@@ -12,7 +12,7 @@ body
 {
    
     font-family: 'Poppins';
-    background: bisque;
+    background: darkgrey;
 }
 
 .webgl
@@ -21,7 +21,7 @@ body
     top: 0;
     left: 0;
     outline: none;
-    mix-blend-mode: color-burn;
+    /*mix-blend-mode: color-burn;*/
 }
 
 
