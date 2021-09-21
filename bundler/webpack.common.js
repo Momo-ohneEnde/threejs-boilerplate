@@ -4,6 +4,7 @@ const MiniCSSExtractPlugin = require('mini-css-extract-plugin')
 const path = require('path')
 
 module.exports = {
+    // specify path to js file which should be loaded
     entry: path.resolve(__dirname, '../src/script.js'),
     output:
     {
@@ -19,8 +20,9 @@ module.exports = {
             ]
         }),
         new HtmlWebpackPlugin({
+            // specify path to html file to be loaded
             //template: path.resolve(__dirname, '../src/index.html'),
-            template: path.resolve(__dirname, '../periodic_table/index.html'),
+            template: path.resolve(__dirname, '../src/periodic_table.html'),
             minify: true
         }),
         new MiniCSSExtractPlugin()
