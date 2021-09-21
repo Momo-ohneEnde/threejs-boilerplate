@@ -99,6 +99,8 @@
 			import { TrackballControls } from './jsm/controls/TrackballControls.js';
 			import { CSS3DRenderer, CSS3DObject } from './jsm/renderers/CSS3DRenderer.js';
 
+			// Daten als Array
+			// Wär hier ein Array mit Objekten nicht besser gewesen?
 			const table = [
 				"H", "Hydrogen", "1.00794", 1, 1,
 				"He", "Helium", "4.002602", 18, 1,
@@ -220,85 +222,139 @@
 				"Og", "Oganesson", "(294)", 18, 7
 			];
 
+			
 			let camera, scene, renderer;
 			let controls;
 
+			// leerer objects array
 			const objects = [];
+			// targets objekt mit leeren Arrays für die vier Darstellungsweisen
 			const targets = { table: [], sphere: [], helix: [], grid: [] };
 
+			// Funktionsaufrufe
 			init();
 			animate();
 
 			function init() {
 
+				// Instanziierung der Kamera
 				camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 1, 10000 );
 				camera.position.z = 3000;
 
+				// Instanziierung der Szene
 				scene = new THREE.Scene();
 
-				// table
+				// TABLE
 
+				// am Ende immer + 5 weil alle Elemente in einem einzigen langen Array gespeichert sind
+				// fünf Index-Positionen weiter beginnt das nächste Element
+
+				/* 
+				Erstellt für jedes Element im table Array folgende HTML-Struktur
+				Beispiel: H
+				<div class="element" 
+					 style="background-color: rgba(0, 127, 127, 0.61); 
+					 		position: absolute; 
+					 		pointer-events: auto; 
+					 		user-select: none; 
+					 		transform: translate(-50%, -50%) matrix3d(1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1, 0, -1190, 810, 0, 1);"
+					 draggable="false">
+					 <div class="number">1</div>
+					 <div class="symbol">H</div>
+					 <div class="details">Hydrogen<br>1.00794</div>
+				</div>
+
+				Wo kommen die style properties her?
+
+				*/
 				for ( let i = 0; i < table.length; i += 5 ) {
 
+					// <div class="element">
 					const element = document.createElement( 'div' );
 					element.className = 'element';
+					// Was tut das Math.random hier?
 					element.style.backgroundColor = 'rgba(0,127,127,' + ( Math.random() * 0.5 + 0.25 ) + ')';
 
+					// <div class="number">
 					const number = document.createElement( 'div' );
 					number.className = 'number';
 					number.textContent = ( i / 5 ) + 1;
 					element.appendChild( number );
 
+					// <div class="symbol">
 					const symbol = document.createElement( 'div' );
 					symbol.className = 'symbol';
 					symbol.textContent = table[ i ];
 					element.appendChild( symbol );
 
+					// <div class="details">
 					const details = document.createElement( 'div' );
 					details.className = 'details';
 					details.innerHTML = table[ i + 1 ] + '<br>' + table[ i + 2 ];
 					element.appendChild( details );
 
+					// erstellt ein CSS3DObjekt aus Variable element
+					// die Anfangsposition der Elemente wird zufällig festgelegt
 					const objectCSS = new CSS3DObject( element );
 					objectCSS.position.x = Math.random() * 4000 - 2000;
 					objectCSS.position.y = Math.random() * 4000 - 2000;
 					objectCSS.position.z = Math.random() * 4000 - 2000;
 					scene.add( objectCSS );
 
+					// alle objectCSS elemente werden in den objects Array aufgenommen
 					objects.push( objectCSS );
 
 					//
 
+					// fixe Positionierung in der Table-Ansicht
 					const object = new THREE.Object3D();
+					// Wie kommt man auf diese Zahlen?
 					object.position.x = ( table[ i + 3 ] * 140 ) - 1330;
 					object.position.y = - ( table[ i + 4 ] * 180 ) + 990;
 
+					// Objekte werden in das table Array des targets-Objekts aufgenommen
 					targets.table.push( object );
 
 				}
 
-				// sphere
+				// SPHERE
 
+				// Instanziierung eines leeren 3D-Vektors
 				const vector = new THREE.Vector3();
 
+				// Loop über Objects Array
 				for ( let i = 0, l = objects.length; i < l; i ++ ) {
 
+					// Berechnung von Winkeln, die für die Positionierung in sphärischem Koordinatensystem notwendig sind
+					// Basiert auf Index und Länge des Objekt-Arrays
+					// phi = polar angle in radians from the y (up) axis
+					// theta = equator angle in radians around the y (up) axis
 					const phi = Math.acos( - 1 + ( 2 * i ) / l );
 					const theta = Math.sqrt( l * Math.PI ) * phi;
 
 					const object = new THREE.Object3D();
 
+					// Objekt (Element) wird in einem sphärischem Koordinatensystem d.h. auf der Kugel platziert
+					// https://en.wikipedia.org/wiki/Spherical_coordinate_system
+					// Mehr Infos zu sphärischen Koordinaten in three.js: https://threejs.org/docs/index.html?q=vector#api/en/math/Spherical
+					// Parameter: radial distance from point to origin (Mittelpunkt), phi, theta
 					object.position.setFromSphericalCoords( 800, phi, theta );
-
+					
+					// im Vektor wird die Position des Objekts gespeichert und skalar mit 2 multipliziert
+					// warum?
 					vector.copy( object.position ).multiplyScalar( 2 );
 
+					// Objekt und Vektor schauen sich an
+					// Objekt wird so rotiert, dass siene interne Z-Achse zum Vektor zeigt
+					// was auch immer das heißen soll???
 					object.lookAt( vector );
 
+					// Objekt wird zum Sphären Array im Targets-Objekt hinzugefügt
 					targets.sphere.push( object );
 
 				}
 
-				// helix
+				// HELIX
 
 				for ( let i = 0, l = objects.length; i < l; i ++ ) {
 
@@ -307,6 +363,12 @@
 
 					const object = new THREE.Object3D();
 
+					// Objekt wird in einem zylindrischen Koordinatensystem positioniert (Helix hat die Form eines Zylinders)
+					// Mehr Infos zu zylindrischen Koordinaten in three.js: https://threejs.org/docs/index.html?q=vector#api/en/math/Cylindrical
+					// Parameter: 
+					// radius (distance from the origin to a point in the x-z plane)
+					// theta = counterclockwise angle in the x-z plane measured in radians from the positive z-axis
+					// y = height above the x-z plane
 					object.position.setFromCylindricalCoords( 900, theta, y );
 
 					vector.x = object.position.x * 2;
@@ -319,12 +381,12 @@
 
 				}
 
-				// grid
+				// GRID
 
 				for ( let i = 0; i < objects.length; i ++ ) {
 
 					const object = new THREE.Object3D();
-
+					// ???
 					object.position.x = ( ( i % 5 ) * 400 ) - 800;
 					object.position.y = ( - ( Math.floor( i / 5 ) % 5 ) * 400 ) + 800;
 					object.position.z = ( Math.floor( i / 25 ) ) * 1000 - 2000;
@@ -333,13 +395,14 @@
 
 				}
 
-				//
+				// Renderer
 
 				renderer = new CSS3DRenderer();
 				renderer.setSize( window.innerWidth, window.innerHeight );
+				// im div mit id = container werdend die Objekte gerendert
 				document.getElementById( 'container' ).appendChild( renderer.domElement );
 
-				//
+				// Funktionalitäten der Buttons (Ansichtswechsel)
 
 				controls = new TrackballControls( camera, renderer.domElement );
 				controls.minDistance = 500;
@@ -382,6 +445,7 @@
 
 			}
 
+			// Funktion, welche die Elemente auf die neue Position verschiebt
 			function transform( targets, duration ) {
 
 				TWEEN.removeAll();
