@@ -220,6 +220,7 @@ pointLight.position.y = 4;
 pointLight.position.z = 6;
 scene.add(pointLight);
 
+const pointLightColor = {color: 0xff0000};
 
 //const pointLight2 = new THREE.PointLight(
     // Farbe
@@ -246,6 +247,9 @@ light.add(pointLight.position, 'y').min(-10).max(10).step(0.01);
 light.add(pointLight.position, 'x').min(-10).max(10).step(0.01);
 light.add(pointLight.position, 'z').min(-10).max(10).step(0.01);
 light.add(pointLight, 'intensity').min(0).max(15).step(0.01);
+light.addColor(pointLightColor, 'color') .onChange( () => {
+    pointLight.color.set(pointLightColor.color)
+})
 
 position.add(object.position, 'y').min(-10).max(10).step(0.01);
 position.add(object.position, 'x').min(-10).max(10).step(0.01);
@@ -255,6 +259,8 @@ scale.add(object.scale, 'y').min(0).max(10).step(0.01);
 scale.add(object.scale, 'z').min(0).max(10).step(0.01);
 
 // Helper geos for lights
+// creates a geometric form that represents the light so you know where exactly the light is
+// there is a helper for every kind of light
 const pointLighthelper = new THREE.PointLightHelper(pointLight, 1);
 scene.add(pointLighthelper);
 //const pointLight2helper = new THREE.PointLightHelper(pointLight2, 1);
@@ -263,6 +269,7 @@ scene.add(pointLighthelper);
 /**
  * Sizes
  */
+// Anpassung an Größe des Browsers
 const sizes = {
     width: window.innerWidth,
     height: window.innerHeight
@@ -371,6 +378,7 @@ const goethe = loader.loadAsync( "/STLs/Goethe_bust.stl" )
 
 const renderer = new THREE.WebGLRenderer({
     canvas: canvas,
+    // makes background transparent
     alpha: true
 })
 renderer.setSize(sizes.width, sizes.height)
@@ -380,27 +388,97 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
  * Animate
  */
 
+
 // Mouse interaction
+
+// speichert Koordinaten der Maus
 const mousemove = {
     mouseX: 0,
     mouseY: 0,
+    normalizedMouse: {
+        x: 0,
+        y: 0
+    },
     targetX: 0,
     targetY: 0,
     windowHalfX: window.innerWidth / 2,
     windowHalfY: window.innerHeight / 2, 
 };
+
+// Hiermit werden die Mauskoordinaten je nach Position geupdated
 document.addEventListener('mousemove', (e) => {
     mousemove.mouseX = (e.clientX - mousemove.windowHalfX);
     mousemove.mouseY = (e.clientY - mousemove.windowHalfY);
+    // der Raycaster benötigt ein normalisiertes Koordinatensystem auf Basis 
+    // der Bildschrimkoordinaten des Mauszeigers
+    // der Raycaster wird innerhalb des Animations-Loops mit den jeweils aktuellen
+    // Koordinaten neu gesetzt (siehe unten)
+    // Teilen durch innerWidth und Multiplizieren mit 2-1 sorgt dafür, dass x und y Werte von -1 bis 1 annehmen können 
+    mousemove.normalizedMouse.x = ( e.clientX / window.innerWidth ) * 2 - 1;
+	mousemove.normalizedMouse.y = - ( e.clientY / window.innerHeight ) * 2 + 1;
 });
 
+// Größe des Objekts wird beim Scrollen verändert
 window.addEventListener('scroll', (e) => {
     object.position.z = window.scrollY * .0009;
 })
 
+const orig = {
+    x: object.scale.x,
+    y: object.scale.y,
+    z: object.scale.z
+};
+
+const objectPlanet = object;
+
+// Raycast passiert nur bei Mausklick
+document.addEventListener('click', (e) => {
+    // der Raycaster gibt ein Array mit den vom Strahl getroffenen
+    // Objekten zurück. Dieses Array ist leer (Länge == 0), wenn 
+    // keine Objekte getroffen wurden.
+    let intersects = raycaster.intersectObjects( scene.children ); 
+    // Alle Elemente in der Szene. Klick auf den LightHelper logged bspw. diesen.
+    // Statt scene.children kann auch ein Array relevanter Objekte angegeben werden: [ objectPlanet ]
+    // Wenn der intersects Array Objekte enthält (length > 0), dann wird der string "Klick" ausgegeben plus das Objekt 
+    if (intersects.length > 0) {
+        let planet = intersects[0].object;
+        console.log("Klick ", planet);
+    } else {
+        console.log("No intersections.");
+    }
+})
+
+// Raycast-event bei gedrückt gehaltener Maustaste
+document.addEventListener('mousedown', (e) => {
+    // der Raycaster gibt ein Array mit den vom Strahl getroffenen
+    // Objekten zurück. Dieses Array ist leer (Länge == 0), wenn 
+    // keine Objekte getroffen wurden.
+    let intersects = raycaster.intersectObjects( scene.children );
+
+    if (intersects.length > 0) {
+        //let planet = intersects[0].object;
+        //console.log("Mousedown ", planet);
+        // Skaliert die Größe des Objekts hoch
+        //planet.scale.x = orig.x * 1.2;
+        //planet.scale.y = orig.y * 1.2;
+        //planet.scale.z = orig.z * 1.2;
+    }
+})
+
+document.addEventListener('mouseup', (e) => {
+    // Setzt die Größe des Planeten auf den Anfangswert
+    // sobald die Maustaste nicht mehr gehalten wird
+    //object.scale.x = orig.x;
+    //object.scale.y = orig.y;
+    //object.scale.z = orig.z;
+})
+
+// Instanziiert den Raycaster 
+const raycaster = new THREE.Raycaster();
+
 const clock = new THREE.Clock()
 
-const animation = () =>
+const tick = () =>
 {
     mousemove.targetX = mousemove.mouseX * .001;
     mousemove.targetY = mousemove.mouseY * .001;
@@ -408,21 +486,25 @@ const animation = () =>
     const elapsedTime = clock.getElapsedTime()
 
     // Update objects
-    //object.rotation.y = .3 * elapsedTime;
+    object.rotation.y = .3 * elapsedTime;
 
-    //object.rotation.y += .5 * (mousemove.targetX - object.rotation.y);
-    //object.rotation.x += .5 * (mousemove.targetY - object.rotation.x);
-    //object.rotation.z += .005 *(mousemove.targetY - object.rotation.x);
-    //Update Orbital Controls
-    controls.update()
+    object.rotation.y += .5 * (mousemove.targetX - object.rotation.y);
+    object.rotation.x += .5 * (mousemove.targetY - object.rotation.x);
+    object.rotation.z += .005 *(mousemove.targetY - object.rotation.x);
+    // Update Orbital Controls
+    //controls.update()
 
-   
-
-    // Call the Renderer
+    // Raycaster
+    // hier wird der Raycaster mit den jeweils aktuellen Mauskoordinaten
+    // aktualisiert, so dass der Strahl von der korrekten Position
+    // geschossen wird
+    raycaster.setFromCamera( mousemove.normalizedMouse, camera );
+	
+    // Render
     renderer.render(scene, camera)
 
     // Call tick again on the next frame
-    window.requestAnimationFrame(animation)
+    window.requestAnimationFrame(tick)
 }
 
-animation()
+tick()

@@ -1,8 +1,7 @@
-import * as THREE from 'three';
-
+            import * as THREE from 'three';
 			import { TWEEN } from 'three/examples/jsm/libs/tween.module.min.js';
 			import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls.js';
-			import { CSS3DRenderer, CSS3DObject } from 'three/examples/jsm/renderers/CSS3DRenderer.js';
+			import { CSS3DRenderer, CSS3DObject } from 'three/examples/jsm/renderers/CSS3DRenderer.js'; 
 
 			// Daten als Array
 			// Wär hier ein Array mit Objekten nicht besser gewesen?
@@ -150,6 +149,11 @@ import * as THREE from 'three';
 				scene = new THREE.Scene();
 
 				// TABLE
+                /* 
+                bei mehr Elementen überlagern sie sich
+                ToDo: Table so anpassen, dass als Rechteck angezeigt, das erweitert werden kann
+                Alternativ: Grid verwenden?
+                */
 
 				// am Ende immer + 5 weil alle Elemente in einem einzigen langen Array gespeichert sind
 				// fünf Index-Positionen weiter beginnt das nächste Element
@@ -223,6 +227,13 @@ import * as THREE from 'three';
 				}
 
 				// SPHERE
+                /* 
+                Kann viele Elemente beinhalten, erst ab ca. 400 wird es kritisch, weil sich die Elemente überlagern.
+                14 Elemente als Minimum für Sphärenansicht
+
+                ToDo: Aufspaltung in mehrere Kugeln je nach Zeitfilter
+                */
+
 
 				// Instanziierung eines leeren 3D-Vektors
 				const vector = new THREE.Vector3();
@@ -260,8 +271,12 @@ import * as THREE from 'three';
 				}
 
 				// HELIX
-
-				for ( let i = 0, l = objects.length; i < l; i ++ ) {
+                /* funktioniert für beliebige Anzahl an aufeinanderfolgenden Elementen
+                ToDo: Anpassung von Anzahl der Umdrehungen gemäß Zeitfilter
+                ToDo: Was passiert, wenn es Lücken im Zeitverlauf gibt? Leere /schwarze Elemente als PLatzhalter?
+                 */
+				
+                for ( let i = 0, l = objects.length; i < l; i ++ ) {
 
 					const theta = i * 0.175 + Math.PI;
 					const y = - ( i * 8 ) + 450;
@@ -287,6 +302,7 @@ import * as THREE from 'three';
 				}
 
 				// GRID
+                // macht einen 5 x 5 Grid
 
 				for ( let i = 0; i < objects.length; i ++ ) {
 
