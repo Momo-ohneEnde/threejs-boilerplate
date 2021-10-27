@@ -9,74 +9,74 @@
 			const table = [
 				// receiverInitials, receiverFormatted, dateFormatted, x, y, idFormatted, Link zur Einzelansicht, gnd-link
 				// Da GB01 noch nicht auf der Plattform -> überall Link auf Startseite, Beispiel aus GB02 beim ersten Zeugnis verlinkt
-				"EB", "Ernst Wolfgang Behrisch", "12. Oktober 1766", 1, 1, "GB01 Nr.20", "https://goethe-biographica.de/id/GB02_BR003_0", "http://d-nb.info/gnd/116111631", 0,
-				"LB", "Ludwig Ysenburg von Buri", "23. Mai 1764", 1, 2, "GB01 Nr.1", "https://goethe-biographica.de/", "http://d-nb.info/gnd/100063934", 0,
-				"JH", "Johann Adam Horn", "Juli 1770", 1, 3, "GB01 Nr.EB018", "https://goethe-biographica.de/",  "http://d-nb.info/gnd/119027682", 0,
-				"CB", "Charlotte Buff", "11. September 1772", 1, 4, "GB01 Nr.103", "https://goethe-biographica.de/", "http://d-nb.info/gnd/118638076", 1,
-				"JR", "Johann Gottfried Roederer", "21. September 1771", 1, 5, "GB01 Nr.88", "https://goethe-biographica.de/", "http://d-nb.info/gnd/124456359", 0,
-				"CG", "Cornelia Goethe", "August 1767", 2, 1, "GB01 Nr.25", "https://goethe-biographica.de/", "http://d-nb.info/gnd/11871791X", 1,
-				"FM", "Friedrich Maximilian Moors", "01. Oktober 1766", 2, 2, "GB01 Nr.16", "https://goethe-biographica.de/", "http://d-nb.info/gnd/117135364", 0,
+				"EB", "Ernst Wolfgang Behrisch", "12. Oktober 1766", 1, 1, "GB01 Nr.20", "https://goethe-biographica.de/id/GB02_BR003_0", "http://d-nb.info/gnd/116111631", "Männlich",
+				"LB", "Ludwig Ysenburg von Buri", "23. Mai 1764", 1, 2, "GB01 Nr.1", "https://goethe-biographica.de/", "http://d-nb.info/gnd/100063934", "Männlich",
+				"JH", "Johann Adam Horn", "Juli 1770", 1, 3, "GB01 Nr.EB018", "https://goethe-biographica.de/",  "http://d-nb.info/gnd/119027682", "Männlich",
+				"CB", "Charlotte Buff", "11. September 1772", 1, 4, "GB01 Nr.103", "https://goethe-biographica.de/", "http://d-nb.info/gnd/118638076", "Weiblich",
+				"JR", "Johann Gottfried Roederer", "21. September 1771", 1, 5, "GB01 Nr.88", "https://goethe-biographica.de/", "http://d-nb.info/gnd/124456359", "Männlich",
+				"CG", "Cornelia Goethe", "August 1767", 2, 1, "GB01 Nr.25", "https://goethe-biographica.de/", "http://d-nb.info/gnd/11871791X", "Weiblich",
+				"FM", "Friedrich Maximilian Moors", "01. Oktober 1766", 2, 2, "GB01 Nr.16", "https://goethe-biographica.de/", "http://d-nb.info/gnd/117135364", "Männlich",
 				
-				"EB", "Ernst Wolfgang Behrisch", "12. Oktober 1766", 2, 3, "GB01 Nr.20", "https://goethe-biographica.de/id/GB02_BR003_0", "http://d-nb.info/gnd/116111631", 0,
-				"LB", "Ludwig Ysenburg von Buri", "23. Mai 1764", 2, 4, "GB01 Nr.1", "https://goethe-biographica.de/", "http://d-nb.info/gnd/100063934", 0,
-				"JH", "Johann Adam Horn", "Juli 1770", 2, 5, "GB01 Nr.EB018", "https://goethe-biographica.de/",  "http://d-nb.info/gnd/119027682", 0,
-				"CB", "Charlotte Buff", "11. September 1772", 3, 1, "GB01 Nr.103", "https://goethe-biographica.de/", "http://d-nb.info/gnd/118638076", 1,
-				"JR", "Johann Gottfried Roederer", "21. September 1771", 3, 2, "GB01 Nr.88", "https://goethe-biographica.de/", "http://d-nb.info/gnd/124456359", 0,
-				"CG", "Cornelia Goethe", "August 1767", 3, 3, "GB01 Nr.25", "https://goethe-biographica.de/", "http://d-nb.info/gnd/11871791X", 1,
-				"FM", "Friedrich Maximilian Moors", "01. Oktober 1766", 3, 4, "GB01 Nr.16", "https://goethe-biographica.de/", "http://d-nb.info/gnd/117135364", 0,
+				"EB", "Ernst Wolfgang Behrisch", "12. Oktober 1766", 2, 3, "GB01 Nr.20", "https://goethe-biographica.de/id/GB02_BR003_0", "http://d-nb.info/gnd/116111631", "Männlich",
+				"LB", "Ludwig Ysenburg von Buri", "23. Mai 1764", 2, 4, "GB01 Nr.1", "https://goethe-biographica.de/", "http://d-nb.info/gnd/100063934", "Männlich",
+				"JH", "Johann Adam Horn", "Juli 1770", 2, 5, "GB01 Nr.EB018", "https://goethe-biographica.de/",  "http://d-nb.info/gnd/119027682", "Männlich",
+				"CB", "Charlotte Buff", "11. September 1772", 3, 1, "GB01 Nr.103", "https://goethe-biographica.de/", "http://d-nb.info/gnd/118638076", "Weiblich",
+				"JR", "Johann Gottfried Roederer", "21. September 1771", 3, 2, "GB01 Nr.88", "https://goethe-biographica.de/", "http://d-nb.info/gnd/124456359", "Männlich",
+				"CG", "Cornelia Goethe", "August 1767", 3, 3, "GB01 Nr.25", "https://goethe-biographica.de/", "http://d-nb.info/gnd/11871791X", "Weiblich",
+				"FM", "Friedrich Maximilian Moors", "01. Oktober 1766", 3, 4, "GB01 Nr.16", "https://goethe-biographica.de/", "http://d-nb.info/gnd/117135364", "Männlich",
 
-				"EB", "Ernst Wolfgang Behrisch", "12. Oktober 1766", 3, 5, "GB01 Nr.20", "https://goethe-biographica.de/id/GB02_BR003_0", "http://d-nb.info/gnd/116111631", 0,
-				"LB", "Ludwig Ysenburg von Buri", "23. Mai 1764", 4, 1, "GB01 Nr.1", "https://goethe-biographica.de/", "http://d-nb.info/gnd/100063934", 0,
-				"JH", "Johann Adam Horn", "Juli 1770", 4, 2, "GB01 Nr.EB018", "https://goethe-biographica.de/",  "http://d-nb.info/gnd/119027682", 0,
-				"CB", "Charlotte Buff", "11. September 1772", 4, 3, "GB01 Nr.103", "https://goethe-biographica.de/", "http://d-nb.info/gnd/118638076", 1,
-				"JR", "Johann Gottfried Roederer", "21. September 1771", 4, 4, "GB01 Nr.88", "https://goethe-biographica.de/", "http://d-nb.info/gnd/124456359", 0,
-				"CG", "Cornelia Goethe", "August 1767", 4, 5, "GB01 Nr.25", "https://goethe-biographica.de/", "http://d-nb.info/gnd/11871791X", 1,
-				"FM", "Friedrich Maximilian Moors", "01. Oktober 1766", 5, 1, "GB01 Nr.16", "https://goethe-biographica.de/", "http://d-nb.info/gnd/117135364", 0,
+				"EB", "Ernst Wolfgang Behrisch", "12. Oktober 1766", 3, 5, "GB01 Nr.20", "https://goethe-biographica.de/id/GB02_BR003_0", "http://d-nb.info/gnd/116111631", "Männlich",
+				"LB", "Ludwig Ysenburg von Buri", "23. Mai 1764", 4, 1, "GB01 Nr.1", "https://goethe-biographica.de/", "http://d-nb.info/gnd/100063934", "Männlich",
+				"JH", "Johann Adam Horn", "Juli 1770", 4, 2, "GB01 Nr.EB018", "https://goethe-biographica.de/",  "http://d-nb.info/gnd/119027682", "Männlich",
+				"CB", "Charlotte Buff", "11. September 1772", 4, 3, "GB01 Nr.103", "https://goethe-biographica.de/", "http://d-nb.info/gnd/118638076", "Weiblich",
+				"JR", "Johann Gottfried Roederer", "21. September 1771", 4, 4, "GB01 Nr.88", "https://goethe-biographica.de/", "http://d-nb.info/gnd/124456359", "Männlich",
+				"CG", "Cornelia Goethe", "August 1767", 4, 5, "GB01 Nr.25", "https://goethe-biographica.de/", "http://d-nb.info/gnd/11871791X", "Weiblich",
+				"FM", "Friedrich Maximilian Moors", "01. Oktober 1766", 5, 1, "GB01 Nr.16", "https://goethe-biographica.de/", "http://d-nb.info/gnd/117135364", "Männlich",
 
-				"EB", "Ernst Wolfgang Behrisch", "12. Oktober 1766", 5, 2, "GB01 Nr.20", "https://goethe-biographica.de/id/GB02_BR003_0", "http://d-nb.info/gnd/116111631", 0,
-				"LB", "Ludwig Ysenburg von Buri", "23. Mai 1764", 5, 3, "GB01 Nr.1", "https://goethe-biographica.de/", "http://d-nb.info/gnd/100063934", 0,
-				"JH", "Johann Adam Horn", "Juli 1770", 5, 4, "GB01 Nr.EB018", "https://goethe-biographica.de/",  "http://d-nb.info/gnd/119027682", 0,
-				"CB", "Charlotte Buff", "11. September 1772", 5, 5, "GB01 Nr.103", "https://goethe-biographica.de/", "http://d-nb.info/gnd/118638076", 1,
-				"JR", "Johann Gottfried Roederer", "21. September 1771", 6, 1, "GB01 Nr.88", "https://goethe-biographica.de/", "http://d-nb.info/gnd/124456359", 0,
-				"CG", "Cornelia Goethe", "August 1767", 6, 2, "GB01 Nr.25", "https://goethe-biographica.de/", "http://d-nb.info/gnd/11871791X", 1,
-				"FM", "Friedrich Maximilian Moors", "01. Oktober 1766", 6, 3, "GB01 Nr.16", "https://goethe-biographica.de/", "http://d-nb.info/gnd/117135364", 0,
+				"EB", "Ernst Wolfgang Behrisch", "12. Oktober 1766", 5, 2, "GB01 Nr.20", "https://goethe-biographica.de/id/GB02_BR003_0", "http://d-nb.info/gnd/116111631", "Männlich",
+				"LB", "Ludwig Ysenburg von Buri", "23. Mai 1764", 5, 3, "GB01 Nr.1", "https://goethe-biographica.de/", "http://d-nb.info/gnd/100063934", "Männlich",
+				"JH", "Johann Adam Horn", "Juli 1770", 5, 4, "GB01 Nr.EB018", "https://goethe-biographica.de/",  "http://d-nb.info/gnd/119027682", "Männlich",
+				"CB", "Charlotte Buff", "11. September 1772", 5, 5, "GB01 Nr.103", "https://goethe-biographica.de/", "http://d-nb.info/gnd/118638076", "Weiblich",
+				"JR", "Johann Gottfried Roederer", "21. September 1771", 6, 1, "GB01 Nr.88", "https://goethe-biographica.de/", "http://d-nb.info/gnd/124456359", "Männlich",
+				"CG", "Cornelia Goethe", "August 1767", 6, 2, "GB01 Nr.25", "https://goethe-biographica.de/", "http://d-nb.info/gnd/11871791X", "Weiblich",
+				"FM", "Friedrich Maximilian Moors", "01. Oktober 1766", 6, 3, "GB01 Nr.16", "https://goethe-biographica.de/", "http://d-nb.info/gnd/117135364", "Männlich",
 
-				"EB", "Ernst Wolfgang Behrisch", "12. Oktober 1766", 6, 4, "GB01 Nr.20", "https://goethe-biographica.de/id/GB02_BR003_0", "http://d-nb.info/gnd/116111631", 0,
-				"LB", "Ludwig Ysenburg von Buri", "23. Mai 1764", 6, 5, "GB01 Nr.1", "https://goethe-biographica.de/", "http://d-nb.info/gnd/100063934", 0,
-				"JH", "Johann Adam Horn", "Juli 1770", 7, 1, "GB01 Nr.EB018", "https://goethe-biographica.de/",  "http://d-nb.info/gnd/119027682", 0,
-				"CB", "Charlotte Buff", "11. September 1772", 7, 2, "GB01 Nr.103", "https://goethe-biographica.de/", "http://d-nb.info/gnd/118638076", 1,
-				"JR", "Johann Gottfried Roederer", "21. September 1771", 7, 3, "GB01 Nr.88", "https://goethe-biographica.de/", "http://d-nb.info/gnd/124456359", 0,
-				"CG", "Cornelia Goethe", "August 1767", 7, 4, "GB01 Nr.25", "https://goethe-biographica.de/", "http://d-nb.info/gnd/11871791X", 1,
-				"FM", "Friedrich Maximilian Moors", "01. Oktober 1766", 7, 5, "GB01 Nr.16", "https://goethe-biographica.de/", "http://d-nb.info/gnd/117135364", 0,
+				"EB", "Ernst Wolfgang Behrisch", "12. Oktober 1766", 6, 4, "GB01 Nr.20", "https://goethe-biographica.de/id/GB02_BR003_0", "http://d-nb.info/gnd/116111631", "Männlich",
+				"LB", "Ludwig Ysenburg von Buri", "23. Mai 1764", 6, 5, "GB01 Nr.1", "https://goethe-biographica.de/", "http://d-nb.info/gnd/100063934", "Männlich",
+				"JH", "Johann Adam Horn", "Juli 1770", 7, 1, "GB01 Nr.EB018", "https://goethe-biographica.de/",  "http://d-nb.info/gnd/119027682", "Männlich",
+				"CB", "Charlotte Buff", "11. September 1772", 7, 2, "GB01 Nr.103", "https://goethe-biographica.de/", "http://d-nb.info/gnd/118638076", "Weiblich",
+				"JR", "Johann Gottfried Roederer", "21. September 1771", 7, 3, "GB01 Nr.88", "https://goethe-biographica.de/", "http://d-nb.info/gnd/124456359", "Männlich",
+				"CG", "Cornelia Goethe", "August 1767", 7, 4, "GB01 Nr.25", "https://goethe-biographica.de/", "http://d-nb.info/gnd/11871791X", "Weiblich",
+				"FM", "Friedrich Maximilian Moors", "01. Oktober 1766", 7, 5, "GB01 Nr.16", "https://goethe-biographica.de/", "http://d-nb.info/gnd/117135364", "Männlich",
 
-				"EB", "Ernst Wolfgang Behrisch", "12. Oktober 1766", 8, 1, "GB01 Nr.20", "https://goethe-biographica.de/id/GB02_BR003_0", "http://d-nb.info/gnd/116111631", 0,
-				"LB", "Ludwig Ysenburg von Buri", "23. Mai 1764", 8, 2, "GB01 Nr.1", "https://goethe-biographica.de/", "http://d-nb.info/gnd/100063934", 0,
-				"JH", "Johann Adam Horn", "Juli 1770", 8, 3, "GB01 Nr.EB018", "https://goethe-biographica.de/",  "http://d-nb.info/gnd/119027682", 0,
-				"CB", "Charlotte Buff", "11. September 1772", 8, 4, "GB01 Nr.103", "https://goethe-biographica.de/", "http://d-nb.info/gnd/118638076", 1,
-				"JR", "Johann Gottfried Roederer", "21. September 1771", 8, 5, "GB01 Nr.88", "https://goethe-biographica.de/", "http://d-nb.info/gnd/124456359", 0,
-				"CG", "Cornelia Goethe", "August 1767", 9, 1, "GB01 Nr.25", "https://goethe-biographica.de/", "http://d-nb.info/gnd/11871791X", 1,
-				"FM", "Friedrich Maximilian Moors", "01. Oktober 1766", 9, 2, "GB01 Nr.16", "https://goethe-biographica.de/", "http://d-nb.info/gnd/117135364", 0,
+				"EB", "Ernst Wolfgang Behrisch", "12. Oktober 1766", 8, 1, "GB01 Nr.20", "https://goethe-biographica.de/id/GB02_BR003_0", "http://d-nb.info/gnd/116111631", "Männlich",
+				"LB", "Ludwig Ysenburg von Buri", "23. Mai 1764", 8, 2, "GB01 Nr.1", "https://goethe-biographica.de/", "http://d-nb.info/gnd/100063934", "Männlich",
+				"JH", "Johann Adam Horn", "Juli 1770", 8, 3, "GB01 Nr.EB018", "https://goethe-biographica.de/",  "http://d-nb.info/gnd/119027682", "Männlich",
+				"CB", "Charlotte Buff", "11. September 1772", 8, 4, "GB01 Nr.103", "https://goethe-biographica.de/", "http://d-nb.info/gnd/118638076", "Weiblich",
+				"JR", "Johann Gottfried Roederer", "21. September 1771", 8, 5, "GB01 Nr.88", "https://goethe-biographica.de/", "http://d-nb.info/gnd/124456359", "Männlich",
+				"CG", "Cornelia Goethe", "August 1767", 9, 1, "GB01 Nr.25", "https://goethe-biographica.de/", "http://d-nb.info/gnd/11871791X", "Weiblich",
+				"FM", "Friedrich Maximilian Moors", "01. Oktober 1766", 9, 2, "GB01 Nr.16", "https://goethe-biographica.de/", "http://d-nb.info/gnd/117135364", "Männlich",
 
-				"EB", "Ernst Wolfgang Behrisch", "12. Oktober 1766", 9, 3, "GB01 Nr.20", "https://goethe-biographica.de/id/GB02_BR003_0", "http://d-nb.info/gnd/116111631", 0,
-				"LB", "Ludwig Ysenburg von Buri", "23. Mai 1764", 9, 4, "GB01 Nr.1", "https://goethe-biographica.de/", "http://d-nb.info/gnd/100063934", 0,
-				"JH", "Johann Adam Horn", "Juli 1770", 9, 5, "GB01 Nr.EB018", "https://goethe-biographica.de/",  "http://d-nb.info/gnd/119027682", 0,
-				"CB", "Charlotte Buff", "11. September 1772", 10, 1, "GB01 Nr.103", "https://goethe-biographica.de/", "http://d-nb.info/gnd/118638076", 1,
-				"JR", "Johann Gottfried Roederer", "21. September 1771", 10, 2, "GB01 Nr.88", "https://goethe-biographica.de/", "http://d-nb.info/gnd/124456359", 0,
-				"CG", "Cornelia Goethe", "August 1767", 10, 3, "GB01 Nr.25", "https://goethe-biographica.de/", "http://d-nb.info/gnd/11871791X", 1,
-				"FM", "Friedrich Maximilian Moors", "01. Oktober 1766", 10, 4, "GB01 Nr.16", "https://goethe-biographica.de/", "http://d-nb.info/gnd/117135364", 0,
+				"EB", "Ernst Wolfgang Behrisch", "12. Oktober 1766", 9, 3, "GB01 Nr.20", "https://goethe-biographica.de/id/GB02_BR003_0", "http://d-nb.info/gnd/116111631", "Männlich",
+				"LB", "Ludwig Ysenburg von Buri", "23. Mai 1764", 9, 4, "GB01 Nr.1", "https://goethe-biographica.de/", "http://d-nb.info/gnd/100063934", "Männlich",
+				"JH", "Johann Adam Horn", "Juli 1770", 9, 5, "GB01 Nr.EB018", "https://goethe-biographica.de/",  "http://d-nb.info/gnd/119027682", "Männlich",
+				"CB", "Charlotte Buff", "11. September 1772", 10, 1, "GB01 Nr.103", "https://goethe-biographica.de/", "http://d-nb.info/gnd/118638076", "Weiblich",
+				"JR", "Johann Gottfried Roederer", "21. September 1771", 10, 2, "GB01 Nr.88", "https://goethe-biographica.de/", "http://d-nb.info/gnd/124456359", "Männlich",
+				"CG", "Cornelia Goethe", "August 1767", 10, 3, "GB01 Nr.25", "https://goethe-biographica.de/", "http://d-nb.info/gnd/11871791X", "Weiblich",
+				"FM", "Friedrich Maximilian Moors", "01. Oktober 1766", 10, 4, "GB01 Nr.16", "https://goethe-biographica.de/", "http://d-nb.info/gnd/117135364", "Männlich",
 
-				"EB", "Ernst Wolfgang Behrisch", "12. Oktober 1766", 10, 5, "GB01 Nr.20", "https://goethe-biographica.de/id/GB02_BR003_0", "http://d-nb.info/gnd/116111631", 0,
-				"LB", "Ludwig Ysenburg von Buri", "23. Mai 1764", 11, 1, "GB01 Nr.1", "https://goethe-biographica.de/", "http://d-nb.info/gnd/100063934", 0,
-				"JH", "Johann Adam Horn", "Juli 1770", 11, 2, "GB01 Nr.EB018", "https://goethe-biographica.de/",  "http://d-nb.info/gnd/119027682", 0,
-				"CB", "Charlotte Buff", "11. September 1772", 11, 3, "GB01 Nr.103", "https://goethe-biographica.de/", "http://d-nb.info/gnd/118638076", 1,
-				"JR", "Johann Gottfried Roederer", "21. September 1771", 11, 4, "GB01 Nr.88", "https://goethe-biographica.de/", "http://d-nb.info/gnd/124456359", 0,
-				"CG", "Cornelia Goethe", "August 1767", 11, 5, "GB01 Nr.25", "https://goethe-biographica.de/", "http://d-nb.info/gnd/11871791X", 1,
-				"FM", "Friedrich Maximilian Moors", "01. Oktober 1766", 12, 1, "GB01 Nr.16", "https://goethe-biographica.de/", "http://d-nb.info/gnd/117135364", 0,
+				"EB", "Ernst Wolfgang Behrisch", "12. Oktober 1766", 10, 5, "GB01 Nr.20", "https://goethe-biographica.de/id/GB02_BR003_0", "http://d-nb.info/gnd/116111631", "Männlich",
+				"LB", "Ludwig Ysenburg von Buri", "23. Mai 1764", 11, 1, "GB01 Nr.1", "https://goethe-biographica.de/", "http://d-nb.info/gnd/100063934", "Männlich",
+				"JH", "Johann Adam Horn", "Juli 1770", 11, 2, "GB01 Nr.EB018", "https://goethe-biographica.de/",  "http://d-nb.info/gnd/119027682", "Männlich",
+				"CB", "Charlotte Buff", "11. September 1772", 11, 3, "GB01 Nr.103", "https://goethe-biographica.de/", "http://d-nb.info/gnd/118638076", "Weiblich",
+				"JR", "Johann Gottfried Roederer", "21. September 1771", 11, 4, "GB01 Nr.88", "https://goethe-biographica.de/", "http://d-nb.info/gnd/124456359", "Männlich",
+				"CG", "Cornelia Goethe", "August 1767", 11, 5, "GB01 Nr.25", "https://goethe-biographica.de/", "http://d-nb.info/gnd/11871791X", "Weiblich",
+				"FM", "Friedrich Maximilian Moors", "01. Oktober 1766", 12, 1, "GB01 Nr.16", "https://goethe-biographica.de/", "http://d-nb.info/gnd/117135364", "Männlich",
 
-				"EB", "Ernst Wolfgang Behrisch", "12. Oktober 1766", 12, 2, "GB01 Nr.20", "https://goethe-biographica.de/id/GB02_BR003_0", "http://d-nb.info/gnd/116111631", 0,
-				"LB", "Ludwig Ysenburg von Buri", "23. Mai 1764", 12, 3, "GB01 Nr.1", "https://goethe-biographica.de/", "http://d-nb.info/gnd/100063934", 0,
-				"JH", "Johann Adam Horn", "Juli 1770", 12, 4, "GB01 Nr.EB018", "https://goethe-biographica.de/",  "http://d-nb.info/gnd/119027682", 0,
-				"CB", "Charlotte Buff", "11. September 1772", 12, 5, "GB01 Nr.103", "https://goethe-biographica.de/", "http://d-nb.info/gnd/118638076", 1,
+				"EB", "Ernst Wolfgang Behrisch", "12. Oktober 1766", 12, 2, "GB01 Nr.20", "https://goethe-biographica.de/id/GB02_BR003_0", "http://d-nb.info/gnd/116111631", "Männlich",
+				"LB", "Ludwig Ysenburg von Buri", "23. Mai 1764", 12, 3, "GB01 Nr.1", "https://goethe-biographica.de/", "http://d-nb.info/gnd/100063934", "Männlich",
+				"JH", "Johann Adam Horn", "Juli 1770", 12, 4, "GB01 Nr.EB018", "https://goethe-biographica.de/",  "http://d-nb.info/gnd/119027682", "Männlich",
+				"CB", "Charlotte Buff", "11. September 1772", 12, 5, "GB01 Nr.103", "https://goethe-biographica.de/", "http://d-nb.info/gnd/118638076", "Keine Info",
 			]
 			
 			let camera, scene, renderer;
@@ -134,11 +134,14 @@
 					// element.style.backgroundColor = 'rgba(255,0,0,' + ( Math.random() * 0.5 + 0.25 ) + ')';
 					// ohne Math.random
 					
-					if(table[i + 8]){
+					if(table[i + 8] == "Weiblich"){
 						element.style.backgroundColor = 'rgb(237, 125, 49, 0.5)';
-					} else {
+					} else if (table[i + 8] == "Männlich") {
 						element.style.backgroundColor = 'rgb(231, 230, 230, 0.5)';
-					};
+					} else {
+						element.style.backgroundColor = 'rgb(0, 0, 0, 0.5)';
+					}
+					;
 					//element.style.backgroundColor = 'rgb(231, 230, 230, 0.5)';
 					element.setAttribute("onclick", "window.open(' " + table[i + 6] +"')");
 
