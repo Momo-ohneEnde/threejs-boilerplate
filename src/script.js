@@ -57,8 +57,6 @@ const scene = new THREE.Scene();
 /* ToDo
 2.) Datenvorbereitung:
     Daten auch nach placeReceived (und year) gruppieren, neue Property sent/received, mergen
-3.) Textfelder auf die Planes: plane als pivot für Text nehmen
-4.) Styling der Planes und Textinfos
 5.) Daten mit fetch() laden
  */
 
@@ -2792,6 +2790,8 @@ function makesphere(
   const material = new THREE.MeshBasicMaterial({
     color: 0xcc0000,
     side: THREE.DoubleSide,
+    transparent: true,
+    opacity: 0.7
   });
   const plane = new THREE.Mesh(geometry, material);
   plane.name = `letter${idText.name}`;
@@ -2812,21 +2812,78 @@ function makesphere(
   // add planes to array of clickable objects
   targets.clickable.push(plane);
 
+  // axes helper for plane
+  /* const axesHelperPlane = new THREE.AxesHelper( 1 );
+  plane.add( axesHelperPlane ); */
+
   /* 
   add content to plane 
   */
   plane.add(idText);
-  //plane.add(initialsText);
-  //plane.add(nameText);
-  //plane.add(dateText);
-
+  plane.add(initialsText);
+  plane.add(nameText);
+  plane.add(dateText);
 
   /* 
   position content on plane
-   */
-  //idText.position.y += 1 + i * 2.5;
-  //idText.position.x = 1;
-  //idText.position.z = 1;
+  */
+
+  /* ID */
+  idText.position.y = 0.13;
+  idText.position.x = -0.06;
+  idText.position.z = 0.01;
+
+  // axes helper for idText
+  /* const axesHelperidText = new THREE.AxesHelper( 1 );
+  idText.add( axesHelperidText ); */
+
+  // gui helper for idText
+  idTextGui.add(idText.position, "y").min(-10).max(10).step(0.01).name(`y_${idText.name}`);
+  idTextGui.add(idText.position, "x").min(-10).max(10).step(0.01).name(`x_${idText.name}`);
+  idTextGui.add(idText.position, "z").min(-10).max(10).step(0.01).name(`z_${idText.name}`);
+
+  /* INITIALS */
+  initialsText.position.y = 0.07;
+  initialsText.position.x = -0.06;
+  initialsText.position.z = 0.01;
+
+  // axes helper for initials
+  /* const axesHelperInitials = new THREE.AxesHelper( 1 );
+  initialsText.add( axesHelperInitials ); */
+
+  // gui helper for initials
+  initialsGui.add(initialsText.position, "y").min(-10).max(10).step(0.01).name(`y_${idText.name}`);
+  initialsGui.add(initialsText.position, "x").min(-10).max(10).step(0.01).name(`x_${idText.name}`);
+  initialsGui.add(initialsText.position, "z").min(-10).max(10).step(0.01).name(`z_${idText.name}`);
+
+  /* NAME */
+  nameText.position.y = -0.03;
+  nameText.position.x = -0.12;
+  nameText.position.z = 0.01;
+
+  // axes helper for name
+  /* const axesHelperName = new THREE.AxesHelper( 1 );
+  nameText.add( axesHelperName ); */
+
+  // gui helper for name
+  nameGui.add(nameText.position, "y").min(-10).max(10).step(0.01).name(`y_${idText.name}`);
+  nameGui.add(nameText.position, "x").min(-10).max(10).step(0.01).name(`x_${idText.name}`);
+  nameGui.add(nameText.position, "z").min(-10).max(10).step(0.01).name(`z_${idText.name}`);
+
+  /* DATE */
+  dateText.position.y = -0.06;
+  dateText.position.x = -0.12;
+  dateText.position.z = 0.01;
+
+  // axes helper for name
+  /* const axesHelperDate = new THREE.AxesHelper( 1 );
+  dateText.add( axesHelperDate ); */
+
+  // gui helper for name
+  dateGui.add(dateText.position, "y").min(-10).max(10).step(0.01).name(`y_${idText.name}`);
+  dateGui.add(dateText.position, "x").min(-10).max(10).step(0.01).name(`x_${idText.name}`);
+  dateGui.add(dateText.position, "z").min(-10).max(10).step(0.01).name(`z_${idText.name}`);
+
 }
 
 /**
@@ -2860,7 +2917,7 @@ function plotting(pivot, letters) {
     idText.name = `${letters[i].idFormatted}`;
 
     // Set styling properties of text object
-    idText.fontSize = 0.07;
+    idText.fontSize = 0.03;
     idText.color = 0xffffff;
 
     // Update the rendering:
@@ -2875,7 +2932,7 @@ function plotting(pivot, letters) {
     initialsText.text = letters[i].receiverInitials;
 
     // Set styling properties of text object
-    initialsText.fontSize = 0.04;
+    initialsText.fontSize = 0.08;
     initialsText.color = 0xffffff;
 
     // Update the rendering:
@@ -2890,7 +2947,7 @@ function plotting(pivot, letters) {
     nameText.text = letters[i].receiverFormatted;
 
     // Set styling properties of text object
-    nameText.fontSize = 0.04;
+    nameText.fontSize = 0.02;
     nameText.color = 0xffffff;
 
     // Update the rendering:
@@ -2905,7 +2962,7 @@ function plotting(pivot, letters) {
     dateText.text = letters[i].dateFormatted;
 
     // Set styling properties of text object
-    dateText.fontSize = 0.04;
+    dateText.fontSize = 0.03;
     dateText.color = 0xffffff;
 
     // Update the rendering:
@@ -2913,6 +2970,10 @@ function plotting(pivot, letters) {
 
     /* SHPERE */
     makesphere(i, l, pivot, idText , initialsText, nameText, dateText);
+
+    /* AXES HELPER for pivot */
+    /* const axesHelperPivot = new THREE.AxesHelper( 1 );
+    pivot.add( axesHelperPivot ); */
 
     // Text
     /* const myText = new Text();
@@ -3067,6 +3128,14 @@ if (SETTINGS.render_wireframe) {
 }
 
 /**
+ * Axes Helper (Scene)
+ */
+
+const axesHelperScene = new THREE.AxesHelper( 30 );
+scene.add( axesHelperScene );
+
+
+/**
  * Lights
  */
 
@@ -3121,9 +3190,15 @@ window.addEventListener("resize", () => {
  * Debug GUI
  */
 const gui = new dat.GUI();
+// must be wider than default, so that also long labels are visible e.g. "y_GB01 Nr.EB013"
+gui.width = 300;
 
 // Set GUI folders
 const light = gui.addFolder("Light");
+const idTextGui = gui.addFolder("idText");
+const initialsGui = gui.addFolder("initials");
+const nameGui = gui.addFolder("name");
+const dateGui = gui.addFolder("date");
 
 // Set Debug GUI
 light.add(pointLight.position, "y").min(-10).max(10).step(0.01);
