@@ -3131,8 +3131,8 @@ if (SETTINGS.render_wireframe) {
  * Axes Helper (Scene)
  */
 
-const axesHelperScene = new THREE.AxesHelper( 30 );
-scene.add( axesHelperScene );
+/* const axesHelperScene = new THREE.AxesHelper( 30 );
+scene.add( axesHelperScene ); */
 
 
 /**
@@ -3151,7 +3151,7 @@ const pointLight = new THREE.PointLight(
   0.5
 );
 pointLight.position.x = -6.5;
-pointLight.position.y = 4;
+pointLight.position.y = 100;
 pointLight.position.z = 6;
 scene.add(pointLight);
 
@@ -3201,7 +3201,7 @@ const nameGui = gui.addFolder("name");
 const dateGui = gui.addFolder("date");
 
 // Set Debug GUI
-light.add(pointLight.position, "y").min(-10).max(10).step(0.01);
+light.add(pointLight.position, "y").min(-10).max(100).step(0.01);
 light.add(pointLight.position, "x").min(-10).max(10).step(0.01);
 light.add(pointLight.position, "z").min(-10).max(10).step(0.01);
 light.add(pointLight, "intensity").min(0).max(15).step(0.01);
