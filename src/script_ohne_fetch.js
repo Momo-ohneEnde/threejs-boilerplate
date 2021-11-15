@@ -4912,7 +4912,7 @@ const vector = new Vector3();
 
 // creation of spheres
 // i = index position, l = length of dataset, pivot = point around which sphere will be centered
-function makesphere(i, l, pivot, id, idText, initialsText, nameText, dateText) {
+function makesphere(i, l, pivot, id, idText, initialsText, firstNameText, lastNameText, dateText) {
   /* 
   create planes and position them as a sphere 
   */
@@ -4954,14 +4954,16 @@ function makesphere(i, l, pivot, id, idText, initialsText, nameText, dateText) {
   */
   plane.add(idText);
   plane.add(initialsText);
-  plane.add(nameText);
+  plane.add(firstNameText);
+  plane.add(lastNameText);
   plane.add(dateText);
 
   /* 
         make content clickable
       */
         targets.clickable.push(initialsText);
-        targets.clickable.push(nameText);
+        targets.clickable.push(firstNameText);
+        targets.clickable.push(lastNameText);
 
   /* 
   position content on plane
@@ -5026,37 +5028,64 @@ function makesphere(i, l, pivot, id, idText, initialsText, nameText, dateText) {
     .name(`z_${idText.name}`);
 
   /* NAME */
-  nameText.position.y = -0.03;
-  nameText.position.x = -0.12;
-  nameText.position.z = 0.01;
+  firstNameText.position.y = -0.03;
+  firstNameText.position.x = -0.13;
+  firstNameText.position.z = 0.01;
+
+  lastNameText.position.y = -0.06;
+  lastNameText.position.x = -0.13;
+  lastNameText.position.z = 0.01;
 
   // axes helper for name
   /* const axesHelperName = new THREE.AxesHelper( 1 );
-  nameText.add( axesHelperName ); */
+  firstNameText.add( axesHelperName ); */
 
-  // gui helper for name
-  nameGui
-    .add(nameText.position, "y")
+    /* const axesHelperName = new THREE.AxesHelper( 1 );
+  lastNameText.add( axesHelperName ); */
+
+  // gui helper for firstName
+  firstNameGui
+    .add(firstNameText.position, "y")
     .min(-10)
     .max(10)
     .step(0.01)
     .name(`y_${idText.name}`);
-  nameGui
-    .add(nameText.position, "x")
+  firstNameGui
+    .add(firstNameText.position, "x")
     .min(-10)
     .max(10)
     .step(0.01)
     .name(`x_${idText.name}`);
-  nameGui
-    .add(nameText.position, "z")
+  firstNameGui
+    .add(firstNameText.position, "z")
     .min(-10)
     .max(10)
     .step(0.01)
     .name(`z_${idText.name}`);
 
+  // gui helper for lastName
+  lastNameGui
+  .add(lastNameText.position, "y")
+  .min(-10)
+  .max(10)
+  .step(0.01)
+  .name(`y_${idText.name}`);
+  lastNameGui
+  .add(lastNameText.position, "x")
+  .min(-10)
+  .max(10)
+  .step(0.01)
+  .name(`x_${idText.name}`);
+  lastNameGui
+  .add(lastNameText.position, "z")
+  .min(-10)
+  .max(10)
+  .step(0.01)
+  .name(`z_${idText.name}`);
+
   /* DATE */
-  dateText.position.y = -0.06;
-  dateText.position.x = -0.12;
+  dateText.position.y = -0.09;
+  dateText.position.x = -0.13;
   dateText.position.z = 0.01;
 
   // axes helper for name
@@ -5137,19 +5166,33 @@ function plotting(pivot, letters) {
     initialsText.sync();
 
     /* NAME */
-    const nameText = new Text();
-    // Scenegraph in Console: e.g. name="Charlotte Buff"
-    nameText.name = `name_${letters[i].receiverFormatted}`;
+    const firstNameText = new Text();
+    // Scenegraph in Console: e.g. name="Charlotte"
+    firstNameText.name = `name_${letters[i].receiverFirstName}`;
 
     // Set content of text object (property "text")
-    nameText.text = letters[i].receiverFormatted;
+    firstNameText.text = letters[i].receiverFirstName;
 
     // Set styling properties of text object
-    nameText.fontSize = 0.02;
-    nameText.color = 0xffffff;
+    firstNameText.fontSize = 0.02;
+    firstNameText.color = 0xffffff;
 
     // Update the rendering:
-    nameText.sync();
+    firstNameText.sync();
+
+    const lastNameText = new Text();
+    // Scenegraph in Console: e.g. name="Buff"
+    lastNameText.name = `name_${letters[i].receiverLastName}`;
+
+    // Set content of text object (property "text")
+    lastNameText.text = letters[i].receiverLastName;
+
+    // Set styling properties of text object
+    lastNameText.fontSize = 0.02;
+    lastNameText.color = 0xffffff;
+
+    // Update the rendering:
+    lastNameText.sync();
 
     /* DATE */
     const dateText = new Text();
@@ -5170,7 +5213,7 @@ function plotting(pivot, letters) {
      const id = letters[i].id;
 
      /* SHPERE */
-     makesphere(i, l, pivot, id, idText, initialsText, nameText, dateText);
+     makesphere(i, l, pivot, id, idText, initialsText, firstNameText, lastNameText, dateText);
 
     /* AXES HELPER for pivot */
     /* const axesHelperPivot = new THREE.AxesHelper( 1 );
@@ -5219,7 +5262,9 @@ function plotting(pivot, letters) {
 /**
  * GLTF: Load Map (Karte + Ortsmarker)
  */
+function loadMap() {
 
+} 
 const roughnessMipmapper = new RoughnessMipmapper(renderer);
 
 // load gltf basemap
@@ -5397,7 +5442,8 @@ gui.width = 310;
 const light = gui.addFolder("Light");
 const idTextGui = gui.addFolder("idText");
 const initialsGui = gui.addFolder("initials");
-const nameGui = gui.addFolder("name");
+const firstNameGui = gui.addFolder("firstname");
+const lastNameGui = gui.addFolder("lastname");
 const dateGui = gui.addFolder("date");
 
 // Set Debug GUI
@@ -5476,6 +5522,7 @@ document.addEventListener("click", (e) => {
   // Alle Elemente in der Szene. Klick auf den LightHelper logged bspw. diesen.
   // Statt scene.children kann auch ein Array relevanter Objekte angegeben werden: [ objectPlanet ]
   // Wenn der intersects Array Objekte enthält (length > 0), dann wird der string "Klick" ausgegeben plus das Objekt
+  
   if (intersects.length > 0) {
     // log clicks
     let clickedObj = intersects[0].object;
