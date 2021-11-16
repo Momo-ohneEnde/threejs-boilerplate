@@ -92,252 +92,43 @@ fetch("./letters_json_grouped_merged.json")
      * Data and Main
      */
 
-     function clearCanvas(){}
+    function clearCanvas() {}
 
-     function initMapView(){
-     // default
-     loadMap();
-     makeKugeln();
-     }
-     
-     
-     function initSinglePlaceView(){
-       // default
-       loadSingleViewBase();
-       loadSingleViewSpheres();
-     }
-     
-     // Funktionen für Kartenansicht
-     function loadMap(){}
-     
-     function makeKugeln(){}
-     // wird bei Klick auf Button Sphere ausgeführt
-     function makeMapSpheres(){}
-     // wird bei Klick auf Button Helix ausgeführt
-     function makeMapHelix(){}
-     
-     // Funktionen für Einzelansicht
-     function loadSingleViewBase() {}
-     function loadSingleViewSpheres(){}
-     function loadSingleViewHelix(){}
+    function initMapView() {
+      // default
+      loadMap();
+      makeKugeln();
+    }
 
+    function initSinglePlaceView() {
+      // default
+      loadSingleViewBase();
+      loadSingleViewSpheres();
+    }
+
+    // Funktionen für Kartenansicht
+    function loadMap() {}
+
+    function makeKugeln() {}
+    // wird bei Klick auf Button Sphere ausgeführt
+    function makeMapSpheres() {}
+    // wird bei Klick auf Button Helix ausgeführt
+    function makeMapHelix() {}
+
+    // Funktionen für Einzelansicht
+    function loadSingleViewBase() {}
+    function loadSingleViewSpheres() {}
+    function loadSingleViewHelix() {}
 
     /**
-     * View 3: Spheres
+     * Map view: SPHERES (View 3)
      */
 
     // vector to which the planes will be facing
     const vector = new Vector3();
 
-    // creation of spheres
-    // i = index position, l = length of dataset, pivot = point around which sphere will be centered
-    function makesphere(i, l, pivot, id, idText, initialsText, firstNameText, lastNameText, dateText) {
-      /* 
-        create planes and position them as a sphere 
-      */
-
-      // Mesh/Plane for letter objects
-      const geometry = new THREE.PlaneGeometry(0.3, 0.3);
-      // DoubleSide -> visisble and not visible sides of objects are rendered
-      const material = new THREE.MeshBasicMaterial({
-        color: 0xcc0000,
-        side: THREE.DoubleSide,
-        transparent: true,
-        opacity: 0.7,
-      });
-      const plane = new THREE.Mesh(geometry, material);
-      plane.name = `${id}`;
-
-      // positioning of planes
-      const phi = Math.acos(-1 + (2 * i) / l);
-      const theta = Math.sqrt(l * Math.PI) * phi;
-
-      plane.position.setFromSphericalCoords(1, phi, theta);
-
-      // makes planes curve so they form a sphere by defining a vector which the planes should face
-      vector.copy(plane.position).multiplyScalar(2);
-      plane.lookAt(vector);
-
-      // add letter objects to pivot bc their position is relative to the pivot
-      pivot.add(plane);
-
-      // add planes to array of clickable objects
-      targets.clickable.push(plane);
-
-      // axes helper for plane
-      /* const axesHelperPlane = new THREE.AxesHelper( 1 );
-      plane.add( axesHelperPlane ); */
-
-      /* 
-        add content to plane 
-      */
-      plane.add(idText);
-      plane.add(initialsText);
-      plane.add(firstNameText);
-      plane.add(lastNameText);
-      plane.add(dateText);
-
-      /* 
-        make content clickable
-      */
-      targets.clickable.push(initialsText);
-      targets.clickable.push(firstNameText);
-      targets.clickable.push(lastNameText);
-      targets.clickable.push(idText);
-
-      /* 
-        position content on plane
-      */
-
-      /* ID */
-      idText.position.y = 0.13;
-      idText.position.x = -0.09;
-      idText.position.z = 0.01;
-
-      // axes helper for idText
-      /* const axesHelperidText = new THREE.AxesHelper( 1 );
-      idText.add( axesHelperidText ); */
-
-      // gui helper for idText
-      idTextGui
-        .add(idText.position, "y")
-        .min(-10)
-        .max(10)
-        .step(0.01)
-        .name(`y_${idText.name}`);
-      idTextGui
-        .add(idText.position, "x")
-        .min(-10)
-        .max(10)
-        .step(0.01)
-        .name(`x_${idText.name}`);
-      idTextGui
-        .add(idText.position, "z")
-        .min(-10)
-        .max(10)
-        .step(0.01)
-        .name(`z_${idText.name}`);
-
-      /* INITIALS */
-      initialsText.position.y = 0.07;
-      initialsText.position.x = -0.06;
-      initialsText.position.z = 0.01;
-
-      // axes helper for initials
-      /* const axesHelperInitials = new THREE.AxesHelper( 1 );
-      initialsText.add( axesHelperInitials ); */
-
-      // gui helper for initials
-      initialsGui
-        .add(initialsText.position, "y")
-        .min(-10)
-        .max(10)
-        .step(0.01)
-        .name(`y_${idText.name}`);
-      initialsGui
-        .add(initialsText.position, "x")
-        .min(-10)
-        .max(10)
-        .step(0.01)
-        .name(`x_${idText.name}`);
-      initialsGui
-        .add(initialsText.position, "z")
-        .min(-10)
-        .max(10)
-        .step(0.01)
-        .name(`z_${idText.name}`);
-
-      /* NAME */
-      firstNameText.position.y = -0.03;
-      firstNameText.position.x = -0.13;
-      firstNameText.position.z = 0.01;
-
-      lastNameText.position.y = -0.06;
-      lastNameText.position.x = -0.13;
-      lastNameText.position.z = 0.01;
-
-      // axes helper for name
-      /* const axesHelperName = new THREE.AxesHelper( 1 );
-  firstNameText.add( axesHelperName ); */
-
-      /* const axesHelperName = new THREE.AxesHelper( 1 );
-  lastNameText.add( axesHelperName ); */
-
-      // gui helper for firstName
-      firstNameGui
-        .add(firstNameText.position, "y")
-        .min(-10)
-        .max(10)
-        .step(0.01)
-        .name(`y_${idText.name}`);
-      firstNameGui
-        .add(firstNameText.position, "x")
-        .min(-10)
-        .max(10)
-        .step(0.01)
-        .name(`x_${idText.name}`);
-      firstNameGui
-        .add(firstNameText.position, "z")
-        .min(-10)
-        .max(10)
-        .step(0.01)
-        .name(`z_${idText.name}`);
-
-      // gui helper for lastName
-      lastNameGui
-        .add(lastNameText.position, "y")
-        .min(-10)
-        .max(10)
-        .step(0.01)
-        .name(`y_${idText.name}`);
-      lastNameGui
-        .add(lastNameText.position, "x")
-        .min(-10)
-        .max(10)
-        .step(0.01)
-        .name(`x_${idText.name}`);
-      lastNameGui
-        .add(lastNameText.position, "z")
-        .min(-10)
-        .max(10)
-        .step(0.01)
-        .name(`z_${idText.name}`);
-
-      /* DATE */
-      dateText.position.y = -0.09;
-      dateText.position.x = -0.13;
-      dateText.position.z = 0.01;
-
-      // axes helper for name
-      /* const axesHelperDate = new THREE.AxesHelper( 1 );
-      dateText.add( axesHelperDate ); */
-
-      // gui helper for name
-      dateGui
-        .add(dateText.position, "y")
-        .min(-10)
-        .max(10)
-        .step(0.01)
-        .name(`y_${idText.name}`);
-      dateGui
-        .add(dateText.position, "x")
-        .min(-10)
-        .max(10)
-        .step(0.01)
-        .name(`x_${idText.name}`);
-      dateGui
-        .add(dateText.position, "z")
-        .min(-10)
-        .max(10)
-        .step(0.01)
-        .name(`z_${idText.name}`);
-    }
-
-    /**
-     * Plotting
-     */
-
     // Plots a sphere around each pivot point (year)
+    // i = index position, l = length of dataset, pivot = point around which sphere will be centered
     function plotting(pivot, letters) {
       for (let i = 0, l = letters.length; i < l; i++) {
         // for later: filtering options
@@ -350,7 +141,46 @@ fetch("./letters_json_grouped_merged.json")
     } */
 
         /* 
-          create text objects with info to put on planes: id, initials, name, date
+        create planes and position them as a sphere 
+      */
+
+        // Mesh/Plane for letter objects
+        const geometry = new THREE.PlaneGeometry(0.3, 0.3);
+        // DoubleSide -> visisble and not visible sides of objects are rendered
+        const material = new THREE.MeshBasicMaterial({
+          color: 0xcc0000,
+          side: THREE.DoubleSide,
+          transparent: true,
+          opacity: 0.7,
+        });
+        const plane = new THREE.Mesh(geometry, material);
+        
+        // set id for naming the plane (z.B. GB01_1_EB005_0_s)
+        const id = letters[i].id;
+        plane.name = `${id}`;
+
+        // positioning of planes
+        const phi = Math.acos(-1 + (2 * i) / l);
+        const theta = Math.sqrt(l * Math.PI) * phi;
+
+        plane.position.setFromSphericalCoords(1, phi, theta);
+
+        // makes planes curve so they form a sphere by defining a vector which the planes should face
+        vector.copy(plane.position).multiplyScalar(2);
+        plane.lookAt(vector);
+
+        // add letter objects to pivot bc their position is relative to the pivot
+        pivot.add(plane);
+
+        // add planes to array of clickable objects
+        targets.clickable.push(plane);
+
+        // axes helper for plane
+        /* const axesHelperPlane = new THREE.AxesHelper( 1 );
+      plane.add( axesHelperPlane ); */
+
+        /* 
+          create text objects with content to put on planes: id, initials, name, date
         */
 
         /* ID */
@@ -429,11 +259,169 @@ fetch("./letters_json_grouped_merged.json")
         // Update the rendering:
         dateText.sync();
 
-        // id for naming the plane
-        const id = letters[i].id;
+        /* 
+        add content to plane 
+      */
+        plane.add(idText);
+        plane.add(initialsText);
+        plane.add(firstNameText);
+        plane.add(lastNameText);
+        plane.add(dateText);
 
-     /* SHPERE */
-     makesphere(i, l, pivot, id, idText, initialsText, firstNameText, lastNameText, dateText);
+        /* 
+        make content clickable
+      */
+        targets.clickable.push(initialsText);
+        targets.clickable.push(firstNameText);
+        targets.clickable.push(lastNameText);
+        targets.clickable.push(idText);
+
+        /* 
+        position content on plane
+      */
+
+        /* ID */
+        idText.position.y = 0.13;
+        idText.position.x = -0.09;
+        idText.position.z = 0.01;
+
+        // axes helper for idText
+        /* const axesHelperidText = new THREE.AxesHelper( 1 );
+      idText.add( axesHelperidText ); */
+
+        // gui helper for idText
+        idTextGui
+          .add(idText.position, "y")
+          .min(-10)
+          .max(10)
+          .step(0.01)
+          .name(`y_${idText.name}`);
+        idTextGui
+          .add(idText.position, "x")
+          .min(-10)
+          .max(10)
+          .step(0.01)
+          .name(`x_${idText.name}`);
+        idTextGui
+          .add(idText.position, "z")
+          .min(-10)
+          .max(10)
+          .step(0.01)
+          .name(`z_${idText.name}`);
+
+        /* INITIALS */
+        initialsText.position.y = 0.07;
+        initialsText.position.x = -0.06;
+        initialsText.position.z = 0.01;
+
+        // axes helper for initials
+        /* const axesHelperInitials = new THREE.AxesHelper( 1 );
+      initialsText.add( axesHelperInitials ); */
+
+        // gui helper for initials
+        initialsGui
+          .add(initialsText.position, "y")
+          .min(-10)
+          .max(10)
+          .step(0.01)
+          .name(`y_${idText.name}`);
+        initialsGui
+          .add(initialsText.position, "x")
+          .min(-10)
+          .max(10)
+          .step(0.01)
+          .name(`x_${idText.name}`);
+        initialsGui
+          .add(initialsText.position, "z")
+          .min(-10)
+          .max(10)
+          .step(0.01)
+          .name(`z_${idText.name}`);
+
+        /* NAME */
+        firstNameText.position.y = -0.03;
+        firstNameText.position.x = -0.13;
+        firstNameText.position.z = 0.01;
+
+        lastNameText.position.y = -0.06;
+        lastNameText.position.x = -0.13;
+        lastNameText.position.z = 0.01;
+
+        // axes helper for name
+        /* const axesHelperName = new THREE.AxesHelper( 1 );
+  firstNameText.add( axesHelperName ); */
+
+        /* const axesHelperName = new THREE.AxesHelper( 1 );
+  lastNameText.add( axesHelperName ); */
+
+        // gui helper for firstName
+        firstNameGui
+          .add(firstNameText.position, "y")
+          .min(-10)
+          .max(10)
+          .step(0.01)
+          .name(`y_${idText.name}`);
+        firstNameGui
+          .add(firstNameText.position, "x")
+          .min(-10)
+          .max(10)
+          .step(0.01)
+          .name(`x_${idText.name}`);
+        firstNameGui
+          .add(firstNameText.position, "z")
+          .min(-10)
+          .max(10)
+          .step(0.01)
+          .name(`z_${idText.name}`);
+
+        // gui helper for lastName
+        lastNameGui
+          .add(lastNameText.position, "y")
+          .min(-10)
+          .max(10)
+          .step(0.01)
+          .name(`y_${idText.name}`);
+        lastNameGui
+          .add(lastNameText.position, "x")
+          .min(-10)
+          .max(10)
+          .step(0.01)
+          .name(`x_${idText.name}`);
+        lastNameGui
+          .add(lastNameText.position, "z")
+          .min(-10)
+          .max(10)
+          .step(0.01)
+          .name(`z_${idText.name}`);
+
+        /* DATE */
+        dateText.position.y = -0.09;
+        dateText.position.x = -0.13;
+        dateText.position.z = 0.01;
+
+        // axes helper for name
+        /* const axesHelperDate = new THREE.AxesHelper( 1 );
+      dateText.add( axesHelperDate ); */
+
+        // gui helper for name
+        dateGui
+          .add(dateText.position, "y")
+          .min(-10)
+          .max(10)
+          .step(0.01)
+          .name(`y_${idText.name}`);
+        dateGui
+          .add(dateText.position, "x")
+          .min(-10)
+          .max(10)
+          .step(0.01)
+          .name(`x_${idText.name}`);
+        dateGui
+          .add(dateText.position, "z")
+          .min(-10)
+          .max(10)
+          .step(0.01)
+          .name(`z_${idText.name}`);
 
         /* AXES HELPER for pivot */
         /* const axesHelperPivot = new THREE.AxesHelper( 1 );
