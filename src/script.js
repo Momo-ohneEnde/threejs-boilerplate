@@ -85,7 +85,8 @@ fetch("./letters_json_grouped_merged.json")
       // default
       // später: Kugelansicht als default, dann wird hier mapViewKugeln() aufgerufen
       //(Funktion mapViewSpheres wird bei Klick auf "Spheres"-Button aufgerufen)
-      mapViewSpheres();
+      mapViewKugeln();
+      //mapViewSpheres();
     }
     init();
 
@@ -94,7 +95,44 @@ fetch("./letters_json_grouped_merged.json")
     /* 1) Default: Kugelansicht */
     // Karte laden, dann Aufruf von makeKugeln()
     function mapViewKugeln() {
-      
+      const roughnessMipmapper = new RoughnessMipmapper(renderer);
+      // load gltf basemap
+      const loader = new GLTFLoader();
+      loader.load("/gltf/goethe_basemap.glb", function (gltf) {
+        gltf.scene.traverse(function (child) {
+          // travese goes through all the children of an object
+          if (child.isMesh) {
+            roughnessMipmapper.generateMipmaps(child.material); // apply mipmapper before rendering
+          }
+        });
+
+        // add basemap to scene (!gltf has its own scene)
+        scene.add(gltf.scene);
+
+        // debug: log scene graph
+        console.log(scene);
+
+        // add year marker
+        scene.children
+          .filter((i) => i.name == "Scene")[0] // scene contains another group "scene" which contains all objects in the gltf file created in blender (Karte und Ortsmarker)
+          .children.filter(
+            (i) => ["Frankfurt", "Darmstadt", "Wiesbaden"].includes(i.name) // temporary! filters which objects (Ortsmarker) from the scene group should be included
+          )
+          .forEach((placeMarker) => {
+            // loop over Ortsmarker objects
+            try {
+              const city = data[placeMarker.name]; // saves name of place from json data
+              console.log(city, placeMarker.name); // logs city names
+
+              makeKugeln(placeMarker, city);
+            } catch (error) {
+              console.log(error);
+            }
+          });
+
+        roughnessMipmapper.dispose();
+        //render();
+      });
     }
 
     /* 2) Briefnetz-Ansicht */
@@ -112,9 +150,6 @@ fetch("./letters_json_grouped_merged.json")
 
     function mapViewSpheres() {
       const roughnessMipmapper = new RoughnessMipmapper(renderer);
-      /**
-       * GLTF: Load Map (Karte + Ortsmarker)
-       */
       // load gltf basemap
       const loader = new GLTFLoader();
       loader.load("/gltf/goethe_basemap.glb", function (gltf) {
@@ -212,7 +247,65 @@ fetch("./letters_json_grouped_merged.json")
 
     /* 1) Kugeln */
     // wird in init aufgerufen
-    function makeKugeln() {}
+    function makeKugeln(placeMarker, city) {
+      // erhält übergeben: Ortsobjekt
+      // Iteration über Jahre, dann Objekten in Jahren
+      // Anzahl der Objekte ermitteln
+      let letterCount = 0;
+      Object.keys(city).forEach((year) => {
+        let yearArray = city[`${year}`];
+        // loop over array with letter objects
+        for (let i = 0; i < yearArray.length; i++) {
+          letterCount++;
+        }
+      });
+      console.log(letterCount);
+
+      // Anzahl der Objekte als Textobjekt
+      const letterNumMarker = new Text();
+      letterNumMarker.name = `letterNumMarker${letterCount}`;
+
+      // Set content of text object
+      letterNumMarker.text = letterCount;
+
+      // Set styling properties of text object
+      letterNumMarker.fontSize = 0.7;
+      letterNumMarker.color = 0xFFFFFF;
+
+      // Update the rendering:
+      letterNumMarker.sync();
+
+      // mithilfe des Interpolators den Durchmesser der Kugel ermitteln
+      // Kugel mit three.js erstellen
+      const geometryKugel = new THREE.SphereGeometry(1, 32, 16);
+      const materialKugel = new THREE.MeshBasicMaterial({
+        color: 0xcc0000,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.7,
+      });
+      const kugel = new THREE.Mesh(geometryKugel, materialKugel);
+      // Kugel auf Karte platzieren
+      placeMarker.add(kugel);
+      // Kugel positionieren
+      kugel.position.y = 2;
+      // Text auf Kugel
+      kugel.add(letterNumMarker);
+    }
+
+    function getMaxLettersPerPlace() {
+      // iteration über Orte, Anzahl der Briefe zählen, in Array schreiben, dann max()
+    }
+
+    function getMinLettersPerPlace() {}
+
+    /*     const scale = d3
+      .scaleSequential()
+      .domain([0, 400])
+      .interpolator(d3.interpolate(1, 20));
+    //undefined
+    scale(355);
+    // 17.8625 */
 
     /* 2) Briefnetz */
 
@@ -543,7 +636,7 @@ fetch("./letters_json_grouped_merged.json")
       makeSpheresForSingleView();
     }
 
-    function singlePlaceViewHelix(){
+    function singlePlaceViewHelix() {
       loadSingleViewBase();
       makeHelixForSingleView();
     }
