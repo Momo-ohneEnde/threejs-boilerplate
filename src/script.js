@@ -23,23 +23,6 @@ fetch("./letters_json_grouped_merged.json")
     return data;
   })
   .then((data) => {
-    /* Ideas: Code Structuring 
- 
- Main Functions:
- * clear canvas
- * make map view (Kartenansicht) -> webGl renderer
-   * make map
-   * make spheres
-   * make helix
-   * make kugel
-       * make letter network
- * make single place view (Einzelansicht) -> css3D renderer
-   * make spheres single view
-   * make helix single view
- 
- 
- */
-
     /**
      * Settings
      */
@@ -89,47 +72,155 @@ fetch("./letters_json_grouped_merged.json")
     const targets = { table: [], sphere: [], helix: [], clickable: [] };
 
     /**
-     * Data and Main
+     * Data and Main Functions
      */
 
-    function clearCanvas() {}
-
-    function initMapView() {
-      // default
-      loadMap();
-      makeKugeln();
+    /* CLEAR */
+    function clearCanvas() {
+      // ToDo
     }
 
-    function initSinglePlaceView() {
+    /* INIT */
+    function init() {
       // default
-      loadSingleViewBase();
-      loadSingleViewSpheres();
+      // später: Kugelansicht als default, dann wird hier mapViewKugeln() aufgerufen
+      //(Funktion mapViewSpheres wird bei Klick auf "Spheres"-Button aufgerufen)
+      mapViewSpheres();
+    }
+    init();
+
+    /* CREATE MAP VIEWS */
+
+    /* 1) Default: Kugelansicht */
+    // Karte laden, dann Aufruf von makeKugeln()
+    function mapViewKugeln() {
+      
     }
 
-    // Funktionen für Kartenansicht
-    function loadMap() {}
+    /* 2) Briefnetz-Ansicht */
 
-    function makeKugeln() {}
-    // wird bei Klick auf Button Sphere ausgeführt
-    function makeMapSpheres() {}
-    // wird bei Klick auf Button Helix ausgeführt
-    function makeMapHelix() {}
+    function mapViewLetterNetwork() {
+      // Code
+      // Karte laden
+      // Aufruf von makeLetterNetwork()
+    }
 
-    // Funktionen für Einzelansicht
-    function loadSingleViewBase() {}
-    function loadSingleViewSpheres() {}
-    function loadSingleViewHelix() {}
-
-    /**
-     * Map view: SPHERES (View 3)
-     */
+    /* 3) Sphären-Ansicht*/
 
     // vector to which the planes will be facing
     const vector = new Vector3();
 
+    function mapViewSpheres() {
+      const roughnessMipmapper = new RoughnessMipmapper(renderer);
+      /**
+       * GLTF: Load Map (Karte + Ortsmarker)
+       */
+      // load gltf basemap
+      const loader = new GLTFLoader();
+      loader.load("/gltf/goethe_basemap.glb", function (gltf) {
+        gltf.scene.traverse(function (child) {
+          // travese goes through all the children of an object
+          if (child.isMesh) {
+            roughnessMipmapper.generateMipmaps(child.material); // apply mipmapper before rendering
+          }
+        });
+
+        // add basemap to scene (!gltf has its own scene)
+        scene.add(gltf.scene);
+
+        // debug: log scene graph
+        console.log(scene);
+
+        scene.children
+          .filter((i) => i.name == "Scene")[0] // scene contains another group "scene" which contains all objects in the gltf file created in blender (Karte und Ortsmarker)
+          .children.filter(
+            (i) => ["Frankfurt", "Darmstadt", "Wiesbaden"].includes(i.name) // temporary! filters which objects (Ortsmarker) from the scene group should be included
+          )
+          .forEach((placeMarker) => {
+            // loop over Ortsmarker objects
+            try {
+              const city = data[placeMarker.name]; // saves name of place from json data
+              console.log(city, placeMarker.name); // logs city names
+              // Array with years (will later be provided by jQuery time filter)
+              [
+                "1764",
+                "1765",
+                "1766",
+                "1767",
+                "1768",
+                "1769",
+                "1770",
+                "1771",
+                "1772",
+              ].forEach((year, index) => {
+                let yearsOfCity = Object.keys(city); // save years associated to each city in an Array
+
+                // test: little spheres in middle instead of text with year
+                //let s = sphere(0.1);
+                //s.position.y += 1 + index * 2.5;
+
+                // create text object
+                const yearMarker = new Text();
+                yearMarker.name = `yearMarker${year}`;
+
+                // Set content of text object (property "text")
+                yearMarker.text = year;
+
+                // Set styling properties of text object
+                yearMarker.fontSize = 0.2;
+                yearMarker.color = 0x9966ff;
+
+                // Set position of text object
+                // distance of text objects to next text object above
+                yearMarker.position.y += 1 + index * 2.5;
+
+                // Update the rendering:
+                yearMarker.sync();
+
+                // add yearMarker object as child of placeMarker object -> yearMarker positioned relative to placeMarker
+                placeMarker.add(yearMarker);
+
+                // test whether years in the time filter array (year) are contained in the list of years associated to each city
+                // if yes, plot the letter objects (here: as sphere)
+                // yearMarker = pivot, city[year] = data = array with all letter objects associated to this year
+                if (yearsOfCity.includes(year)) {
+                  let lettersFromYear = city[year];
+                  makeSpheresForMap(yearMarker, lettersFromYear);
+                }
+
+                // add yearMarkers to array of clickable objects
+                targets.clickable.push(yearMarker);
+              });
+            } catch (error) {
+              console.log(error);
+            }
+          });
+
+        roughnessMipmapper.dispose();
+        //render();
+      });
+    }
+
+    /* 4) Helix-Ansicht */
+    function mapViewHelix() {
+      // Code
+      // Karte laden
+      // Aufruf von makeHelixForMap()
+    }
+
+    /* FUNCTIONS FOR MAP VIEW */
+
+    /* 1) Kugeln */
+    // wird in init aufgerufen
+    function makeKugeln() {}
+
+    /* 2) Briefnetz */
+
+    /* 3) Sphären */
+    // wird bei Klick auf Button Sphäre ausgeführt
     // Plots a sphere around each pivot point (year)
     // i = index position, l = length of dataset, pivot = point around which sphere will be centered
-    function plotting(pivot, letters) {
+    function makeSpheresForMap(pivot, letters) {
       for (let i = 0, l = letters.length; i < l; i++) {
         // for later: filtering options
         /* if (data[i].receiverGender == "Weiblich") {
@@ -154,7 +245,7 @@ fetch("./letters_json_grouped_merged.json")
           opacity: 0.7,
         });
         const plane = new THREE.Mesh(geometry, material);
-        
+
         // set id for naming the plane (z.B. GB01_1_EB005_0_s)
         const id = letters[i].id;
         plane.name = `${id}`;
@@ -440,110 +531,33 @@ fetch("./letters_json_grouped_merged.json")
       }
     }
 
-    // GLTF
+    /* 4) Helix */
+    // wird bei Klick auf Button Helix ausgeführt
+    function makeHelixForMap() {}
 
-    // sphere for test
-    /* function sphere(diameter) {
-    var geometry = new THREE.SphereBufferGeometry(diameter, 128, 128);
-    //Material to apply to the cube (green)
-    var material = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
-    //Applies material to BoxGeometry
-    var cube = new THREE.Mesh(geometry, material);
-    //Adds cube to the scene
-    return cube;} */
+    /* CREATE SINGLE PLACE VIEWS (Einzelansicht)*/
 
-    /**
-     * GLTF: Load Map (Karte + Ortsmarker)
-     */
-    function loadMap() {
-      const roughnessMipmapper = new RoughnessMipmapper(renderer);
-
-      // load gltf basemap
-      const loader = new GLTFLoader();
-      loader.load("/gltf/goethe_basemap.glb", function (gltf) {
-        gltf.scene.traverse(function (child) {
-          // travese goes through all the children of an object
-          if (child.isMesh) {
-            roughnessMipmapper.generateMipmaps(child.material); // apply mipmapper before rendering
-          }
-        });
-
-        // add basemap to scene (!gltf has its own scene)
-        scene.add(gltf.scene);
-
-        // debug: log scene graph
-        console.log(scene);
-
-        scene.children
-          .filter((i) => i.name == "Scene")[0] // scene contains another group "scene" which contains all objects in the gltf file created in blender (Karte und Ortsmarker)
-          .children.filter(
-            (i) => ["Frankfurt", "Darmstadt", "Wiesbaden"].includes(i.name) // temporary! filters which objects (Ortsmarker) from the scene group should be included
-          )
-          .forEach((placeMarker) => {
-            // loop over Ortsmarker objects
-            try {
-              const city = data[placeMarker.name]; // saves name of place from json data
-              console.log(city, placeMarker.name); // logs city names
-              // Array with years (will later be provided by jQuery time filter)
-              [
-                "1764",
-                "1765",
-                "1766",
-                "1767",
-                "1768",
-                "1769",
-                "1770",
-                "1771",
-                "1772",
-              ].forEach((year, index) => {
-                let yearsOfCity = Object.keys(city); // save years associated to each city in an Array
-
-                // test: little spheres in middle instead of text with year
-                //let s = sphere(0.1);
-                //s.position.y += 1 + index * 2.5;
-
-                // create text object
-                const yearMarker = new Text();
-                yearMarker.name = `yearMarker${year}`;
-
-                // Set content of text object (property "text")
-                yearMarker.text = year;
-
-                // Set styling properties of text object
-                yearMarker.fontSize = 0.2;
-                yearMarker.color = 0x9966ff;
-
-                // Set position of text object
-                // distance of text objects to next text object above
-                yearMarker.position.y += 1 + index * 2.5;
-
-                // Update the rendering:
-                yearMarker.sync();
-
-                // add yearMarker object as child of placeMarker object -> yearMarker positioned relative to placeMarker
-                placeMarker.add(yearMarker);
-
-                // test whether years in the time filter array (year) are contained in the list of years associated to each city
-                // if yes, plot the letter objects (here: as sphere)
-                // yearMarker = pivot, city[year] = data = array with all letter objects associated to this year
-                if (yearsOfCity.includes(year)) {
-                  let lettersFromYear = city[year];
-                  plotting(yearMarker, lettersFromYear);
-                }
-
-                // add yearMarkers to array of clickable objects
-                targets.clickable.push(yearMarker);
-              });
-            } catch (error) {
-              console.log(error);
-            }
-          });
-
-        roughnessMipmapper.dispose();
-        //render();
-      });
+    function initSinglePlaceView() {
+      // default: Sphären
+      loadSingleViewBase();
+      makeSpheresForSingleView();
     }
-    loadMap();
+
+    function singlePlaceViewHelix(){
+      loadSingleViewBase();
+      makeHelixForSingleView();
+    }
+
+    /* FUNCTIONS FOR SINGLE PLACE VIEW */
+
+    /* Basis für Einzelansicht */
+    function loadSingleViewBase() {}
+
+    /* Einzelansicht: Sphären */
+    function makeSpheresForSingleView() {}
+
+    /* Einzelansicht: Helix */
+    function makeHelixForSingleView() {}
 
     /**
      * Helper Geometries
