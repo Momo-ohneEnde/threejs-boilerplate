@@ -5,8 +5,8 @@ const path = require('path')
 
 module.exports = {
     // specify path to js file which should be loaded
-    //entry: path.resolve(__dirname, '../src/script.js'),
-    entry: path.resolve(__dirname, '../src/script_ohne_fetch.js'),
+    entry: path.resolve(__dirname, '../src/script.js'),
+    //entry: path.resolve(__dirname, '../src/script_ohne_fetch.js'),
     //entry: path.resolve(__dirname, '../src/experiments.js'),
     //entry: path.resolve(__dirname, '../src/script_periodic.js'),
     //entry: path.resolve(__dirname, '../src/script_goethe.js'),

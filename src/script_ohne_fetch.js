@@ -4899,6 +4899,39 @@ const data = {
   },
 };
 
+/**
+ * Main:
+ */
+
+function clearCanvas(){}
+
+function initMapView(){
+// default
+loadMap();
+makeKugeln();
+}
+
+
+function initSinglePlaceView(){
+  // default
+  loadSingleViewBase();
+  loadSingleViewSpheres();
+}
+
+// Funktionen für Kartenansicht
+function loadMap(){}
+
+function makeKugeln(){}
+// wird bei Klick auf Button Sphere ausgeführt
+function makeMapSpheres(){}
+// wird bei Klick auf Button Helix ausgeführt
+function makeMapHelix(){}
+
+// Funktionen für Einzelansicht
+function loadSingleViewBase() {}
+function loadSingleViewSpheres(){}
+function loadSingleViewHelix(){}
+
 
 /**
  * View 3: Spheres
@@ -4964,6 +4997,7 @@ function makesphere(i, l, pivot, id, idText, initialsText, firstNameText, lastNa
         targets.clickable.push(initialsText);
         targets.clickable.push(firstNameText);
         targets.clickable.push(lastNameText);
+        targets.clickable.push(idText);
 
   /* 
   position content on plane
@@ -5263,94 +5297,94 @@ function plotting(pivot, letters) {
  * GLTF: Load Map (Karte + Ortsmarker)
  */
 function loadMap() {
+  const roughnessMipmapper = new RoughnessMipmapper(renderer);
 
-} 
-const roughnessMipmapper = new RoughnessMipmapper(renderer);
-
-// load gltf basemap
-const loader = new GLTFLoader();
-loader.load("/gltf/goethe_basemap.glb", function (gltf) {
-  gltf.scene.traverse(function (child) {
-    // travese goes through all the children of an object
-    if (child.isMesh) {
-      roughnessMipmapper.generateMipmaps(child.material); // apply mipmapper before rendering
-    }
-  });
-
-  // add basemap to scene (!gltf has its own scene)
-  scene.add(gltf.scene);
-
-  // debug: log scene graph
-  console.log(scene);
-
-  scene.children
-    .filter((i) => i.name == "Scene")[0] // scene contains another group "scene" which contains all objects in the gltf file created in blender (Karte und Ortsmarker)
-    .children.filter(
-      (i) => ["Frankfurt", "Darmstadt", "Wiesbaden"].includes(i.name) // temporary! filters which objects (Ortsmarker) from the scene group should be included
-    )
-    .forEach((placeMarker) => {
-      // loop over Ortsmarker objects
-      try {
-        const city = data[placeMarker.name]; // saves name of place from json data
-        console.log(city, placeMarker.name); // logs city names
-        // Array with years (will later be provided by jQuery time filter)
-        [
-          "1764",
-          "1765",
-          "1766",
-          "1767",
-          "1768",
-          "1769",
-          "1770",
-          "1771",
-          "1772",
-        ].forEach((year, index) => {
-          let yearsOfCity = Object.keys(city); // save years associated to each city in an Array
-
-          // test: little spheres in middle instead of text with year
-          //let s = sphere(0.1);
-          //s.position.y += 1 + index * 2.5;
-
-          // create text object
-          const yearMarker = new Text();
-          yearMarker.name = `yearMarker${year}`;
-
-          // Set content of text object (property "text")
-          yearMarker.text = year;
-
-          // Set styling properties of text object
-          yearMarker.fontSize = 0.2;
-          yearMarker.color = 0x9966ff;
-
-          // Set position of text object
-          // distance of text objects to next text object above
-          yearMarker.position.y += 1 + index * 2.5;
-
-          // Update the rendering:
-          yearMarker.sync();
-
-          // add yearMarker object as child of placeMarker object -> yearMarker positioned relative to placeMarker
-          placeMarker.add(yearMarker);
-
-          // test whether years in the time filter array (year) are contained in the list of years associated to each city
-          // if yes, plot the letter objects (here: as sphere)
-          // yearMarker = pivot, city[year] = data = array with all letter objects associated to this year
-          if (yearsOfCity.includes(year)) {
-            let lettersFromYear = city[year];
-            plotting(yearMarker, lettersFromYear);
-          }
-
-          // add yearMarkers to array of clickable objects
-          targets.clickable.push(yearMarker);
-        });
-      } catch (error) {
-        console.log(error);
+  // load gltf basemap
+  const loader = new GLTFLoader();
+  loader.load("/gltf/goethe_basemap.glb", function (gltf) {
+    gltf.scene.traverse(function (child) {
+      // travese goes through all the children of an object
+      if (child.isMesh) {
+        roughnessMipmapper.generateMipmaps(child.material); // apply mipmapper before rendering
       }
     });
-
-  roughnessMipmapper.dispose();
-  //render();
-});
+  
+    // add basemap to scene (!gltf has its own scene)
+    scene.add(gltf.scene);
+  
+    // debug: log scene graph
+    console.log(scene);
+  
+    scene.children
+      .filter((i) => i.name == "Scene")[0] // scene contains another group "scene" which contains all objects in the gltf file created in blender (Karte und Ortsmarker)
+      .children.filter(
+        (i) => ["Frankfurt", "Darmstadt", "Wiesbaden"].includes(i.name) // temporary! filters which objects (Ortsmarker) from the scene group should be included
+      )
+      .forEach((placeMarker) => {
+        // loop over Ortsmarker objects
+        try {
+          const city = data[placeMarker.name]; // saves name of place from json data
+          console.log(city, placeMarker.name); // logs city names
+          // Array with years (will later be provided by jQuery time filter)
+          [
+            "1764",
+            "1765",
+            "1766",
+            "1767",
+            "1768",
+            "1769",
+            "1770",
+            "1771",
+            "1772",
+          ].forEach((year, index) => {
+            let yearsOfCity = Object.keys(city); // save years associated to each city in an Array
+  
+            // test: little spheres in middle instead of text with year
+            //let s = sphere(0.1);
+            //s.position.y += 1 + index * 2.5;
+  
+            // create text object
+            const yearMarker = new Text();
+            yearMarker.name = `yearMarker${year}`;
+  
+            // Set content of text object (property "text")
+            yearMarker.text = year;
+  
+            // Set styling properties of text object
+            yearMarker.fontSize = 0.2;
+            yearMarker.color = 0x9966ff;
+  
+            // Set position of text object
+            // distance of text objects to next text object above
+            yearMarker.position.y += 1 + index * 2.5;
+  
+            // Update the rendering:
+            yearMarker.sync();
+  
+            // add yearMarker object as child of placeMarker object -> yearMarker positioned relative to placeMarker
+            placeMarker.add(yearMarker);
+  
+            // test whether years in the time filter array (year) are contained in the list of years associated to each city
+            // if yes, plot the letter objects (here: as sphere)
+            // yearMarker = pivot, city[year] = data = array with all letter objects associated to this year
+            if (yearsOfCity.includes(year)) {
+              let lettersFromYear = city[year];
+              plotting(yearMarker, lettersFromYear);
+            }
+  
+            // add yearMarkers to array of clickable objects
+            targets.clickable.push(yearMarker);
+          });
+        } catch (error) {
+          console.log(error);
+        }
+      });
+  
+    roughnessMipmapper.dispose();
+    //render();
+  });
+} 
+loadMap();
 
 /**
  * Helper Geometries
@@ -5530,9 +5564,14 @@ document.addEventListener("click", (e) => {
 
     /* Define click events for different objects*/
 
-    // click on letter object (planes) -> link to platform
+    // click on letter object (planes)
+    // nur zum Test
     if (clickedObj.geometry.type == "PlaneGeometry") {
       console.log("Briefelement angeklickt");
+    }
+
+    // click on id -> link to platform
+    if(clickedObj.name.includes("GB01 Nr.")){
       // öffnet neuen Tab mit Beispielbrief
       window.open("https://goethe-biographica.de/id/GB02_BR005_0");
       // perspektivisch (wenn Briefe auf Plattform verlinkt)

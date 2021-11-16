@@ -1,4 +1,3 @@
-
 /**
  * Imports
  */
@@ -13,7 +12,7 @@ import { RoughnessMipmapper } from "three/examples/jsm/utils/RoughnessMipmapper.
 import { Text } from "troika-three-text";
 import * as R from "ramda";
 
-fetch("letters_json_grouped_merged.json")
+fetch("./letters_json_grouped_merged.json")
   // log response to see whether data is loaded
   /* .then(response => {
       console.log('Response:', response)
@@ -24,8 +23,7 @@ fetch("letters_json_grouped_merged.json")
     return data;
   })
   .then((data) => {
-
-/* Ideas: Code Structuring 
+    /* Ideas: Code Structuring 
  
  Main Functions:
  * clear canvas
@@ -42,57 +40,86 @@ fetch("letters_json_grouped_merged.json")
  
  */
 
-/**
- * Settings
- */
+    /**
+     * Settings
+     */
 
-const SETTINGS = {
-  render_wireframe: false,
-  show_edges: false,
-};
+    const SETTINGS = {
+      render_wireframe: false,
+      show_edges: false,
+    };
 
-/**
- * Sizes
- */
+    /**
+     * Sizes
+     */
 
-// Anpassung an Größe des Browsers
-const sizes = {
-  width: window.innerWidth,
-  height: window.innerHeight,
-};
+    // Anpassung an Größe des Browsers
+    const sizes = {
+      width: window.innerWidth,
+      height: window.innerHeight,
+    };
 
-/**
- * Canvas
- */
+    /**
+     * Canvas
+     */
 
-// looks up canvas element in html where 3D graphic should be drawn
-const canvas = document.querySelector("canvas.webgl");
+    // looks up canvas element in html where 3D graphic should be drawn
+    const canvas = document.querySelector("canvas.webgl");
 
-/**
- * Renderer
- */
+    /**
+     * Renderer
+     */
 
-const renderer = new THREE.WebGLRenderer({
-  canvas: canvas,
-  // makes background transparent
-  alpha: true,
-});
-renderer.setSize(sizes.width, sizes.height);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    const renderer = new THREE.WebGLRenderer({
+      canvas: canvas,
+      // makes background transparent
+      alpha: true,
+    });
+    renderer.setSize(sizes.width, sizes.height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-/**
- * Scene
- */
-const scene = new THREE.Scene();
+    /**
+     * Scene
+     */
+    const scene = new THREE.Scene();
 
-/**
- * Variables
- */
-const targets = { table: [], sphere: [], helix: [], clickable: [] };
+    /**
+     * Variables
+     */
+    const targets = { table: [], sphere: [], helix: [], clickable: [] };
 
-/**
- * Data and Main
- */
+    /**
+     * Data and Main
+     */
+
+     function clearCanvas(){}
+
+     function initMapView(){
+     // default
+     loadMap();
+     makeKugeln();
+     }
+     
+     
+     function initSinglePlaceView(){
+       // default
+       loadSingleViewBase();
+       loadSingleViewSpheres();
+     }
+     
+     // Funktionen für Kartenansicht
+     function loadMap(){}
+     
+     function makeKugeln(){}
+     // wird bei Klick auf Button Sphere ausgeführt
+     function makeMapSpheres(){}
+     // wird bei Klick auf Button Helix ausgeführt
+     function makeMapHelix(){}
+     
+     // Funktionen für Einzelansicht
+     function loadSingleViewBase() {}
+     function loadSingleViewSpheres(){}
+     function loadSingleViewHelix(){}
 
 
     /**
@@ -104,16 +131,7 @@ const targets = { table: [], sphere: [], helix: [], clickable: [] };
 
     // creation of spheres
     // i = index position, l = length of dataset, pivot = point around which sphere will be centered
-    function makesphere(
-      i,
-      l,
-      pivot,
-      id,
-      idText,
-      initialsText,
-      nameText,
-      dateText
-    ) {
+    function makesphere(i, l, pivot, id, idText, initialsText, firstNameText, lastNameText, dateText) {
       /* 
         create planes and position them as a sphere 
       */
@@ -155,14 +173,17 @@ const targets = { table: [], sphere: [], helix: [], clickable: [] };
       */
       plane.add(idText);
       plane.add(initialsText);
-      plane.add(nameText);
+      plane.add(firstNameText);
+      plane.add(lastNameText);
       plane.add(dateText);
 
       /* 
         make content clickable
       */
       targets.clickable.push(initialsText);
-      targets.clickable.push(nameText);
+      targets.clickable.push(firstNameText);
+      targets.clickable.push(lastNameText);
+      targets.clickable.push(idText);
 
       /* 
         position content on plane
@@ -227,37 +248,64 @@ const targets = { table: [], sphere: [], helix: [], clickable: [] };
         .name(`z_${idText.name}`);
 
       /* NAME */
-      nameText.position.y = -0.03;
-      nameText.position.x = -0.12;
-      nameText.position.z = 0.01;
+      firstNameText.position.y = -0.03;
+      firstNameText.position.x = -0.13;
+      firstNameText.position.z = 0.01;
+
+      lastNameText.position.y = -0.06;
+      lastNameText.position.x = -0.13;
+      lastNameText.position.z = 0.01;
 
       // axes helper for name
       /* const axesHelperName = new THREE.AxesHelper( 1 );
-      nameText.add( axesHelperName ); */
+  firstNameText.add( axesHelperName ); */
 
-      // gui helper for name
-      nameGui
-        .add(nameText.position, "y")
+      /* const axesHelperName = new THREE.AxesHelper( 1 );
+  lastNameText.add( axesHelperName ); */
+
+      // gui helper for firstName
+      firstNameGui
+        .add(firstNameText.position, "y")
         .min(-10)
         .max(10)
         .step(0.01)
         .name(`y_${idText.name}`);
-      nameGui
-        .add(nameText.position, "x")
+      firstNameGui
+        .add(firstNameText.position, "x")
         .min(-10)
         .max(10)
         .step(0.01)
         .name(`x_${idText.name}`);
-      nameGui
-        .add(nameText.position, "z")
+      firstNameGui
+        .add(firstNameText.position, "z")
+        .min(-10)
+        .max(10)
+        .step(0.01)
+        .name(`z_${idText.name}`);
+
+      // gui helper for lastName
+      lastNameGui
+        .add(lastNameText.position, "y")
+        .min(-10)
+        .max(10)
+        .step(0.01)
+        .name(`y_${idText.name}`);
+      lastNameGui
+        .add(lastNameText.position, "x")
+        .min(-10)
+        .max(10)
+        .step(0.01)
+        .name(`x_${idText.name}`);
+      lastNameGui
+        .add(lastNameText.position, "z")
         .min(-10)
         .max(10)
         .step(0.01)
         .name(`z_${idText.name}`);
 
       /* DATE */
-      dateText.position.y = -0.06;
-      dateText.position.x = -0.12;
+      dateText.position.y = -0.09;
+      dateText.position.x = -0.13;
       dateText.position.z = 0.01;
 
       // axes helper for name
@@ -338,19 +386,33 @@ const targets = { table: [], sphere: [], helix: [], clickable: [] };
         initialsText.sync();
 
         /* NAME */
-        const nameText = new Text();
-        // Scenegraph in Console: e.g. name="Charlotte Buff"
-        nameText.name = `name_${letters[i].receiverFormatted}`;
+        const firstNameText = new Text();
+        // Scenegraph in Console: e.g. name="Charlotte"
+        firstNameText.name = `name_${letters[i].receiverFirstName}`;
 
         // Set content of text object (property "text")
-        nameText.text = letters[i].receiverFormatted;
+        firstNameText.text = letters[i].receiverFirstName;
 
         // Set styling properties of text object
-        nameText.fontSize = 0.02;
-        nameText.color = 0xffffff;
+        firstNameText.fontSize = 0.02;
+        firstNameText.color = 0xffffff;
 
         // Update the rendering:
-        nameText.sync();
+        firstNameText.sync();
+
+        const lastNameText = new Text();
+        // Scenegraph in Console: e.g. name="Buff"
+        lastNameText.name = `name_${letters[i].receiverLastName}`;
+
+        // Set content of text object (property "text")
+        lastNameText.text = letters[i].receiverLastName;
+
+        // Set styling properties of text object
+        lastNameText.fontSize = 0.02;
+        lastNameText.color = 0xffffff;
+
+        // Update the rendering:
+        lastNameText.sync();
 
         /* DATE */
         const dateText = new Text();
@@ -370,8 +432,8 @@ const targets = { table: [], sphere: [], helix: [], clickable: [] };
         // id for naming the plane
         const id = letters[i].id;
 
-        /* SHPERE */
-        makesphere(i, l, pivot, id, idText, initialsText, nameText, dateText);
+     /* SHPERE */
+     makesphere(i, l, pivot, id, idText, initialsText, firstNameText, lastNameText, dateText);
 
         /* AXES HELPER for pivot */
         /* const axesHelperPivot = new THREE.AxesHelper( 1 );
@@ -380,20 +442,6 @@ const targets = { table: [], sphere: [], helix: [], clickable: [] };
         // Text
         /* const myText = new Text();
         pivot.add(myText);
-
-    // Set properties to configure:
-    myText.text = "Hello world!";
-    myText.fontSize = 0.2;
-    // myText.position.z = -2;
-    myText.color = 0x9966ff;
-
-    myText.position.x = Math.random() - 0.5;
-    myText.position.y = Math.random();
-    myText.position.z = Math.random() - 0.5;
-
-    // Update the rendering:
-    myText.sync();
-    targets.clickable.push(myText);
  */
         //
 
@@ -419,93 +467,95 @@ const targets = { table: [], sphere: [], helix: [], clickable: [] };
     /**
      * GLTF: Load Map (Karte + Ortsmarker)
      */
+    function loadMap() {
+      const roughnessMipmapper = new RoughnessMipmapper(renderer);
 
-    const roughnessMipmapper = new RoughnessMipmapper(renderer);
-
-    // load gltf basemap
-    const loader = new GLTFLoader();
-    loader.load("/gltf/goethe_basemap.glb", function (gltf) {
-      gltf.scene.traverse(function (child) {
-        // travese goes through all the children of an object
-        if (child.isMesh) {
-          roughnessMipmapper.generateMipmaps(child.material); // apply mipmapper before rendering
-        }
-      });
-
-      // add basemap to scene (!gltf has its own scene)
-      scene.add(gltf.scene);
-
-      // debug: log scene graph
-      console.log(scene);
-
-      scene.children
-        .filter((i) => i.name == "Scene")[0] // scene contains another group "scene" which contains all objects in the gltf file created in blender (Karte und Ortsmarker)
-        .children.filter(
-          (i) => ["Frankfurt", "Darmstadt", "Wiesbaden"].includes(i.name) // temporary! filters which objects (Ortsmarker) from the scene group should be included
-        )
-        .forEach((placeMarker) => {
-          // loop over Ortsmarker objects
-          try {
-            const city = data[placeMarker.name]; // saves name of place from json data
-            console.log(city, placeMarker.name); // logs city names
-            // Array with years (will later be provided by jQuery time filter)
-            [
-              "1764",
-              "1765",
-              "1766",
-              "1767",
-              "1768",
-              "1769",
-              "1770",
-              "1771",
-              "1772",
-            ].forEach((year, index) => {
-              let yearsOfCity = Object.keys(city); // save years associated to each city in an Array
-
-              // test: little spheres in middle instead of text with year
-              //let s = sphere(0.1);
-              //s.position.y += 1 + index * 2.5;
-
-              // create text object
-              const yearMarker = new Text();
-              yearMarker.name = `yearMarker${year}`;
-
-              // Set content of text object (property "text")
-              yearMarker.text = year;
-
-              // Set styling properties of text object
-              yearMarker.fontSize = 0.2;
-              yearMarker.color = 0x9966ff;
-
-              // Set position of text object
-              // distance of text objects to next text object above
-              yearMarker.position.y += 1 + index * 2.5;
-
-              // Update the rendering:
-              yearMarker.sync();
-
-              // add yearMarker object as child of placeMarker object -> yearMarker positioned relative to placeMarker
-              placeMarker.add(yearMarker);
-
-              // test whether years in the time filter array (year) are contained in the list of years associated to each city
-              // if yes, plot the letter objects (here: as sphere)
-              // yearMarker = pivot, city[year] = data = array with all letter objects associated to this year
-              if (yearsOfCity.includes(year)) {
-                let lettersFromYear = city[year];
-                plotting(yearMarker, lettersFromYear);
-              }
-
-              // add yearMarkers to array of clickable objects
-              targets.clickable.push(yearMarker);
-            });
-          } catch (error) {
-            console.log(error);
+      // load gltf basemap
+      const loader = new GLTFLoader();
+      loader.load("/gltf/goethe_basemap.glb", function (gltf) {
+        gltf.scene.traverse(function (child) {
+          // travese goes through all the children of an object
+          if (child.isMesh) {
+            roughnessMipmapper.generateMipmaps(child.material); // apply mipmapper before rendering
           }
         });
 
-      roughnessMipmapper.dispose();
-      //render();
-    });
+        // add basemap to scene (!gltf has its own scene)
+        scene.add(gltf.scene);
+
+        // debug: log scene graph
+        console.log(scene);
+
+        scene.children
+          .filter((i) => i.name == "Scene")[0] // scene contains another group "scene" which contains all objects in the gltf file created in blender (Karte und Ortsmarker)
+          .children.filter(
+            (i) => ["Frankfurt", "Darmstadt", "Wiesbaden"].includes(i.name) // temporary! filters which objects (Ortsmarker) from the scene group should be included
+          )
+          .forEach((placeMarker) => {
+            // loop over Ortsmarker objects
+            try {
+              const city = data[placeMarker.name]; // saves name of place from json data
+              console.log(city, placeMarker.name); // logs city names
+              // Array with years (will later be provided by jQuery time filter)
+              [
+                "1764",
+                "1765",
+                "1766",
+                "1767",
+                "1768",
+                "1769",
+                "1770",
+                "1771",
+                "1772",
+              ].forEach((year, index) => {
+                let yearsOfCity = Object.keys(city); // save years associated to each city in an Array
+
+                // test: little spheres in middle instead of text with year
+                //let s = sphere(0.1);
+                //s.position.y += 1 + index * 2.5;
+
+                // create text object
+                const yearMarker = new Text();
+                yearMarker.name = `yearMarker${year}`;
+
+                // Set content of text object (property "text")
+                yearMarker.text = year;
+
+                // Set styling properties of text object
+                yearMarker.fontSize = 0.2;
+                yearMarker.color = 0x9966ff;
+
+                // Set position of text object
+                // distance of text objects to next text object above
+                yearMarker.position.y += 1 + index * 2.5;
+
+                // Update the rendering:
+                yearMarker.sync();
+
+                // add yearMarker object as child of placeMarker object -> yearMarker positioned relative to placeMarker
+                placeMarker.add(yearMarker);
+
+                // test whether years in the time filter array (year) are contained in the list of years associated to each city
+                // if yes, plot the letter objects (here: as sphere)
+                // yearMarker = pivot, city[year] = data = array with all letter objects associated to this year
+                if (yearsOfCity.includes(year)) {
+                  let lettersFromYear = city[year];
+                  plotting(yearMarker, lettersFromYear);
+                }
+
+                // add yearMarkers to array of clickable objects
+                targets.clickable.push(yearMarker);
+              });
+            } catch (error) {
+              console.log(error);
+            }
+          });
+
+        roughnessMipmapper.dispose();
+        //render();
+      });
+    }
+    loadMap();
 
     /**
      * Helper Geometries
@@ -597,7 +647,8 @@ const targets = { table: [], sphere: [], helix: [], clickable: [] };
     const light = gui.addFolder("Light");
     const idTextGui = gui.addFolder("idText");
     const initialsGui = gui.addFolder("initials");
-    const nameGui = gui.addFolder("name");
+    const firstNameGui = gui.addFolder("firstname");
+    const lastNameGui = gui.addFolder("lastname");
     const dateGui = gui.addFolder("date");
 
     // Set Debug GUI
@@ -676,6 +727,7 @@ const targets = { table: [], sphere: [], helix: [], clickable: [] };
       // Alle Elemente in der Szene. Klick auf den LightHelper logged bspw. diesen.
       // Statt scene.children kann auch ein Array relevanter Objekte angegeben werden: [ objectPlanet ]
       // Wenn der intersects Array Objekte enthält (length > 0), dann wird der string "Klick" ausgegeben plus das Objekt
+
       if (intersects.length > 0) {
         // log clicks
         let clickedObj = intersects[0].object;
@@ -683,9 +735,14 @@ const targets = { table: [], sphere: [], helix: [], clickable: [] };
 
         /* Define click events for different objects*/
 
-        // click on letter object (planes) -> link to platform
+        // click on letter object (planes)
+        // nur zum Test
         if (clickedObj.geometry.type == "PlaneGeometry") {
           console.log("Briefelement angeklickt");
+        }
+
+        // click on id -> link to platform
+        if (clickedObj.name.includes("GB01 Nr.")) {
           // öffnet neuen Tab mit Beispielbrief
           window.open("https://goethe-biographica.de/id/GB02_BR005_0");
           // perspektivisch (wenn Briefe auf Plattform verlinkt)
@@ -693,7 +750,7 @@ const targets = { table: [], sphere: [], helix: [], clickable: [] };
           // maybe useful:
           // get id of letter (without _s or _r)
           /* let id = R.replace(/_[sr]/g, "", clickedObj.parent.name);
-          console.log(id); */
+             console.log(id); */
         }
 
         // click on initals or name -> link to gnd of person
