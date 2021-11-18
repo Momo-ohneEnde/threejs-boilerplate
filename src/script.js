@@ -85,60 +85,100 @@ fetch("./letters_json_grouped_merged.json")
 
     // tests for clean up
 
-    /* Vorgehen: Komplette Szene durchgehen (traverse), 
-    alle Elemente in Szene einzeln löschen 
-    bzw. geometry, material, textures müssen auch einzeln gelöscht werden
-    WIE????
+    // dispose button
+    let disposeBtn = document.getElementById("disposeBtn");
+    disposeBtn.onclick = () => {
+      resMgr.dispose();
+      //console.log("Disposed!");
+      console.log(scene);
+      console.log(renderer.info);
+    };
+    /* Allgemeines Vorgehen, um Elemente aus der Szene zu löschen: 
+      1.) Komplette Szene durchgehen, 
+      2.) alle Elemente in Szene von der Szene entfernen mit remove(), 
+      3.) dann mit dispose() aus dem Speicher löschen, bzw. geometry, material, textures müssen auch einzeln gelöscht werden
      */
 
-    let disposeBtn = document.getElementById("disposeBtn");
-    disposeBtn.onclick = function dispose() {
-      scene.children[4].children[4].geometry.dispose();
-      console.log("Disposed!");
-    };
+    /* Vorgehen: Resource Tracker:
+      legt ein Set mit zu löschenden Objekten an
+      hat eine track-function, mit der Objekte in das Set aufgenommen werden 
+      d.h. immer wenn ein neues Objekt erstellt wird, dann muss es von der Funktion track() umschlossen werden
+      am Ende kann dann dispose() auf das Set angewandt werden, sodass alle Objekte gleichzeitig gelöscht werden
+    */
 
-    /* const sceneTraverse = (obj, fn) => {
-      if (!obj) return;
-
-      fn(obj);
-
-      if (obj.children && obj.children.length > 0) {
-        obj.children.forEach((o) => {
-          sceneTraverse(o, fn);
-        });
+    // resource tracker class (tracks objects which will be removed later)
+    class ResourceTracker {
+      constructor() {
+        this.resources = new Set();
       }
-    }; */
-
-    /*     const dispose = (e) => {
-      // dispose geometries and materials in scene
-      sceneTraverse(scene, (o) => {
-        if (o.geometry) {
-          o.geometry.dispose();
-          //console.log("dispose geometry ", o.geometry);
+      track(resource) {
+        // check whether resource is undefined or null
+        if (!resource) {
+          return resource;
         }
 
-        if (o.material) {
-          if (o.material.length) {
-            for (let i = 0; i < o.material.length; ++i) {
-              o.material[i].dispose();
-              //console.log("dispose material ", o.material[i]);
+        // handle children and when material is an array of materials or
+        // uniform is array of textures
+        // not applicable in my case
+        if (Array.isArray(resource)) {
+          resource.forEach(resource => this.track(resource));
+          return resource;
+        }
+
+        // add recource to the tracking array
+        if (resource.dispose || resource instanceof THREE.Object3D) {
+          this.resources.add(resource);
+        }
+
+        // geometry, material and possible children of an Object3D must be tracked (and then disposed of) separately
+        if (resource instanceof THREE.Object3D) {
+          this.track(resource.geometry);
+          this.track(resource.material);
+          this.track(resource.children);
+        } else if (resource instanceof THREE.Material) {
+          // We have to check if there are any textures on the material
+          // not applicable for my case
+          for (const value of Object.values(resource)) {
+            if (value instanceof THREE.Texture) {
+              this.track(value);
             }
-          } else {
-            o.material.dispose();
-            //console.log("dispose material ", o.material);
+          }
+          // We also have to check if any uniforms reference textures or arrays of textures
+          if (resource.uniforms) {
+            for (const value of Object.values(resource.uniforms)) {
+              if (value) {
+                const uniformValue = value.value;
+                if (uniformValue instanceof THREE.Texture ||
+                    Array.isArray(uniformValue)) {
+                  this.track(uniformValue);
+                }
+              }
+            }
           }
         }
-      });
+        return resource;
+      }
+      untrack(resource) {
+        this.resources.delete(resource);
+      }
+      dispose() {
+        for (const resource of this.resources) {
+          if (resource instanceof THREE.Object3D) {
+            if (resource.parent) {
+              resource.parent.remove(resource);
+            }
+          }
+          if (resource.dispose) {
+            resource.dispose();
+          }
+        }
+        this.resources.clear();
+      }
+    }
 
-      //scene = undefined;
-      //camera = undefined;
-      renderer && renderer.renderLists.dispose();
-      //renderer = undefined;
-
-      //addBtn.removeEventListener("click", addMeshes);
-      disposeBtn.removeEventListener("click", dispose);
-    };
-    //dispose(); */
+    // set up resource tracker and bind tracking method
+    const resMgr = new ResourceTracker();
+    const track = resMgr.track.bind(resMgr);
 
     /* INIT */
     function init() {
@@ -151,11 +191,19 @@ fetch("./letters_json_grouped_merged.json")
     init();
 
     /* BUTTONS */
-    // Sphären-Butten -> Wechsel zu Spährenansicht (Karte)
+    // Kugel-Button ->Wechsel zu Kugelansicht(Karte)
+    const kugelButton = document.getElementById("kugel");
+    kugelButton.onclick = () => {
+      //clearCanvas();
+      mapViewKugeln();
+      console.log("Wechsel zu Kugelansicht!");
+    };
+
+    // Sphären-Button -> Wechsel zu Spährenansicht (Karte)
     const sphereButton = document.getElementById("sphere");
     sphereButton.onclick = () => {
       //clearCanvas();
-      //mapViewSpheres();
+      mapViewSpheres();
       console.log("Wechsel zu Sphärenansicht!");
     };
 
@@ -183,8 +231,8 @@ fetch("./letters_json_grouped_merged.json")
           }
         });
 
-        // add basemap to scene (!gltf has its own scene)
-        scene.add(gltf.scene);
+        // add basemap to scene (!gltf has its own scene) and track it
+        scene.add(track(gltf.scene));
 
         // debug: log scene graph
         console.log(scene);
@@ -253,8 +301,8 @@ fetch("./letters_json_grouped_merged.json")
           }
         });
 
-        // add basemap to scene (!gltf has its own scene)
-        scene.add(gltf.scene);
+        // add basemap to scene (!gltf has its own scene) and track it
+        scene.add(track(gltf.scene));
 
         // debug: log scene graph
         console.log(scene);
@@ -289,7 +337,7 @@ fetch("./letters_json_grouped_merged.json")
                 //s.position.y += 1 + index * 2.5;
 
                 // create text object
-                const yearMarker = new Text();
+                const yearMarker = track(new Text());
                 yearMarker.name = `yearMarker${year}`;
 
                 // Set content of text object (property "text")
@@ -364,7 +412,7 @@ fetch("./letters_json_grouped_merged.json")
       console.log(letterCount);
 
       // Anzahl der Objekte als Textobjekt
-      const letterNumMarker = new Text();
+      const letterNumMarker = track(new Text());
       letterNumMarker.name = `letterNumMarker${letterCount}`;
 
       // Set content of text object
@@ -392,15 +440,15 @@ fetch("./letters_json_grouped_merged.json")
       }
 
       // Kugel mit three.js erstellen
-      const geometryKugel = new THREE.SphereGeometry(getRadius(), 32, 16);
-      const materialKugel = new THREE.MeshBasicMaterial({
+      const geometryKugel = track(new THREE.SphereGeometry(getRadius(), 32, 16));
+      const materialKugel = track(new THREE.MeshBasicMaterial({
         color: 0xcc0000,
         side: THREE.DoubleSide,
         transparent: true,
         opacity: 0.7,
-      });
+      }));
 
-      const kugel = new THREE.Mesh(geometryKugel, materialKugel);
+      const kugel = track(new THREE.Mesh(geometryKugel, materialKugel));
       // Kugel auf Karte platzieren
       placeMarker.add(kugel);
       // Kugel positionieren
@@ -508,15 +556,15 @@ fetch("./letters_json_grouped_merged.json")
       */
 
         // Mesh/Plane for letter objects
-        const geometry = new THREE.PlaneGeometry(0.3, 0.3);
+        const geometry = track(new THREE.PlaneGeometry(0.3, 0.3));
         // DoubleSide -> visisble and not visible sides of objects are rendered
-        const material = new THREE.MeshBasicMaterial({
+        const material = track(new THREE.MeshBasicMaterial({
           color: 0xcc0000,
           side: THREE.DoubleSide,
           transparent: true,
           opacity: 0.7,
-        });
-        const plane = new THREE.Mesh(geometry, material);
+        }));
+        const plane = track(new THREE.Mesh(geometry, material));
 
         // set id for naming the plane (z.B. GB01_1_EB005_0_s)
         const id = letters[i].id;
@@ -547,7 +595,7 @@ fetch("./letters_json_grouped_merged.json")
         */
 
         /* ID */
-        const idText = new Text();
+        const idText = track(new Text());
 
         // Set content of text object (property "text")
         idText.text = letters[i].idFormatted;
@@ -564,7 +612,7 @@ fetch("./letters_json_grouped_merged.json")
         idText.sync();
 
         /* INITIALS */
-        const initialsText = new Text();
+        const initialsText = track(new Text());
         // Scenegraph in Console: e.g. name="CB"
         initialsText.name = `initials_${letters[i].receiverInitials}`;
 
@@ -579,7 +627,7 @@ fetch("./letters_json_grouped_merged.json")
         initialsText.sync();
 
         /* NAME */
-        const firstNameText = new Text();
+        const firstNameText = track(new Text());
         // Scenegraph in Console: e.g. name="Charlotte"
         firstNameText.name = `name_${letters[i].receiverFirstName}`;
 
@@ -593,7 +641,7 @@ fetch("./letters_json_grouped_merged.json")
         // Update the rendering:
         firstNameText.sync();
 
-        const lastNameText = new Text();
+        const lastNameText = track(new Text());
         // Scenegraph in Console: e.g. name="Buff"
         lastNameText.name = `name_${letters[i].receiverLastName}`;
 
@@ -608,7 +656,7 @@ fetch("./letters_json_grouped_merged.json")
         lastNameText.sync();
 
         /* DATE */
-        const dateText = new Text();
+        const dateText = track(new Text());
         // Scenegraph in Console: e.g. name="12. Juli 1764"
         dateText.name = `${letters[i].dateFormatted}`;
 
@@ -797,7 +845,7 @@ fetch("./letters_json_grouped_merged.json")
         //
 
         // ???
-        const object = new THREE.Object3D();
+        const object = track(new THREE.Object3D());
         // Objekte werden in das table Array des targets-Objekts aufgenommen
         targets.table.push(object);
       }
