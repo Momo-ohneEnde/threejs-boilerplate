@@ -11,6 +11,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { RoughnessMipmapper } from "three/examples/jsm/utils/RoughnessMipmapper.js";
 import { Text } from "troika-three-text";
 import * as R from "ramda";
+import * as d3 from "d3";
 
 fetch("./letters_json_grouped_merged.json")
   // log response to see whether data is loaded
@@ -60,6 +61,8 @@ fetch("./letters_json_grouped_merged.json")
     });
     renderer.setSize(sizes.width, sizes.height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    // shows render info e.g. how many objects are currently in memory
+    console.log(renderer.info);
 
     /**
      * Scene
@@ -100,7 +103,7 @@ fetch("./letters_json_grouped_merged.json")
       const loader = new GLTFLoader();
       loader.load("/gltf/goethe_basemap.glb", function (gltf) {
         gltf.scene.traverse(function (child) {
-          // travese goes through all the children of an object
+          // traverse goes through all the children of an object
           if (child.isMesh) {
             roughnessMipmapper.generateMipmaps(child.material); // apply mipmapper before rendering
           }
@@ -116,7 +119,8 @@ fetch("./letters_json_grouped_merged.json")
         scene.children
           .filter((i) => i.name == "Scene")[0] // scene contains another group "scene" which contains all objects in the gltf file created in blender (Karte und Ortsmarker)
           .children.filter(
-            (i) => ["Frankfurt", "Darmstadt", "Wiesbaden"].includes(i.name) // temporary! filters which objects (Ortsmarker) from the scene group should be included
+            (i) =>
+              ["Frankfurt", "Darmstadt", "Wiesbaden", "Worms"].includes(i.name) // temporary! filters which objects (Ortsmarker) from the scene group should be included
           )
           .forEach((placeMarker) => {
             // loop over Ortsmarker objects
@@ -129,6 +133,21 @@ fetch("./letters_json_grouped_merged.json")
               console.log(error);
             }
           });
+
+        // correct position of placemarker "Wiesbaden"
+        scene.children
+          .filter((i) => i.name == "Scene")[0]
+          .children.filter((i) => i.name == "Wiesbaden")
+          .forEach(
+            (wiesbadenPlacemarker) => (wiesbadenPlacemarker.position.y = 3.8)
+          );
+
+        // make objects on gltf scene clickable
+        const gltfSceneObjs = scene.children[4].children;
+        // loop over array gltf scene objects and add each child ojb to the clickable list
+        gltfSceneObjs.forEach((obj) => {
+          targets.clickable.push(obj);
+        })
 
         roughnessMipmapper.dispose();
         //render();
@@ -169,7 +188,8 @@ fetch("./letters_json_grouped_merged.json")
         scene.children
           .filter((i) => i.name == "Scene")[0] // scene contains another group "scene" which contains all objects in the gltf file created in blender (Karte und Ortsmarker)
           .children.filter(
-            (i) => ["Frankfurt", "Darmstadt", "Wiesbaden"].includes(i.name) // temporary! filters which objects (Ortsmarker) from the scene group should be included
+            (i) =>
+              ["Frankfurt", "Darmstadt", "Wiesbaden", "Worms"].includes(i.name) // temporary! filters which objects (Ortsmarker) from the scene group should be included
           )
           .forEach((placeMarker) => {
             // loop over Ortsmarker objects
@@ -231,6 +251,14 @@ fetch("./letters_json_grouped_merged.json")
             }
           });
 
+        // correct position of placemarker "Wiesbaden"
+        scene.children
+          .filter((i) => i.name == "Scene")[0]
+          .children.filter((i) => i.name == "Wiesbaden")
+          .forEach(
+            (wiesbadenPlacemarker) => (wiesbadenPlacemarker.position.y = 3.8)
+          );
+
         roughnessMipmapper.dispose();
         //render();
       });
@@ -248,7 +276,7 @@ fetch("./letters_json_grouped_merged.json")
     /* 1) Kugeln */
     // wird in init aufgerufen
     function makeKugeln(placeMarker, city) {
-      // erhält übergeben: Ortsobjekt
+      // erhält übergeben: placeMarker, Ortsobjekt
       // Iteration über Jahre, dann Objekten in Jahren
       // Anzahl der Objekte ermitteln
       let letterCount = 0;
@@ -270,42 +298,119 @@ fetch("./letters_json_grouped_merged.json")
 
       // Set styling properties of text object
       letterNumMarker.fontSize = 0.7;
-      letterNumMarker.color = 0xFFFFFF;
+      letterNumMarker.color = 0xffffff;
 
       // Update the rendering:
       letterNumMarker.sync();
 
-      // mithilfe des Interpolators den Durchmesser der Kugel ermitteln
+      // determins radius of kugel with interpolation
+      function getRadius() {
+        // d3.scaleSequencial = generator for scaling function
+        // maps a domain (here: range of numbers, namely the max and min number of letters per place)
+        // to a smaller range, which will then be the max and min numbers for the radius
+        const scale = d3
+          .scaleSequential()
+          .domain([getMinLettersPerPlace(), getMaxLettersPerPlace()]) // for GB01: min = 1, max = 61
+          .interpolator(d3.interpolate(0.5, 2));
+        const radius = scale(letterCount);
+        //console.log(radius);
+        return radius;
+      }
+
       // Kugel mit three.js erstellen
-      const geometryKugel = new THREE.SphereGeometry(1, 32, 16);
+      const geometryKugel = new THREE.SphereGeometry(getRadius(), 32, 16);
       const materialKugel = new THREE.MeshBasicMaterial({
         color: 0xcc0000,
         side: THREE.DoubleSide,
         transparent: true,
         opacity: 0.7,
       });
+
       const kugel = new THREE.Mesh(geometryKugel, materialKugel);
       // Kugel auf Karte platzieren
       placeMarker.add(kugel);
       // Kugel positionieren
-      kugel.position.y = 2;
+      kugel.position.y = getRadius() + 0.5;
+
       // Text auf Kugel
       kugel.add(letterNumMarker);
+      //Text positionieren
+      letterNumMarker.position.y = 0.5;
+      letterNumMarker.position.x = -0.2;
+      letterNumMarker.position.z = getRadius();
+
+      // axes helper for letterNumMarker
+      /* const axesHelperKugel = new THREE.AxesHelper(1);
+      kugel.add(axesHelperKugel);
+
+      const axesHelperLetterNumMarker = new THREE.AxesHelper(1);
+      letterNumMarker.add(axesHelperLetterNumMarker); */
+
+      // gui für letterNumMarker
+      letterNumMarkerGui
+        .add(letterNumMarker.position, "y")
+        .min(-10)
+        .max(10)
+        .step(0.01)
+        .name(`y_${letterNumMarker.name}`);
+      letterNumMarkerGui
+        .add(letterNumMarker.position, "x")
+        .min(-10)
+        .max(10)
+        .step(0.01)
+        .name(`x_${letterNumMarker.name}`);
+      letterNumMarkerGui
+        .add(letterNumMarker.position, "z")
+        .min(-10)
+        .max(10)
+        .step(0.01)
+        .name(`z_${letterNumMarker.name}`);
     }
 
     function getMaxLettersPerPlace() {
       // iteration über Orte, Anzahl der Briefe zählen, in Array schreiben, dann max()
+      let letterCount = 0;
+      let letterCountArray = [];
+      let maxLettersPerPlace = 0;
+      Object.keys(data).forEach((place) => {
+        // loop over years
+        Object.keys(data[`${place}`]).forEach((year) => {
+          let yearArray = data[`${place}`][`${year}`];
+          // loop over array with letter objects
+          for (let i = 0; i < yearArray.length; i++) {
+            letterCount++;
+          }
+        });
+        letterCountArray.push(letterCount);
+        letterCount = 0;
+      });
+      //console.log(letterCountArray);
+      maxLettersPerPlace = Math.max(...letterCountArray);
+      //console.log(maxLettersPerPlace);
+      return maxLettersPerPlace;
     }
 
-    function getMinLettersPerPlace() {}
-
-    /*     const scale = d3
-      .scaleSequential()
-      .domain([0, 400])
-      .interpolator(d3.interpolate(1, 20));
-    //undefined
-    scale(355);
-    // 17.8625 */
+    function getMinLettersPerPlace() {
+      let letterCount = 0;
+      let letterCountArray = [];
+      let minLettersPerPlace = 0;
+      Object.keys(data).forEach((place) => {
+        // loop over years
+        Object.keys(data[`${place}`]).forEach((year) => {
+          let yearArray = data[`${place}`][`${year}`];
+          // loop over array with letter objects
+          for (let i = 0; i < yearArray.length; i++) {
+            letterCount++;
+          }
+        });
+        letterCountArray.push(letterCount);
+        letterCount = 0;
+      });
+      //console.log(letterCountArray);
+      minLettersPerPlace = Math.min(...letterCountArray);
+      //console.log(minLettersPerPlace);
+      return minLettersPerPlace;
+    }
 
     /* 2) Briefnetz */
 
@@ -745,6 +850,7 @@ fetch("./letters_json_grouped_merged.json")
     const firstNameGui = gui.addFolder("firstname");
     const lastNameGui = gui.addFolder("lastname");
     const dateGui = gui.addFolder("date");
+    const letterNumMarkerGui = gui.addFolder("letterNumMarker");
 
     // Set Debug GUI
     light.add(pointLight.position, "y").min(-10).max(100).step(0.01);
@@ -872,6 +978,20 @@ fetch("./letters_json_grouped_merged.json")
             });
           });
         }
+
+        // click on placeMarker -> Wechsel zu Einzelansicht
+        if (
+          clickedObj.parent.name == "Scene" &&
+          clickedObj.parent.type == "Group" &&
+          clickedObj.name != "GOOGLE_SAT_WM" &&
+          clickedObj.name != "GOOGLE_MAP_WM" &&
+          clickedObj.name != "OSM_MAPNIK_WM" &&
+          clickedObj.name != "EXPORT_OSM_MAPNIK_WM"
+        ) {
+          console.log("Klick auf Ortsmarker!");
+          //clearCanvas();
+          //initSinglePlaceView();
+        }
       } else {
         console.log("No intersections.");
       }
@@ -936,4 +1056,59 @@ fetch("./letters_json_grouped_merged.json")
     };
 
     tick();
+
+    /* CLEAN UP - dispose of all objects in scene*/
+    /* Vorgehen: Komplette Szene durchgehen (traverse), 
+    alle Elemente in Szene einzeln löschen 
+    bzw. geometry, material, textures müssen auch einzeln gelöscht werden
+     */
+
+    let disposeBtn = document.getElementById("disposeBtn");
+    disposeBtn.onclick = function dispose() {
+      scene.children[4].children[4].geometry.dispose();
+      console.log("Disposed!");
+    };
+
+    /* const sceneTraverse = (obj, fn) => {
+      if (!obj) return;
+
+      fn(obj);
+
+      if (obj.children && obj.children.length > 0) {
+        obj.children.forEach((o) => {
+          sceneTraverse(o, fn);
+        });
+      }
+    }; */
+
+    /*     const dispose = (e) => {
+      // dispose geometries and materials in scene
+      sceneTraverse(scene, (o) => {
+        if (o.geometry) {
+          o.geometry.dispose();
+          //console.log("dispose geometry ", o.geometry);
+        }
+
+        if (o.material) {
+          if (o.material.length) {
+            for (let i = 0; i < o.material.length; ++i) {
+              o.material[i].dispose();
+              //console.log("dispose material ", o.material[i]);
+            }
+          } else {
+            o.material.dispose();
+            //console.log("dispose material ", o.material);
+          }
+        }
+      });
+
+      //scene = undefined;
+      //camera = undefined;
+      renderer && renderer.renderLists.dispose();
+      //renderer = undefined;
+
+      //addBtn.removeEventListener("click", addMeshes);
+      disposeBtn.removeEventListener("click", dispose);
+    };
+    //dispose(); */
   }); // FETCH END
