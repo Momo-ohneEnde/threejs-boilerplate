@@ -83,6 +83,63 @@ fetch("./letters_json_grouped_merged.json")
       // ToDo
     }
 
+    // tests for clean up
+
+    /* Vorgehen: Komplette Szene durchgehen (traverse), 
+    alle Elemente in Szene einzeln löschen 
+    bzw. geometry, material, textures müssen auch einzeln gelöscht werden
+    WIE????
+     */
+
+    let disposeBtn = document.getElementById("disposeBtn");
+    disposeBtn.onclick = function dispose() {
+      scene.children[4].children[4].geometry.dispose();
+      console.log("Disposed!");
+    };
+
+    /* const sceneTraverse = (obj, fn) => {
+      if (!obj) return;
+
+      fn(obj);
+
+      if (obj.children && obj.children.length > 0) {
+        obj.children.forEach((o) => {
+          sceneTraverse(o, fn);
+        });
+      }
+    }; */
+
+    /*     const dispose = (e) => {
+      // dispose geometries and materials in scene
+      sceneTraverse(scene, (o) => {
+        if (o.geometry) {
+          o.geometry.dispose();
+          //console.log("dispose geometry ", o.geometry);
+        }
+
+        if (o.material) {
+          if (o.material.length) {
+            for (let i = 0; i < o.material.length; ++i) {
+              o.material[i].dispose();
+              //console.log("dispose material ", o.material[i]);
+            }
+          } else {
+            o.material.dispose();
+            //console.log("dispose material ", o.material);
+          }
+        }
+      });
+
+      //scene = undefined;
+      //camera = undefined;
+      renderer && renderer.renderLists.dispose();
+      //renderer = undefined;
+
+      //addBtn.removeEventListener("click", addMeshes);
+      disposeBtn.removeEventListener("click", dispose);
+    };
+    //dispose(); */
+
     /* INIT */
     function init() {
       // default
@@ -92,6 +149,23 @@ fetch("./letters_json_grouped_merged.json")
       //mapViewSpheres();
     }
     init();
+
+    /* BUTTONS */
+    // Sphären-Butten -> Wechsel zu Spährenansicht (Karte)
+    const sphereButton = document.getElementById("sphere");
+    sphereButton.onclick = () => {
+      //clearCanvas();
+      //mapViewSpheres();
+      console.log("Wechsel zu Sphärenansicht!");
+    };
+
+    // Helix-Buttton -> Wechsel zu Helixansicht (Karte)
+    const helixButton = document.getElementById("helix");
+    helixButton.onclick = () => {
+      //clearCanvas();
+      //mapViewHelix();
+      console.log("Wechsel zu Helixansicht!");
+    };
 
     /* CREATE MAP VIEWS */
 
@@ -147,7 +221,7 @@ fetch("./letters_json_grouped_merged.json")
         // loop over array gltf scene objects and add each child ojb to the clickable list
         gltfSceneObjs.forEach((obj) => {
           targets.clickable.push(obj);
-        })
+        });
 
         roughnessMipmapper.dispose();
         //render();
@@ -1056,59 +1130,4 @@ fetch("./letters_json_grouped_merged.json")
     };
 
     tick();
-
-    /* CLEAN UP - dispose of all objects in scene*/
-    /* Vorgehen: Komplette Szene durchgehen (traverse), 
-    alle Elemente in Szene einzeln löschen 
-    bzw. geometry, material, textures müssen auch einzeln gelöscht werden
-     */
-
-    let disposeBtn = document.getElementById("disposeBtn");
-    disposeBtn.onclick = function dispose() {
-      scene.children[4].children[4].geometry.dispose();
-      console.log("Disposed!");
-    };
-
-    /* const sceneTraverse = (obj, fn) => {
-      if (!obj) return;
-
-      fn(obj);
-
-      if (obj.children && obj.children.length > 0) {
-        obj.children.forEach((o) => {
-          sceneTraverse(o, fn);
-        });
-      }
-    }; */
-
-    /*     const dispose = (e) => {
-      // dispose geometries and materials in scene
-      sceneTraverse(scene, (o) => {
-        if (o.geometry) {
-          o.geometry.dispose();
-          //console.log("dispose geometry ", o.geometry);
-        }
-
-        if (o.material) {
-          if (o.material.length) {
-            for (let i = 0; i < o.material.length; ++i) {
-              o.material[i].dispose();
-              //console.log("dispose material ", o.material[i]);
-            }
-          } else {
-            o.material.dispose();
-            //console.log("dispose material ", o.material);
-          }
-        }
-      });
-
-      //scene = undefined;
-      //camera = undefined;
-      renderer && renderer.renderLists.dispose();
-      //renderer = undefined;
-
-      //addBtn.removeEventListener("click", addMeshes);
-      disposeBtn.removeEventListener("click", dispose);
-    };
-    //dispose(); */
   }); // FETCH END
