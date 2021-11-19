@@ -121,7 +121,7 @@ fetch("./letters_json_grouped_merged.json")
         // uniform is array of textures
         // not applicable in my case
         if (Array.isArray(resource)) {
-          resource.forEach(resource => this.track(resource));
+          resource.forEach((resource) => this.track(resource));
           return resource;
         }
 
@@ -148,8 +148,10 @@ fetch("./letters_json_grouped_merged.json")
             for (const value of Object.values(resource.uniforms)) {
               if (value) {
                 const uniformValue = value.value;
-                if (uniformValue instanceof THREE.Texture ||
-                    Array.isArray(uniformValue)) {
+                if (
+                  uniformValue instanceof THREE.Texture ||
+                  Array.isArray(uniformValue)
+                ) {
                   this.track(uniformValue);
                 }
               }
@@ -211,7 +213,7 @@ fetch("./letters_json_grouped_merged.json")
     const helixButton = document.getElementById("helix");
     helixButton.onclick = () => {
       //clearCanvas();
-      //mapViewHelix();
+      mapViewHelix();
       console.log("Wechsel zu Helixansicht!");
     };
 
@@ -267,9 +269,8 @@ fetch("./letters_json_grouped_merged.json")
         // make objects on gltf scene clickable
         const gltfSceneObjs = scene.children[4].children;
         // loop over array gltf scene objects and add each child ojb to the clickable list
-        gltfSceneObjs.forEach((obj) => {
-          targets.clickable.push(obj);
-        });
+        // true -> isArray
+        makeClickable(gltfSceneObjs, true);
 
         roughnessMipmapper.dispose();
         //render();
@@ -366,7 +367,7 @@ fetch("./letters_json_grouped_merged.json")
                 }
 
                 // add yearMarkers to array of clickable objects
-                targets.clickable.push(yearMarker);
+                makeClickable(yearMarker, false);
               });
             } catch (error) {
               console.log(error);
@@ -388,13 +389,105 @@ fetch("./letters_json_grouped_merged.json")
 
     /* 4) Helix-Ansicht */
     function mapViewHelix() {
-      // Code
-      // Karte laden
-      // Aufruf von makeHelixForMap()
+      const roughnessMipmapper = new RoughnessMipmapper(renderer);
+      // load gltf basemap
+      const loader = new GLTFLoader();
+      loader.load("/gltf/goethe_basemap.glb", function (gltf) {
+        gltf.scene.traverse(function (child) {
+          // travese goes through all the children of an object
+          if (child.isMesh) {
+            roughnessMipmapper.generateMipmaps(child.material); // apply mipmapper before rendering
+          }
+        });
+
+        // add basemap to scene (!gltf has its own scene) and track it
+        scene.add(track(gltf.scene));
+
+        // debug: log scene graph
+        console.log(scene);
+
+        scene.children
+          .filter((i) => i.name == "Scene")[0] // scene contains another group "scene" which contains all objects in the gltf file created in blender (Karte und Ortsmarker)
+          .children.filter(
+            (i) =>
+              ["Frankfurt", "Darmstadt", "Wiesbaden", "Worms"].includes(i.name) // temporary! filters which objects (Ortsmarker) from the scene group should be included
+          )
+          .forEach((placeMarker) => {
+            // loop over Ortsmarker objects
+            try {
+              const city = data[placeMarker.name]; // saves name of place from json data
+              console.log(city, placeMarker.name); // logs city names
+              // Array with years (will later be provided by jQuery time filter)
+              [
+                "1764",
+                "1765",
+                "1766",
+                "1767",
+                "1768",
+                "1769",
+                "1770",
+                "1771",
+                "1772",
+              ].forEach((year, index) => {
+                let yearsOfCity = Object.keys(city); // save years associated to each city in an Array
+
+                // test: little spheres in middle instead of text with year
+                //let s = sphere(0.1);
+                //s.position.y += 1 + index * 2.5;
+
+                // create text object
+                const yearMarker = track(new Text());
+                yearMarker.name = `yearMarker${year}`;
+
+                // Set content of text object (property "text")
+                yearMarker.text = year;
+
+                // Set styling properties of text object
+                yearMarker.fontSize = 0.2;
+                yearMarker.color = 0x9966ff;
+
+                // Set position of text object
+                // distance of text objects to next text object above
+                yearMarker.position.y += 1 + index * 2.5;
+
+                // Update the rendering:
+                yearMarker.sync();
+
+                // add yearMarker object as child of placeMarker object -> yearMarker positioned relative to placeMarker
+                placeMarker.add(yearMarker);
+
+                // test whether years in the time filter array (year) are contained in the list of years associated to each city
+                // if yes, plot the letter objects (here: as helix)
+                // yearMarker = pivot, city[year] = data = array with all letter objects associated to this year
+                if (yearsOfCity.includes(year)) {
+                  let lettersFromYear = city[year];
+                  makeHelixForMap(yearMarker, lettersFromYear);
+                }
+
+                // add yearMarkers to array of clickable objects
+                makeClickable(yearMarker, false);
+              });
+            } catch (error) {
+              console.log(error);
+            }
+          });
+
+        // correct position of placemarker "Wiesbaden"
+        scene.children
+          .filter((i) => i.name == "Scene")[0]
+          .children.filter((i) => i.name == "Wiesbaden")
+          .forEach(
+            (wiesbadenPlacemarker) => (wiesbadenPlacemarker.position.y = 3.8)
+          );
+
+        roughnessMipmapper.dispose();
+        //render();
+      });
     }
 
     /* FUNCTIONS FOR MAP VIEW */
-
+    /* 0) Karte */
+    function loadMap() {}
     /* 1) Kugeln */
     // wird in init aufgerufen
     function makeKugeln(placeMarker, city) {
@@ -440,13 +533,17 @@ fetch("./letters_json_grouped_merged.json")
       }
 
       // Kugel mit three.js erstellen
-      const geometryKugel = track(new THREE.SphereGeometry(getRadius(), 32, 16));
-      const materialKugel = track(new THREE.MeshBasicMaterial({
-        color: 0xcc0000,
-        side: THREE.DoubleSide,
-        transparent: true,
-        opacity: 0.7,
-      }));
+      const geometryKugel = track(
+        new THREE.SphereGeometry(getRadius(), 32, 16)
+      );
+      const materialKugel = track(
+        new THREE.MeshBasicMaterial({
+          color: 0xcc0000,
+          side: THREE.DoubleSide,
+          transparent: true,
+          opacity: 0.7,
+        })
+      );
 
       const kugel = track(new THREE.Mesh(geometryKugel, materialKugel));
       // Kugel auf Karte platzieren
@@ -556,15 +653,7 @@ fetch("./letters_json_grouped_merged.json")
       */
 
         // Mesh/Plane for letter objects
-        const geometry = track(new THREE.PlaneGeometry(0.3, 0.3));
-        // DoubleSide -> visisble and not visible sides of objects are rendered
-        const material = track(new THREE.MeshBasicMaterial({
-          color: 0xcc0000,
-          side: THREE.DoubleSide,
-          transparent: true,
-          opacity: 0.7,
-        }));
-        const plane = track(new THREE.Mesh(geometry, material));
+        const plane = makePlane();
 
         // set id for naming the plane (z.B. GB01_1_EB005_0_s)
         const id = letters[i].id;
@@ -584,7 +673,7 @@ fetch("./letters_json_grouped_merged.json")
         pivot.add(plane);
 
         // add planes to array of clickable objects
-        targets.clickable.push(plane);
+        makeClickable(plane, false);
 
         // axes helper for plane
         /* const axesHelperPlane = new THREE.AxesHelper( 1 );
@@ -682,10 +771,10 @@ fetch("./letters_json_grouped_merged.json")
         /* 
         make content clickable
       */
-        targets.clickable.push(initialsText);
-        targets.clickable.push(firstNameText);
-        targets.clickable.push(lastNameText);
-        targets.clickable.push(idText);
+        makeClickable(initialsText, false);
+        makeClickable(firstNameText, false);
+        makeClickable(lastNameText, false);
+        makeClickable(idText, false);
 
         /* 
         position content on plane
@@ -853,7 +942,29 @@ fetch("./letters_json_grouped_merged.json")
 
     /* 4) Helix */
     // wird bei Klick auf Button Helix ausgeführt
-    function makeHelixForMap() {}
+    function makeHelixForMap(pivot, letters) {
+      /* for (let i = 0, l = letters.length; i < l; i++) {
+        makePlane();
+        //...
+      } */
+    }
+
+    /* 5.) Helper Functions for Map View */
+
+    function makePlane() {
+      const geometry = track(new THREE.PlaneGeometry(0.3, 0.3));
+      // DoubleSide -> visisble and not visible sides of objects are rendered
+      const material = track(
+        new THREE.MeshBasicMaterial({
+          color: 0xcc0000,
+          side: THREE.DoubleSide,
+          transparent: true,
+          opacity: 0.7,
+        })
+      );
+      const plane = track(new THREE.Mesh(geometry, material));
+      return plane;
+    }
 
     /* CREATE SINGLE PLACE VIEWS (Einzelansicht)*/
 
@@ -878,6 +989,22 @@ fetch("./letters_json_grouped_merged.json")
 
     /* Einzelansicht: Helix */
     function makeHelixForSingleView() {}
+
+    /* HELPER FUNCTIONS */
+
+    function makeClickable(obj, isArray) {
+      if (isArray) {
+        obj.forEach((o) => {
+          targets.clickable.push(o);
+        });
+      } else {
+        targets.clickable.push(obj);
+      }
+    }
+
+    // loop over places
+
+    // loop over years
 
     /**
      * Helper Geometries
