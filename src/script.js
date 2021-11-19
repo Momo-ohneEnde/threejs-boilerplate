@@ -684,80 +684,17 @@ fetch("./letters_json_grouped_merged.json")
         */
 
         /* ID */
-        const idText = track(new Text());
-
-        // Set content of text object (property "text")
-        idText.text = letters[i].idFormatted;
-
-        // give object a name (will appear in scenegraph in console)
-        // e.g. name="GB01 Nr.EB005"
-        idText.name = `${letters[i].idFormatted}`;
-
-        // Set styling properties of text object
-        idText.fontSize = 0.03;
-        idText.color = 0xffffff;
-
-        // Update the rendering:
-        idText.sync();
+        const idText = makeIdText(letters[i]);
 
         /* INITIALS */
-        const initialsText = track(new Text());
-        // Scenegraph in Console: e.g. name="CB"
-        initialsText.name = `initials_${letters[i].receiverInitials}`;
-
-        // Set content of text object (property "text")
-        initialsText.text = letters[i].receiverInitials;
-
-        // Set styling properties of text object
-        initialsText.fontSize = 0.08;
-        initialsText.color = 0xffffff;
-
-        // Update the rendering:
-        initialsText.sync();
+        const initialsText = makeInitialsText(letters[i]);
 
         /* NAME */
-        const firstNameText = track(new Text());
-        // Scenegraph in Console: e.g. name="Charlotte"
-        firstNameText.name = `name_${letters[i].receiverFirstName}`;
-
-        // Set content of text object (property "text")
-        firstNameText.text = letters[i].receiverFirstName;
-
-        // Set styling properties of text object
-        firstNameText.fontSize = 0.02;
-        firstNameText.color = 0xffffff;
-
-        // Update the rendering:
-        firstNameText.sync();
-
-        const lastNameText = track(new Text());
-        // Scenegraph in Console: e.g. name="Buff"
-        lastNameText.name = `name_${letters[i].receiverLastName}`;
-
-        // Set content of text object (property "text")
-        lastNameText.text = letters[i].receiverLastName;
-
-        // Set styling properties of text object
-        lastNameText.fontSize = 0.02;
-        lastNameText.color = 0xffffff;
-
-        // Update the rendering:
-        lastNameText.sync();
+        const firstNameText = makeFirstNameText(letters[i]);
+        const lastNameText = makeLastNameText(letters[i]);
 
         /* DATE */
-        const dateText = track(new Text());
-        // Scenegraph in Console: e.g. name="12. Juli 1764"
-        dateText.name = `${letters[i].dateFormatted}`;
-
-        // Set content of text object (property "text")
-        dateText.text = letters[i].dateFormatted;
-
-        // Set styling properties of text object
-        dateText.fontSize = 0.03;
-        dateText.color = 0xffffff;
-
-        // Update the rendering:
-        dateText.sync();
+        const dateText = makeDateText(letters[i]);
 
         /* 
         add content to plane 
@@ -964,6 +901,98 @@ fetch("./letters_json_grouped_merged.json")
       );
       const plane = track(new THREE.Mesh(geometry, material));
       return plane;
+    }
+
+    function makeIdText(letter){
+      const idText = track(new Text());
+
+        // Set content of text object (property "text")
+        idText.text = letter.idFormatted;
+
+        // give object a name (will appear in scenegraph in console)
+        // e.g. name="GB01 Nr.EB005"
+        idText.name = `${letter.idFormatted}`;
+
+        // Set styling properties of text object
+        idText.fontSize = 0.03;
+        idText.color = 0xffffff;
+
+        // Update the rendering:
+        idText.sync();
+
+        return idText;
+    }
+
+    function makeInitialsText(letter){
+      const initialsText = track(new Text());
+        // Scenegraph in Console: e.g. name="CB"
+        initialsText.name = `initials_${letter.receiverInitials}`;
+
+        // Set content of text object (property "text")
+        initialsText.text = letter.receiverInitials;
+
+        // Set styling properties of text object
+        initialsText.fontSize = 0.08;
+        initialsText.color = 0xffffff;
+
+        // Update the rendering:
+        initialsText.sync();
+
+        return initialsText;
+    }
+    
+    function makeFirstNameText(letter){
+      const firstNameText = track(new Text());
+        // Scenegraph in Console: e.g. name="Charlotte"
+        firstNameText.name = `name_${letter.receiverFirstName}`;
+
+        // Set content of text object (property "text")
+        firstNameText.text = letter.receiverFirstName;
+
+        // Set styling properties of text object
+        firstNameText.fontSize = 0.02;
+        firstNameText.color = 0xffffff;
+
+        // Update the rendering:
+        firstNameText.sync();
+
+        return firstNameText;
+    }
+
+    function makeLastNameText(letter){
+      const lastNameText = track(new Text());
+      // Scenegraph in Console: e.g. name="Buff"
+      lastNameText.name = `name_${letter.receiverLastName}`;
+
+      // Set content of text object (property "text")
+      lastNameText.text = letter.receiverLastName;
+
+      // Set styling properties of text object
+      lastNameText.fontSize = 0.02;
+      lastNameText.color = 0xffffff;
+
+      // Update the rendering:
+      lastNameText.sync();
+
+      return lastNameText;
+    }
+
+    function makeDateText(letter){
+      const dateText = track(new Text());
+        // Scenegraph in Console: e.g. name="12. Juli 1764"
+        dateText.name = `${letter.dateFormatted}`;
+
+        // Set content of text object (property "text")
+        dateText.text = letter.dateFormatted;
+
+        // Set styling properties of text object
+        dateText.fontSize = 0.03;
+        dateText.color = 0xffffff;
+
+        // Update the rendering:
+        dateText.sync();
+
+        return dateText;
     }
 
     /* CREATE SINGLE PLACE VIEWS (Einzelansicht)*/
