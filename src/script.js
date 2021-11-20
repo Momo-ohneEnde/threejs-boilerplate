@@ -259,12 +259,7 @@ fetch("./letters_json_grouped_merged.json")
           });
 
         // correct position of placemarker "Wiesbaden"
-        scene.children
-          .filter((i) => i.name == "Scene")[0]
-          .children.filter((i) => i.name == "Wiesbaden")
-          .forEach(
-            (wiesbadenPlacemarker) => (wiesbadenPlacemarker.position.y = 3.8)
-          );
+        correctPositionWiesbaden();
 
         // make objects on gltf scene clickable
         const gltfSceneObjs = scene.children[4].children;
@@ -338,22 +333,7 @@ fetch("./letters_json_grouped_merged.json")
                 //s.position.y += 1 + index * 2.5;
 
                 // create text object
-                const yearMarker = track(new Text());
-                yearMarker.name = `yearMarker${year}`;
-
-                // Set content of text object (property "text")
-                yearMarker.text = year;
-
-                // Set styling properties of text object
-                yearMarker.fontSize = 0.2;
-                yearMarker.color = 0x9966ff;
-
-                // Set position of text object
-                // distance of text objects to next text object above
-                yearMarker.position.y += 1 + index * 2.5;
-
-                // Update the rendering:
-                yearMarker.sync();
+                const yearMarker = makeYearMarker(year, index);
 
                 // add yearMarker object as child of placeMarker object -> yearMarker positioned relative to placeMarker
                 placeMarker.add(yearMarker);
@@ -375,12 +355,7 @@ fetch("./letters_json_grouped_merged.json")
           });
 
         // correct position of placemarker "Wiesbaden"
-        scene.children
-          .filter((i) => i.name == "Scene")[0]
-          .children.filter((i) => i.name == "Wiesbaden")
-          .forEach(
-            (wiesbadenPlacemarker) => (wiesbadenPlacemarker.position.y = 3.8)
-          );
+        correctPositionWiesbaden();
 
         roughnessMipmapper.dispose();
         //render();
@@ -436,22 +411,7 @@ fetch("./letters_json_grouped_merged.json")
                 //s.position.y += 1 + index * 2.5;
 
                 // create text object
-                const yearMarker = track(new Text());
-                yearMarker.name = `yearMarker${year}`;
-
-                // Set content of text object (property "text")
-                yearMarker.text = year;
-
-                // Set styling properties of text object
-                yearMarker.fontSize = 0.2;
-                yearMarker.color = 0x9966ff;
-
-                // Set position of text object
-                // distance of text objects to next text object above
-                yearMarker.position.y += 1 + index * 2.5;
-
-                // Update the rendering:
-                yearMarker.sync();
+                const yearMarker = makeYearMarker(year, index);
 
                 // add yearMarker object as child of placeMarker object -> yearMarker positioned relative to placeMarker
                 placeMarker.add(yearMarker);
@@ -473,12 +433,7 @@ fetch("./letters_json_grouped_merged.json")
           });
 
         // correct position of placemarker "Wiesbaden"
-        scene.children
-          .filter((i) => i.name == "Scene")[0]
-          .children.filter((i) => i.name == "Wiesbaden")
-          .forEach(
-            (wiesbadenPlacemarker) => (wiesbadenPlacemarker.position.y = 3.8)
-          );
+        correctPositionWiesbaden();
 
         roughnessMipmapper.dispose();
         //render();
@@ -505,18 +460,7 @@ fetch("./letters_json_grouped_merged.json")
       console.log(letterCount);
 
       // Anzahl der Objekte als Textobjekt
-      const letterNumMarker = track(new Text());
-      letterNumMarker.name = `letterNumMarker${letterCount}`;
-
-      // Set content of text object
-      letterNumMarker.text = letterCount;
-
-      // Set styling properties of text object
-      letterNumMarker.fontSize = 0.7;
-      letterNumMarker.color = 0xffffff;
-
-      // Update the rendering:
-      letterNumMarker.sync();
+      const letterNumMarker = makeLetterNumMarker(letterCount);
 
       // determins radius of kugel with interpolation
       function getRadius() {
@@ -533,19 +477,8 @@ fetch("./letters_json_grouped_merged.json")
       }
 
       // Kugel mit three.js erstellen
-      const geometryKugel = track(
-        new THREE.SphereGeometry(getRadius(), 32, 16)
-      );
-      const materialKugel = track(
-        new THREE.MeshBasicMaterial({
-          color: 0xcc0000,
-          side: THREE.DoubleSide,
-          transparent: true,
-          opacity: 0.7,
-        })
-      );
+      const kugel = makeKugel(getRadius());
 
-      const kugel = track(new THREE.Mesh(geometryKugel, materialKugel));
       // Kugel auf Karte platzieren
       placeMarker.add(kugel);
       // Kugel positionieren
@@ -903,63 +836,80 @@ fetch("./letters_json_grouped_merged.json")
       return plane;
     }
 
-    function makeIdText(letter){
+    function makeKugel(radius){
+      const geometryKugel = track(
+        new THREE.SphereGeometry(radius, 32, 16)
+      );
+      const materialKugel = track(
+        new THREE.MeshBasicMaterial({
+          color: 0xcc0000,
+          side: THREE.DoubleSide,
+          transparent: true,
+          opacity: 0.7,
+        })
+      );
+      const kugel = track(new THREE.Mesh(geometryKugel, materialKugel));
+
+      return kugel;
+    }
+
+    function makeIdText(letter) {
       const idText = track(new Text());
 
-        // Set content of text object (property "text")
-        idText.text = letter.idFormatted;
+      // Set content of text object (property "text")
+      idText.text = letter.idFormatted;
 
-        // give object a name (will appear in scenegraph in console)
-        // e.g. name="GB01 Nr.EB005"
-        idText.name = `${letter.idFormatted}`;
+      // give object a name (will appear in scenegraph in console)
+      // e.g. name="GB01 Nr.EB005"
+      idText.name = `${letter.idFormatted}`;
 
-        // Set styling properties of text object
-        idText.fontSize = 0.03;
-        idText.color = 0xffffff;
+      // Set styling properties of text object
+      idText.fontSize = 0.03;
+      idText.color = 0xffffff;
 
-        // Update the rendering:
-        idText.sync();
+      // Update the rendering:
+      idText.sync();
 
-        return idText;
+      return idText;
     }
 
-    function makeInitialsText(letter){
+    function makeInitialsText(letter) {
       const initialsText = track(new Text());
-        // Scenegraph in Console: e.g. name="CB"
-        initialsText.name = `initials_${letter.receiverInitials}`;
+      // Scenegraph in Console: e.g. name="CB"
+      initialsText.name = `initials_${letter.receiverInitials}`;
 
-        // Set content of text object (property "text")
-        initialsText.text = letter.receiverInitials;
+      // Set content of text object (property "text")
+      initialsText.text = letter.receiverInitials;
 
-        // Set styling properties of text object
-        initialsText.fontSize = 0.08;
-        initialsText.color = 0xffffff;
+      // Set styling properties of text object
+      initialsText.fontSize = 0.08;
+      initialsText.color = 0xffffff;
 
-        // Update the rendering:
-        initialsText.sync();
+      // Update the rendering:
+      initialsText.sync();
 
-        return initialsText;
+      return initialsText;
     }
-    
-    function makeFirstNameText(letter){
+
+    function makeFirstNameText(letter) {
       const firstNameText = track(new Text());
-        // Scenegraph in Console: e.g. name="Charlotte"
-        firstNameText.name = `name_${letter.receiverFirstName}`;
+      // Scenegraph in Console: e.g. name="Charlotte"
+      firstNameText.name = `name_${letter.receiverFirstName}`;
 
-        // Set content of text object (property "text")
-        firstNameText.text = letter.receiverFirstName;
+      // Set content of text object (property "text")
+      firstNameText.text = letter.receiverFirstName;
 
-        // Set styling properties of text object
-        firstNameText.fontSize = 0.02;
-        firstNameText.color = 0xffffff;
+      // Set styling properties of text object
+      firstNameText.fontSize = 0.02;
+      firstNameText.color = 0xffffff;
 
-        // Update the rendering:
-        firstNameText.sync();
+      // Update the rendering:
+      firstNameText.sync();
 
-        return firstNameText;
+      return firstNameText;
     }
 
-    function makeLastNameText(letter){
+    function makeLastNameText(letter) {
       const lastNameText = track(new Text());
       // Scenegraph in Console: e.g. name="Buff"
       lastNameText.name = `name_${letter.receiverLastName}`;
@@ -977,22 +927,68 @@ fetch("./letters_json_grouped_merged.json")
       return lastNameText;
     }
 
-    function makeDateText(letter){
+    function makeDateText(letter) {
       const dateText = track(new Text());
-        // Scenegraph in Console: e.g. name="12. Juli 1764"
-        dateText.name = `${letter.dateFormatted}`;
+      // Scenegraph in Console: e.g. name="12. Juli 1764"
+      dateText.name = `${letter.dateFormatted}`;
 
-        // Set content of text object (property "text")
-        dateText.text = letter.dateFormatted;
+      // Set content of text object (property "text")
+      dateText.text = letter.dateFormatted;
 
-        // Set styling properties of text object
-        dateText.fontSize = 0.03;
-        dateText.color = 0xffffff;
+      // Set styling properties of text object
+      dateText.fontSize = 0.03;
+      dateText.color = 0xffffff;
 
-        // Update the rendering:
-        dateText.sync();
+      // Update the rendering:
+      dateText.sync();
 
-        return dateText;
+      return dateText;
+    }
+
+    function correctPositionWiesbaden() {
+      scene.children
+        .filter((i) => i.name == "Scene")[0]
+        .children.filter((i) => i.name == "Wiesbaden")
+        .forEach(
+          (wiesbadenPlacemarker) => (wiesbadenPlacemarker.position.y = 3.8)
+        );
+    }
+
+    function makeYearMarker(year, index) {
+      const yearMarker = track(new Text());
+      yearMarker.name = `yearMarker${year}`;
+
+      // Set content of text object (property "text")
+      yearMarker.text = year;
+
+      // Set styling properties of text object
+      yearMarker.fontSize = 0.2;
+      yearMarker.color = 0x9966ff;
+
+      // Set position of text object
+      // distance of text objects to next text object above
+      yearMarker.position.y += 1 + index * 2.5;
+
+      // Update the rendering:
+      yearMarker.sync();
+      return yearMarker;
+    }
+
+    function makeLetterNumMarker(letterCount) {
+      const letterNumMarker = track(new Text());
+      letterNumMarker.name = `letterNumMarker${letterCount}`;
+
+      // Set content of text object
+      letterNumMarker.text = letterCount;
+
+      // Set styling properties of text object
+      letterNumMarker.fontSize = 0.7;
+      letterNumMarker.color = 0xffffff;
+
+      // Update the rendering:
+      letterNumMarker.sync();
+      
+      return letterNumMarker;
     }
 
     /* CREATE SINGLE PLACE VIEWS (Einzelansicht)*/
