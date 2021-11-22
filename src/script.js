@@ -185,10 +185,8 @@ fetch("./letters_json_grouped_merged.json")
     /* INIT */
     function init() {
       // default
-      // später: Kugelansicht als default, dann wird hier mapViewKugeln() aufgerufen
-      //(Funktion mapViewSpheres wird bei Klick auf "Spheres"-Button aufgerufen)
-      mapViewKugeln();
-      //mapViewSpheres();
+      //mapViewKugeln();
+      mapViewHelix();
     }
     init();
 
@@ -316,56 +314,7 @@ fetch("./letters_json_grouped_merged.json")
         // debug: log scene graph
         console.log(scene);
 
-        scene.children
-          .filter((i) => i.name == "Scene")[0] // scene contains another group "scene" which contains all objects in the gltf file created in blender (Karte und Ortsmarker)
-          .children.filter(
-            (i) =>
-              ["Frankfurt", "Darmstadt", "Wiesbaden", "Worms"].includes(i.name) // temporary! filters which objects (Ortsmarker) from the scene group should be included
-          )
-          .forEach((placeMarker) => {
-            // loop over Ortsmarker objects
-            try {
-              const city = data[placeMarker.name]; // saves name of place from json data
-              console.log(city, placeMarker.name); // logs city names
-              // Array with years (will later be provided by jQuery time filter)
-              [
-                "1764",
-                "1765",
-                "1766",
-                "1767",
-                "1768",
-                "1769",
-                "1770",
-                "1771",
-                "1772",
-              ].forEach((year, index) => {
-                let yearsOfCity = Object.keys(city); // save years associated to each city in an Array
-
-                // test: little spheres in middle instead of text with year
-                //let s = sphere(0.1);
-                //s.position.y += 1 + index * 2.5;
-
-                // create text object
-                const yearMarker = makeYearMarker(year, index);
-
-                // add yearMarker object as child of placeMarker object -> yearMarker positioned relative to placeMarker
-                placeMarker.add(yearMarker);
-
-                // test whether years in the time filter array (year) are contained in the list of years associated to each city
-                // if yes, plot the letter objects (here: as helix)
-                // yearMarker = pivot, city[year] = data = array with all letter objects associated to this year
-                if (yearsOfCity.includes(year)) {
-                  let lettersFromYear = city[year];
-                  makeHelixForMap(yearMarker, lettersFromYear);
-                }
-
-                // add yearMarkers to array of clickable objects
-                makeClickable(yearMarker, false);
-              });
-            } catch (error) {
-              console.log(error);
-            }
-          });
+        loopPlaceMarker(addHelixtoPlaceMarker);
 
         // correct position of placemarker "Wiesbaden"
         correctPositionWiesbaden();
@@ -719,7 +668,7 @@ fetch("./letters_json_grouped_merged.json")
         /* const axesHelperDate = new THREE.AxesHelper( 1 );
       dateText.add( axesHelperDate ); */
 
-        // gui helper for name
+        // gui helper for date
         dateGui
           .add(dateText.position, "y")
           .min(-10)
@@ -783,17 +732,127 @@ fetch("./letters_json_grouped_merged.json")
     }
 
     /* 4) Helix */
-    // wird bei Klick auf Button Helix ausgeführt
-    function makeHelixForMap(pivot, letters) {
-      /* for (let i = 0, l = letters.length; i < l; i++) {
-        makePlane();
-        //...
-      } */
+    // implementation of functionForLoop in loop over placemarker
+    function addHelixtoPlaceMarker(placeMarker) {
+      try {
+        const city = data[placeMarker.name]; // saves name of place from json data
+        console.log(city, placeMarker.name); // logs city names
+
+        makeHelixForMap(placeMarker, city);
+      } catch (error) {
+        console.log(error);
+      }
     }
 
-    // implementation of functionForLoop in loop over yearMarker
-    function addYearMarkerAndHelix(placeMarker, city, year, index){
+    function makeHelixForMap(placeMarker, city) {
+      // aggreagate all letters of one place in an array
+      const letters = [];
+      Object.keys(city).forEach((year) => {
+        let yearArray = city[`${year}`];
+        // loop over array with letter objects
+        for (let i = 0; i < yearArray.length; i++) {
+          letters.push(city[`${year}`][i]);
+        }
+      });
 
+      // loop over letters and create helix
+      for (let i = 0, l = letters.length; i < l; i++) {
+        /* 
+        create planes and position them as a helix 
+      */
+
+        // Mesh/Plane for letter objects
+        const plane = makePlane();
+
+        // set id for naming the plane (z.B. GB01_1_EB005_0_s)
+        const id = letters[i].id;
+        plane.name = `${id}`;
+
+        // positioning of planes
+        const theta = i * 0.175 + Math.PI;
+        const y = i * 0.1;
+
+        plane.position.setFromCylindricalCoords( 2, theta, y);
+
+        vector.x = plane.position.x * 2;
+        vector.y = plane.position.y;
+        vector.z = plane.position.z * 2;
+
+        vector.copy(plane.position).multiplyScalar(2);
+        plane.lookAt(vector);
+
+        // add letter objects to pivot bc their position is relative to the pivot
+        placeMarker.add(plane);
+
+        // add planes to array of clickable objects
+        makeClickable(plane, false);
+
+        //axes helper for plane
+       /*  const axesHelperPlane = new THREE.AxesHelper( 1 );
+      plane.add( axesHelperPlane ); */
+
+        /* 
+          create text objects with content to put on planes: id, initials, name, date
+        */
+
+        /* ID */
+        const idText = makeIdText(letters[i]);
+
+        /* INITIALS */
+        const initialsText = makeInitialsText(letters[i]);
+
+        /* NAME */
+        const firstNameText = makeFirstNameText(letters[i]);
+        const lastNameText = makeLastNameText(letters[i]);
+
+        /* DATE */
+        const dateText = makeDateText(letters[i]);
+
+        /* 
+        add content to plane 
+      */
+        plane.add(idText);
+        plane.add(initialsText);
+        plane.add(firstNameText);
+        plane.add(lastNameText);
+        plane.add(dateText);
+
+        /* 
+        make content clickable
+      */
+        makeClickable(initialsText, false);
+        makeClickable(firstNameText, false);
+        makeClickable(lastNameText, false);
+        makeClickable(idText, false);
+
+        /* 
+        position content on plane
+      */
+
+        /* ID */
+        idText.position.y = 0.13;
+        idText.position.x = -0.09;
+        idText.position.z = 0.01;
+
+        /* INITIALS */
+        initialsText.position.y = 0.07;
+        initialsText.position.x = -0.06;
+        initialsText.position.z = 0.01;
+
+        /* NAME */
+        firstNameText.position.y = -0.03;
+        firstNameText.position.x = -0.13;
+        firstNameText.position.z = 0.01;
+
+        lastNameText.position.y = -0.06;
+        lastNameText.position.x = -0.13;
+        lastNameText.position.z = 0.01;
+
+        /* DATE */
+        dateText.position.y = -0.09;
+        dateText.position.x = -0.13;
+        dateText.position.z = 0.01;
+      }
     }
 
     /* 5.) Helper Functions for Map View */
@@ -974,7 +1033,7 @@ fetch("./letters_json_grouped_merged.json")
             ["Frankfurt", "Darmstadt", "Wiesbaden", "Worms"].includes(i.name) // temporary! filters which objects (Ortsmarker) from the scene group should be included
         )
         .forEach((placeMarker) => {
-          // function with code that should be executed in the loop for each placeMarker 
+          // function with code that should be executed in the loop for each placeMarker
           // functionForLoop must have argument "placeMarker"
           functionForLoop(placeMarker);
         });
@@ -1005,7 +1064,7 @@ fetch("./letters_json_grouped_merged.json")
               "1772",
             ].forEach((year, index) => {
               // function with code that should be executed in the loop for each yearMarker
-              // function for loop needs arguments "placeMarker, city, year, index" 
+              // function for loop needs arguments "placeMarker, city, year, index"
               functionForLoop(placeMarker, city, year, index);
             });
           } catch (error) {
@@ -1248,7 +1307,7 @@ fetch("./letters_json_grouped_merged.json")
           // maybe useful:
           // get id of letter (without _s or _r)
           /* let id = R.replace(/_[sr]/g, "", clickedObj.parent.name);
-             console.log(id); */
+               console.log(id); */
         }
 
         // click on initals or name -> link to gnd of person
@@ -1332,10 +1391,10 @@ fetch("./letters_json_grouped_merged.json")
 
       // Update objects
       /* object.rotation.y = 0.3 * elapsedTime;
-  
-    object.rotation.y += 0.5 * (mousemove.targetX - object.rotation.y);
-    object.rotation.x += 0.5 * (mousemove.targetY - object.rotation.x);
-    object.rotation.z += 0.005 * (mousemove.targetY - object.rotation.x); */
+    
+      object.rotation.y += 0.5 * (mousemove.targetX - object.rotation.y);
+      object.rotation.x += 0.5 * (mousemove.targetY - object.rotation.x);
+      object.rotation.z += 0.005 * (mousemove.targetY - object.rotation.x); */
       // Update Orbital Controls
       //controls.update()
 

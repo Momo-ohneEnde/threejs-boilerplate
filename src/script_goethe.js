@@ -2918,7 +2918,7 @@
 					// radius (distance from the origin to a point in the x-z plane)
 					// theta = counterclockwise angle in the x-z plane measured in radians from the positive z-axis
 					// y = height above the x-z plane
-					object.position.setFromCylindricalCoords( 900, theta, y );
+					object.position.setFromCylindricalCoords( 900, theta, y);
 
 					vector.x = object.position.x * 2;
 					vector.y = object.position.y;
@@ -2929,6 +2929,40 @@
 					targets.helix.push( object );
 
 				}
+
+				// Experiment
+				/* for ( let i = 0, l = objects.length; i < l; i ++ ) {
+
+					const theta = i * 0.175 + Math.PI; // Wie groß sind die Abstände zwischen den Elementen? (links-rechts)
+					const y = - ( i * 10 ) + 450; // Wie groß sind die Abstände zwischen den Elementen? (oben-unten)
+
+					const object = new THREE.Object3D();
+
+					const numLettersPerYear = [17, 30, 50];
+					const radius = [];
+					for (let i = 0; i <numLettersPerYear.length; i++){
+						let r = numLettersPerYear[i] / 28 + 900;
+						radius.push(r);
+						// Objekt wird in einem zylindrischen Koordinatensystem positioniert (Helix hat die Form eines Zylinders)
+					// Mehr Infos zu zylindrischen Koordinaten in three.js: https://threejs.org/docs/index.html?q=vector#api/en/math/Cylindrical
+					// Parameter: 
+					// radius (distance from the origin to a point in the x-z plane)
+					// theta = counterclockwise angle in the x-z plane measured in radians from the positive z-axis
+					// y = height above the x-z plane
+					object.position.setFromCylindricalCoords( radius[i], theta, y);
+
+					
+										vector.x = object.position.x * 2;
+										vector.y = object.position.y;
+										vector.z = object.position.z * 2;
+					
+										object.lookAt( vector );
+					
+										targets.helix.push( object );
+					}
+
+				} */
+
 
 				// GRID
                 // macht einen 5 x 5 Grid
