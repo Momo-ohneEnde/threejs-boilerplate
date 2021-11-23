@@ -5,6 +5,7 @@
 import "./style.css";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { FirstPersonControls } from "three/examples/jsm/controls/FirstPersonControls.js";
 import * as dat from "dat.gui";
 import { PointLight, AmbientLight, Vector3 } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
@@ -12,6 +13,10 @@ import { RoughnessMipmapper } from "three/examples/jsm/utils/RoughnessMipmapper.
 import { Text } from "troika-three-text";
 import * as R from "ramda";
 import * as d3 from "d3";
+import {
+  CSS3DRenderer,
+  CSS3DObject,
+} from "three/examples/jsm/renderers/CSS3DRenderer.js";
 
 fetch("./letters_json_grouped_merged.json")
   // log response to see whether data is loaded
@@ -54,15 +59,19 @@ fetch("./letters_json_grouped_merged.json")
      * Renderer
      */
 
-    const renderer = new THREE.WebGLRenderer({
-      canvas: canvas,
-      // makes background transparent
-      alpha: true,
-    });
-    renderer.setSize(sizes.width, sizes.height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    // shows render info e.g. how many objects are currently in memory
-    console.log(renderer.info);
+    let renderer = (() => {
+      let renderer = new THREE.WebGLRenderer({
+        canvas: canvas,
+        // makes background transparent
+        alpha: true,
+      });
+      renderer.name = "WebGL";
+      renderer.setSize(sizes.width, sizes.height);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      // shows render info e.g. how many objects are currently in memory
+      console.log(renderer.info);
+      return renderer;
+    })();
 
     /**
      * Scene
@@ -194,6 +203,36 @@ fetch("./letters_json_grouped_merged.json")
     // Kugel-Button ->Wechsel zu Kugelansicht(Karte)
     const kugelButton = document.getElementById("kugel");
     kugelButton.onclick = () => {
+      if (renderer.name != "WebGL") {
+        renderer = (() => {
+          let renderer = new THREE.WebGLRenderer({
+            canvas: canvas,
+            // makes background transparent
+            alpha: true,
+          });
+          renderer.name = "WebGL";
+          renderer.setSize(sizes.width, sizes.height);
+          renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+          // shows render info e.g. how many objects are currently in memory
+          console.log(renderer.info);
+          return renderer;
+        })();
+        camera = new THREE.OrthographicCamera(
+          sizes.width / -2,
+          sizes.width / 2,
+          sizes.height / 2,
+          sizes.height / -2,
+          0,
+          2000
+        );
+        camera.position.x = 0;
+        camera.position.y = 25;
+        camera.position.z = 20;
+        camera.zoom = 10;
+        camera.updateProjectionMatrix();
+        controls = new OrbitControls(camera, canvas);
+        document.getElementById("canvas").style.zIndex = "100";
+      }
       //clearCanvas();
       mapViewKugeln();
       console.log("Wechsel zu Kugelansicht!");
@@ -203,6 +242,22 @@ fetch("./letters_json_grouped_merged.json")
     const sphereButton = document.getElementById("sphere");
     sphereButton.onclick = () => {
       //clearCanvas();
+      if (renderer.name != "WebGL") {
+        renderer = (() => {
+          let renderer = new THREE.WebGLRenderer({
+            canvas: canvas,
+            // makes background transparent
+            alpha: true,
+          });
+          renderer.name = "WebGL";
+          renderer.setSize(sizes.width, sizes.height);
+          renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+          // shows render info e.g. how many objects are currently in memory
+          console.log(renderer.info);
+          return renderer;
+        })();
+      }
+
       mapViewSpheres();
       console.log("Wechsel zu Sphärenansicht!");
     };
@@ -210,9 +265,33 @@ fetch("./letters_json_grouped_merged.json")
     // Helix-Buttton -> Wechsel zu Helixansicht (Karte)
     const helixButton = document.getElementById("helix");
     helixButton.onclick = () => {
+      if (renderer.name != "WebGL") {
+        renderer = (() => {
+          let renderer = new THREE.WebGLRenderer({
+            canvas: canvas,
+            // makes background transparent
+            alpha: true,
+          });
+          renderer.name = "WebGL";
+          renderer.setSize(sizes.width, sizes.height);
+          renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+          // shows render info e.g. how many objects are currently in memory
+          console.log(renderer.info);
+          return renderer;
+        })();
+      }
       //clearCanvas();
       mapViewHelix();
       console.log("Wechsel zu Helixansicht!");
+    };
+
+    // render button
+
+    const renderButton = document.getElementById("render");
+    renderButton.onclick = () => {
+      //clearCanvas();
+      initSinglePlaceView();
+      console.log("Wechsel zu Einzelansicht!");
     };
 
     /* CREATE MAP VIEWS */
@@ -248,6 +327,7 @@ fetch("./letters_json_grouped_merged.json")
         // loop over array gltf scene objects and add each child ojb to the clickable list
         // true -> isArray
         makeClickable(gltfSceneObjs, true);
+        console.log(gltfSceneObjs);
 
         roughnessMipmapper.dispose();
         //render();
@@ -746,113 +826,138 @@ fetch("./letters_json_grouped_merged.json")
 
     function makeHelixForMap(placeMarker, city) {
       // aggreagate all letters of one place in an array
-      const letters = [];
-      Object.keys(city).forEach((year) => {
-        let yearArray = city[`${year}`];
-        // loop over array with letter objects
-        for (let i = 0; i < yearArray.length; i++) {
-          letters.push(city[`${year}`][i]);
-        }
-      });
 
-      // loop over letters and create helix
-      for (let i = 0, l = letters.length; i < l; i++) {
+      Object.keys(city).forEach((year, yearindex) => {
+        let letters = city[`${year}`];
+        // loop over array with letter objects
+        //const letters = [];
+        for (let i = 0; i < letters.length; i++) {
+          //letters.push(city[`${year}`][i]);
+          const plane = makePlane();
+
+          // set id for naming the plane (z.B. GB01_1_EB005_0_s)
+          const id = letters[i].id;
+          plane.name = `${id}`;
+
+          function getHelixRadius(letterNumber) {
+            const r = letterNumber / 10.5;
+            return r;
+          }
+//
+          function getHelixThetaFaktor(r) {
+            const thetaFaktor = r / .25;
+            //const thetaFaktor = letterNumber / 200;
+
+            return thetaFaktor;
+          }
+
+          // positioning of planes
+          // wenn der Durchmesser größer wird, muss theta kleiner werden
+          // Anzahl Briefe : 17,5 = Radius
+          // Radius : 11.4285714286 = theta-Faktor
+          /* const theta = i * 0.175 + Math.PI;
+        const y = i * .1; */
+          const theta = i * getHelixThetaFaktor(getHelixRadius(letters.length)) + Math.PI;
+          //const theta = i * 0.175 + Math.PI;
+          const y = i * 0.1;
+
+          plane.position.setFromCylindricalCoords(
+            getHelixRadius(letters.length),
+            theta,
+            y
+          );
+          vector.x = plane.position.x * 2;
+          vector.y = plane.position.y;
+          vector.z = plane.position.z * 2;
+          //vector.multiplyScalar(2);
+
+          plane.lookAt(vector);
+
+          /* vector.x = plane.position.x * 2;
+        vector.y = plane.position.y;
+        vector.z = plane.position.z * 2; */
+
+          // add letter objects to pivot bc their position is relative to the pivot
+          placeMarker.add(plane);
+
+          // add planes to array of clickable objects
+          makeClickable(plane, false);
+
+          //axes helper for plane
+          /*  const axesHelperPlane = new THREE.AxesHelper( 1 );
+      plane.add( axesHelperPlane ); */
+
+          /* 
+          create text objects with content to put on planes: id, initials, name, date
+        */
+
+          /* ID */
+          const idText = makeIdText(letters[i]);
+
+          /* INITIALS */
+          const initialsText = makeInitialsText(letters[i]);
+
+          /* NAME */
+          const firstNameText = makeFirstNameText(letters[i]);
+          const lastNameText = makeLastNameText(letters[i]);
+
+          /* DATE */
+          const dateText = makeDateText(letters[i]);
+
+          /* 
+        add content to plane 
+      */
+          plane.add(idText);
+          plane.add(initialsText);
+          plane.add(firstNameText);
+          plane.add(lastNameText);
+          plane.add(dateText);
+
+          /* 
+        make content clickable
+      */
+          makeClickable(initialsText, false);
+          makeClickable(firstNameText, false);
+          makeClickable(lastNameText, false);
+          makeClickable(idText, false);
+
+          /* 
+        position content on plane
+      */
+
+          /* ID */
+          idText.position.y = 0.13;
+          idText.position.x = -0.09;
+          idText.position.z = 0.01;
+
+          /* INITIALS */
+          initialsText.position.y = 0.07;
+          initialsText.position.x = -0.06;
+          initialsText.position.z = 0.01;
+
+          /* NAME */
+          firstNameText.position.y = -0.03;
+          firstNameText.position.x = -0.13;
+          firstNameText.position.z = 0.01;
+
+          lastNameText.position.y = -0.06;
+          lastNameText.position.x = -0.13;
+          lastNameText.position.z = 0.01;
+
+          /* DATE */
+          dateText.position.y = -0.09;
+          dateText.position.x = -0.13;
+          dateText.position.z = 0.01;
+        }
+
+        // loop over letters and create helix
+        //for (let i = 0, l = letters.length; i < l; i++) {
         /* 
         create planes and position them as a helix 
       */
 
         // Mesh/Plane for letter objects
-        const plane = makePlane();
-
-        // set id for naming the plane (z.B. GB01_1_EB005_0_s)
-        const id = letters[i].id;
-        plane.name = `${id}`;
-
-        // positioning of planes
-        const theta = i * 0.175 + Math.PI;
-        const y = i * 0.1;
-
-        plane.position.setFromCylindricalCoords( 2, theta, y);
-
-        vector.x = plane.position.x * 2;
-        vector.y = plane.position.y;
-        vector.z = plane.position.z * 2;
-
-        vector.copy(plane.position).multiplyScalar(2);
-        plane.lookAt(vector);
-
-        // add letter objects to pivot bc their position is relative to the pivot
-        placeMarker.add(plane);
-
-        // add planes to array of clickable objects
-        makeClickable(plane, false);
-
-        //axes helper for plane
-       /*  const axesHelperPlane = new THREE.AxesHelper( 1 );
-      plane.add( axesHelperPlane ); */
-
-        /* 
-          create text objects with content to put on planes: id, initials, name, date
-        */
-
-        /* ID */
-        const idText = makeIdText(letters[i]);
-
-        /* INITIALS */
-        const initialsText = makeInitialsText(letters[i]);
-
-        /* NAME */
-        const firstNameText = makeFirstNameText(letters[i]);
-        const lastNameText = makeLastNameText(letters[i]);
-
-        /* DATE */
-        const dateText = makeDateText(letters[i]);
-
-        /* 
-        add content to plane 
-      */
-        plane.add(idText);
-        plane.add(initialsText);
-        plane.add(firstNameText);
-        plane.add(lastNameText);
-        plane.add(dateText);
-
-        /* 
-        make content clickable
-      */
-        makeClickable(initialsText, false);
-        makeClickable(firstNameText, false);
-        makeClickable(lastNameText, false);
-        makeClickable(idText, false);
-
-        /* 
-        position content on plane
-      */
-
-        /* ID */
-        idText.position.y = 0.13;
-        idText.position.x = -0.09;
-        idText.position.z = 0.01;
-
-        /* INITIALS */
-        initialsText.position.y = 0.07;
-        initialsText.position.x = -0.06;
-        initialsText.position.z = 0.01;
-
-        /* NAME */
-        firstNameText.position.y = -0.03;
-        firstNameText.position.x = -0.13;
-        firstNameText.position.z = 0.01;
-
-        lastNameText.position.y = -0.06;
-        lastNameText.position.x = -0.13;
-        lastNameText.position.z = 0.01;
-
-        /* DATE */
-        dateText.position.y = -0.09;
-        dateText.position.x = -0.13;
-        dateText.position.z = 0.01;
-      }
+      });
     }
 
     /* 5.) Helper Functions for Map View */
@@ -1077,22 +1182,185 @@ fetch("./letters_json_grouped_merged.json")
 
     function initSinglePlaceView() {
       // default: Sphären
-      loadSingleViewBase();
-      makeSpheresForSingleView();
+      renderer = loadSingleViewBase();
+      makeSpheresForSingleView("Frankfurt");
     }
 
     function singlePlaceViewHelix() {
-      loadSingleViewBase();
+      renderer = loadSingleViewBase();
       makeHelixForSingleView();
     }
 
     /* FUNCTIONS FOR SINGLE PLACE VIEW */
 
     /* Basis für Einzelansicht */
-    function loadSingleViewBase() {}
+    function loadSingleViewBase() {
+      let renderer = new CSS3DRenderer();
+      renderer.name = "CSS3D";
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      // im div mit id = container werdend die Objekte gerendert
+      document.getElementById("container").appendChild(renderer.domElement);
+      return renderer;
+    }
 
     /* Einzelansicht: Sphären */
-    function makeSpheresForSingleView() {}
+    function makeSpheresForSingleView(placename) {
+      // Instanziierung eines leeren 3D-Vektors
+      const vector = new THREE.Vector3();
+      camera = new THREE.PerspectiveCamera(
+        40,
+        window.innerWidth / window.innerHeight,
+        1,
+        10000
+      );
+      camera.position.y = 0;
+      camera.position.z = 0;
+      camera.position.x = 0;
+
+      camera.position.z = 10000;
+      camera.position.x = 7500;
+      camera.position.y = 5000;
+      camera.zoom = 1;
+      //camera.updateProjectionMatrix();
+      //camera.lookAt(new Vector3(0,1000,0));
+      //camera.position.y = 3000;
+      //camera.updateProjectionMatrix();
+      //camera.lookAt(new Vector3(0,1000,0));
+      cameraGui.add(camera.position, "y").min(0).max(10000).step(10);
+      cameraGui.add(camera.position, "x").min(0).max(10000).step(10);
+      cameraGui.add(camera.position, "z").min(0).max(10000).step(10);
+
+      console.log(camera);
+      controls = new OrbitControls(camera, renderer.domElement);
+      controls.target.x = 0;
+      controls.target.z = 0;
+      controls.target.y = 0;
+      controls.minPolarAngle = Math.PI / 2;
+      controls.maxPolarAngle = Math.PI / 2 + 0.75;
+      // controls.enablePan = false;
+      // controls.enableZoom = false;
+      // console.log('azi',controls.getAzimuthalAngle());
+      // console.log('pol',controls.getPolarAngle());
+      console.log(controls.target);
+      //   canvas.addEventListener( 'wheel', function(event){
+      //     //...
+      //     event.preventDefault();
+      //     let scale = 0;
+      //     console.log(event.deltaY);
+      //     scale += event.deltaY;
+
+      //     // Restrict scale
+
+      //     console.log(scale);
+      //     camera.position.y += scale * 10;
+      //     //...
+      //  })
+      //controls.enableRotate = false;
+
+      let place = data[`${placename}`];
+
+      Object.keys(place).forEach((year, index) => {
+        let yearArray = place[`${year}`];
+        console.log(yearArray);
+        // loop over array with letter objects
+        let letters = [];
+        for (let i = 0; i < yearArray.length; i++) {
+          letters.push(yearArray[i]);
+        }
+        createSphere(letters, index);
+      });
+
+      function createSphere(letters, year) {
+        for (let i = 0, l = letters.length; i < l; i++) {
+          // <div class="element">
+          const element = document.createElement("div");
+          element.className = "element";
+          // Math.random legt einen zufälligen Alpha-Wert für die Hintergrundfarbe fest
+          // element.style.backgroundColor = 'rgba(255,0,0,' + ( Math.random() * 0.5 + 0.25 ) + ')';
+          // ohne Math.random
+
+          if (letters[i].receiverGender == "Weiblich") {
+            element.style.backgroundColor = "rgb(237, 125, 49, 0.5)";
+          } else if (letters[i].receiverGender == "Männlich") {
+            element.style.backgroundColor = "rgb(231, 230, 230, 0.5)";
+          } else {
+            element.style.backgroundColor = "rgb(0, 0, 0, 0.5)";
+          }
+          //element.style.backgroundColor = 'rgb(231, 230, 230, 0.5)';
+          element.setAttribute(
+            "onclick",
+            "window.open(' " + letters[i].propyURL + "')"
+          );
+
+          // <div class="id">
+          const id = document.createElement("div");
+          id.className = "id";
+          id.textContent = letters[i].idFormatted;
+          element.appendChild(id);
+
+          // <div class="initials">
+          const initials = document.createElement("div");
+          initials.className = "initials";
+          initials.textContent = letters[i].receiverInitials;
+          initials.setAttribute(
+            "onclick",
+            "window.open(' " + letters[i].receiverId + "')"
+          );
+          element.appendChild(initials);
+
+          // <div class="name">
+          const name = document.createElement("div");
+          name.className = "name";
+          name.innerHTML = letters[i].receiverFormatted;
+          name.setAttribute(
+            "onclick",
+            "window.open(' " + letters[i].receiverId + "')"
+          );
+          element.appendChild(name);
+
+          // <div class="date">
+          const date = document.createElement("div");
+          date.className = "date";
+          date.innerHTML = letters[i].dateFormatted;
+          element.appendChild(date);
+
+          // erstellt ein CSS3DObjekt aus Variable element
+          // die Anfangsposition der Elemente wird zufällig festgelegt
+          const objectCSS = track(new CSS3DObject(element));
+          /* objectCSS.position.x = Math.random() * 400 - 200;
+          objectCSS.position.y = Math.random() * 400 - 200;
+          objectCSS.position.z = Math.random() * 400 - 200; */
+
+          // Berechnung von Winkeln, die für die Positionierung in sphärischem Koordinatensystem notwendig sind
+          // Basiert auf Index und Länge des Objekt-Arrays
+          // phi = polar angle in radians from the y (up) axis
+          // theta = equator angle in radians around the y (up) axis
+          const phi = Math.acos(-1 + (2 * i) / l);
+          const theta = Math.sqrt(l * Math.PI) * phi;
+
+          // Objekt (Element) wird in einem sphärischem Koordinatensystem d.h. auf der Kugel platziert
+          // https://en.wikipedia.org/wiki/Spherical_coordinate_system
+          // Mehr Infos zu sphärischen Koordinaten in three.js: https://threejs.org/docs/index.html?q=vector#api/en/math/Spherical
+          // Parameter: radial distance from point to origin (Mittelpunkt), phi, theta
+          objectCSS.position.setFromSphericalCoords(500, phi, theta);
+
+          // im Vektor wird die Position des Objekts gespeichert und skalar mit 2 multipliziert
+          // warum?
+          vector.copy(objectCSS.position).multiplyScalar(2);
+
+          // Objekt und Vektor schauen sich an
+          // Objekt wird so rotiert, dass siene interne Z-Achse zum Vektor zeigt
+          // was auch immer das heißen soll???
+          objectCSS.lookAt(vector);
+          scene.add(objectCSS);
+
+          objectCSS.position.y += 1200 * year;
+
+          // Objekt wird zum Sphären Array im Targets-Objekt hinzugefügt
+          targets.sphere.push(objectCSS);
+        }
+      }
+    }
 
     /* Einzelansicht: Helix */
     function makeHelixForSingleView() {}
@@ -1189,7 +1457,9 @@ fetch("./letters_json_grouped_merged.json")
 
       // Update renderer
       renderer.setSize(sizes.width, sizes.height);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      if (renderer.name == "WebGL") {
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      }
     });
 
     /**
@@ -1200,6 +1470,7 @@ fetch("./letters_json_grouped_merged.json")
     gui.width = 310;
 
     // Set GUI folders
+    const cameraGui = gui.addFolder("Camera");
     const light = gui.addFolder("Light");
     const idTextGui = gui.addFolder("idText");
     const initialsGui = gui.addFolder("initials");
@@ -1221,7 +1492,7 @@ fetch("./letters_json_grouped_merged.json")
      * Camera
      */
 
-    const camera = new THREE.OrthographicCamera(
+    let camera = new THREE.OrthographicCamera(
       sizes.width / -2,
       sizes.width / 2,
       sizes.height / 2,
@@ -1240,7 +1511,7 @@ fetch("./letters_json_grouped_merged.json")
      * Controls
      */
 
-    const controls = new OrbitControls(camera, canvas);
+    let controls = new OrbitControls(camera, canvas);
     //controls.enableDamping = true;
 
     /**
@@ -1279,8 +1550,9 @@ fetch("./letters_json_grouped_merged.json")
       // der Raycaster gibt ein Array mit den vom Strahl getroffenen
       // Objekten zurück. Dieses Array ist leer (Länge == 0), wenn
       // keine Objekte getroffen wurden.
+      console.log(targets.clickable);
       let intersects = raycaster.intersectObjects(targets.clickable);
-      console.log(scene.children[4].children);
+      //console.log(scene.children[4].children);
       // Alle Elemente in der Szene. Klick auf den LightHelper logged bspw. diesen.
       // Statt scene.children kann auch ein Array relevanter Objekte angegeben werden: [ objectPlanet ]
       // Wenn der intersects Array Objekte enthält (length > 0), dann wird der string "Klick" ausgegeben plus das Objekt
@@ -1334,9 +1606,15 @@ fetch("./letters_json_grouped_merged.json")
             });
           });
         }
-
+        console.log(clickedObj);
         // click on placeMarker -> Wechsel zu Einzelansicht
-        if (
+        if (Object.keys(data).includes(clickedObj.name)) {
+          console.log("Klick auf Ortsmarker!");
+          //clearCanvas();
+          //initSinglePlaceView();
+        }
+
+        /* if (
           clickedObj.parent.name == "Scene" &&
           clickedObj.parent.type == "Group" &&
           clickedObj.name != "GOOGLE_SAT_WM" &&
@@ -1347,7 +1625,7 @@ fetch("./letters_json_grouped_merged.json")
           console.log("Klick auf Ortsmarker!");
           //clearCanvas();
           //initSinglePlaceView();
-        }
+        } */
       } else {
         console.log("No intersections.");
       }
