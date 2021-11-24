@@ -104,7 +104,9 @@
 </head>
 <body>
     
+    <!-- canvas wird für Kartenansicht mit WebGL renderer verwendet -->
     <canvas id="canvas" class="webgl"></canvas>
+    <!-- container div wird für Einzelansicht mit css3d renderer verwendet -->
     <div id="container">
     </div>
     <div id="menu">
@@ -112,7 +114,6 @@
         <button id="sphere">SPHERE</button>
         <button id="helix">HELIX</button>
         <button id="render">RENDER</button>
-        <!--<button id="grid">GRID</button>-->
         <button id="disposeBtn" onclick="dispose()">DISPOSE</button>
     </div>
 </body>

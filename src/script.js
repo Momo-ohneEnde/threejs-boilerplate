@@ -87,33 +87,37 @@ fetch("./letters_json_grouped_merged.json")
      * Data and Main Functions
      */
 
-    /* CLEAR */
+    /* CLEAR - dispose objects when changing views */
+
+    // clear function
     function clearCanvas() {
-      // ToDo
+      resourceTracker.dispose();
+      //console.log("Disposed!");
+      console.log(scene);
+      console.log(renderer.info);
     }
 
-    // tests for clean up
-
-    // dispose button
+    // dispose button (alternative for clearCanvas, used for testing the resource tracker)
     let disposeBtn = document.getElementById("disposeBtn");
     disposeBtn.onclick = () => {
-      resMgr.dispose();
+      resourceTracker.dispose();
       //console.log("Disposed!");
       console.log(scene);
       console.log(renderer.info);
     };
+
     /* Allgemeines Vorgehen, um Elemente aus der Szene zu löschen: 
       1.) Komplette Szene durchgehen, 
       2.) alle Elemente in Szene von der Szene entfernen mit remove(), 
       3.) dann mit dispose() aus dem Speicher löschen, bzw. geometry, material, textures müssen auch einzeln gelöscht werden
      */
 
-    /* Vorgehen: Resource Tracker:
-      legt ein Set mit zu löschenden Objekten an
-      hat eine track-function, mit der Objekte in das Set aufgenommen werden 
-      d.h. immer wenn ein neues Objekt erstellt wird, dann muss es von der Funktion track() umschlossen werden
-      am Ende kann dann dispose() auf das Set angewandt werden, sodass alle Objekte gleichzeitig gelöscht werden
-    */
+    /* Vorgehen mit Resource Tracker:
+     * Tracker legt ein Set mit zu löschenden Objekten an
+     * Tracker hat eine track-function, mit der Objekte in das Set aufgenommen werden
+     * d.h. immer wenn ein neues Objekt erstellt wird, dann muss es von der Funktion track() umschlossen werden
+     * am Ende kann dann dispose() auf das Set angewandt werden, sodass alle Objekte gleichzeitig gelöscht werden
+     */
 
     // resource tracker class (tracks objects which will be removed later)
     class ResourceTracker {
@@ -128,7 +132,6 @@ fetch("./letters_json_grouped_merged.json")
 
         // handle children and when material is an array of materials or
         // uniform is array of textures
-        // not applicable in my case
         if (Array.isArray(resource)) {
           resource.forEach((resource) => this.track(resource));
           return resource;
@@ -146,7 +149,6 @@ fetch("./letters_json_grouped_merged.json")
           this.track(resource.children);
         } else if (resource instanceof THREE.Material) {
           // We have to check if there are any textures on the material
-          // not applicable for my case
           for (const value of Object.values(resource)) {
             if (value instanceof THREE.Texture) {
               this.track(value);
@@ -188,21 +190,31 @@ fetch("./letters_json_grouped_merged.json")
     }
 
     // set up resource tracker and bind tracking method
-    const resMgr = new ResourceTracker();
-    const track = resMgr.track.bind(resMgr);
+    const resourceTracker = new ResourceTracker();
+    const track = resourceTracker.track.bind(resourceTracker);
 
     /* INIT */
     function init() {
       // default
-      //mapViewKugeln();
-      mapViewHelix();
+      mapViewKugeln();
+      //mapViewHelix();
     }
     init();
 
     /* BUTTONS */
     // Kugel-Button ->Wechsel zu Kugelansicht(Karte)
     const kugelButton = document.getElementById("kugel");
+
     kugelButton.onclick = () => {
+      // clear canvas
+      clearCanvas();
+
+      /* reset renderer and camera 
+       why necessary?
+       In case the button is clicked coming from the single place view,
+       where the css3d renderer and the perspective camera are used,
+       the renderer must be changed to  WebGl and the camera must be changed to orthographic
+    */
       if (renderer.name != "WebGL") {
         renderer = (() => {
           let renderer = new THREE.WebGLRenderer({
@@ -217,6 +229,7 @@ fetch("./letters_json_grouped_merged.json")
           console.log(renderer.info);
           return renderer;
         })();
+
         camera = new THREE.OrthographicCamera(
           sizes.width / -2,
           sizes.width / 2,
@@ -231,9 +244,18 @@ fetch("./letters_json_grouped_merged.json")
         camera.zoom = 10;
         camera.updateProjectionMatrix();
         controls = new OrbitControls(camera, canvas);
+
+        // wichtig!
+        /* Wenn der css3d renderer verwendet wird, muss das container-div im Vordergrund sein,
+        wenn der webgl renderer verwendet wird, muss das canvas-Element im Vordergrund sein.
+        Daher bekommt das canvas-Element hier einen z-Index von 100 
+        und das Menü mit den Buttons einen z-Index von 200 (Menü soll über allen Visus sitzen und klickbar sein).
+        */
         document.getElementById("canvas").style.zIndex = "100";
+        document.getElementById("menu").style.zIndex = "200";
       }
-      //clearCanvas();
+
+      // create Kugelansicht
       mapViewKugeln();
       console.log("Wechsel zu Kugelansicht!");
     };
@@ -241,7 +263,10 @@ fetch("./letters_json_grouped_merged.json")
     // Sphären-Button -> Wechsel zu Spährenansicht (Karte)
     const sphereButton = document.getElementById("sphere");
     sphereButton.onclick = () => {
-      //clearCanvas();
+      // clear canvas
+      clearCanvas();
+
+      // reset renderer
       if (renderer.name != "WebGL") {
         renderer = (() => {
           let renderer = new THREE.WebGLRenderer({
@@ -256,15 +281,45 @@ fetch("./letters_json_grouped_merged.json")
           console.log(renderer.info);
           return renderer;
         })();
+
+        camera = new THREE.OrthographicCamera(
+          sizes.width / -2,
+          sizes.width / 2,
+          sizes.height / 2,
+          sizes.height / -2,
+          0,
+          2000
+        );
+        camera.position.x = 0;
+        camera.position.y = 25;
+        camera.position.z = 20;
+        camera.zoom = 10;
+        camera.updateProjectionMatrix();
+        controls = new OrbitControls(camera, canvas);
+
+        // wichtig!
+        /* Wenn der css3d renderer verwendet wird, muss das container-div im Vordergrund sein,
+        wenn der webgl renderer verwendet wird, muss das canvas-Element im Vordergrund sein.
+        Daher bekommt das canvas-Element hier einen z-Index von 100 
+        und das Menü mit den Buttons einen z-Index von 200 (Menü soll über allen Visus sitzen und klickbar sein).
+        */
+        document.getElementById("canvas").style.zIndex = "100";
+        document.getElementById("menu").style.zIndex = "200";
       }
 
+      // create Sphärenansicht
       mapViewSpheres();
       console.log("Wechsel zu Sphärenansicht!");
     };
 
     // Helix-Buttton -> Wechsel zu Helixansicht (Karte)
     const helixButton = document.getElementById("helix");
+
     helixButton.onclick = () => {
+      // clear canvas
+      clearCanvas();
+
+      // reset renderer
       if (renderer.name != "WebGL") {
         renderer = (() => {
           let renderer = new THREE.WebGLRenderer({
@@ -279,17 +334,45 @@ fetch("./letters_json_grouped_merged.json")
           console.log(renderer.info);
           return renderer;
         })();
+
+        camera = new THREE.OrthographicCamera(
+          sizes.width / -2,
+          sizes.width / 2,
+          sizes.height / 2,
+          sizes.height / -2,
+          0,
+          2000
+        );
+        camera.position.x = 0;
+        camera.position.y = 25;
+        camera.position.z = 20;
+        camera.zoom = 10;
+        camera.updateProjectionMatrix();
+        controls = new OrbitControls(camera, canvas);
+
+        // wichtig!
+        /* Wenn der css3d renderer verwendet wird, muss das container-div im Vordergrund sein,
+        wenn der webgl renderer verwendet wird, muss das canvas-Element im Vordergrund sein.
+        Daher bekommt das canvas-Element hier einen z-Index von 100 
+        und das Menü mit den Buttons einen z-Index von 200 (Menü soll über allen Visus sitzen und klickbar sein).
+        */
+        document.getElementById("canvas").style.zIndex = "100";
+        document.getElementById("menu").style.zIndex = "200";
       }
-      //clearCanvas();
+
+      // create Helixansicht
       mapViewHelix();
       console.log("Wechsel zu Helixansicht!");
     };
 
-    // render button
+    // render button for single place view
 
     const renderButton = document.getElementById("render");
     renderButton.onclick = () => {
-      //clearCanvas();
+      // clear canvas
+      clearCanvas();
+
+      // create single place view
       initSinglePlaceView();
       console.log("Wechsel zu Einzelansicht!");
     };
@@ -843,9 +926,9 @@ fetch("./letters_json_grouped_merged.json")
             const r = letterNumber / 10.5;
             return r;
           }
-//
+          //
           function getHelixThetaFaktor(r) {
-            const thetaFaktor = r / .25;
+            const thetaFaktor = r / 0.25;
             //const thetaFaktor = letterNumber / 200;
 
             return thetaFaktor;
@@ -857,7 +940,8 @@ fetch("./letters_json_grouped_merged.json")
           // Radius : 11.4285714286 = theta-Faktor
           /* const theta = i * 0.175 + Math.PI;
         const y = i * .1; */
-          const theta = i * getHelixThetaFaktor(getHelixRadius(letters.length)) + Math.PI;
+          const theta =
+            i * getHelixThetaFaktor(getHelixRadius(letters.length)) + Math.PI;
           //const theta = i * 0.175 + Math.PI;
           const y = i * 0.1;
 
@@ -1182,19 +1266,25 @@ fetch("./letters_json_grouped_merged.json")
 
     function initSinglePlaceView() {
       // default: Sphären
-      renderer = loadSingleViewBase();
+
+      // update renderer, camera and controls
+      renderer = loadCSS3DRenderer();
+      camera = loadPerspectiveCamera();
+      controls = loadOrbitControls();
+
       makeSpheresForSingleView("Frankfurt");
     }
 
     function singlePlaceViewHelix() {
-      renderer = loadSingleViewBase();
+      renderer = loadCSS3DRenderer();
+      loadPerspectiveCameraAndOrbits();
       makeHelixForSingleView();
     }
 
     /* FUNCTIONS FOR SINGLE PLACE VIEW */
 
     /* Basis für Einzelansicht */
-    function loadSingleViewBase() {
+    function loadCSS3DRenderer() {
       let renderer = new CSS3DRenderer();
       renderer.name = "CSS3D";
       renderer.setSize(window.innerWidth, window.innerHeight);
@@ -1203,11 +1293,8 @@ fetch("./letters_json_grouped_merged.json")
       return renderer;
     }
 
-    /* Einzelansicht: Sphären */
-    function makeSpheresForSingleView(placename) {
-      // Instanziierung eines leeren 3D-Vektors
-      const vector = new THREE.Vector3();
-      camera = new THREE.PerspectiveCamera(
+    function loadPerspectiveCamera() {
+      let camera = new THREE.PerspectiveCamera(
         40,
         window.innerWidth / window.innerHeight,
         1,
@@ -1231,7 +1318,11 @@ fetch("./letters_json_grouped_merged.json")
       cameraGui.add(camera.position, "z").min(0).max(10000).step(10);
 
       console.log(camera);
-      controls = new OrbitControls(camera, renderer.domElement);
+      return camera;
+    }
+
+    function loadOrbitControls(){
+      let controls = new OrbitControls(camera, renderer.domElement);
       controls.target.x = 0;
       controls.target.z = 0;
       controls.target.y = 0;
@@ -1257,8 +1348,18 @@ fetch("./letters_json_grouped_merged.json")
       //  })
       //controls.enableRotate = false;
 
+      return controls;
+    }
+
+    /* Einzelansicht: Sphären */
+    function makeSpheresForSingleView(placename) {
+      // Instanziierung eines leeren 3D-Vektors
+      const vector = new THREE.Vector3();
+
+      // get data for place
       let place = data[`${placename}`];
 
+      // loop over years, put letters from each year in an array and use it to create a sphere
       Object.keys(place).forEach((year, index) => {
         let yearArray = place[`${year}`];
         console.log(yearArray);
