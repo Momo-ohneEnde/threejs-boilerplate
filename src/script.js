@@ -25,7 +25,7 @@ fetch("./letters_json_grouped_merged.json")
       return response.json(); } */
   .then((response) => response.json())
   .then((data) => {
-    console.log(data);
+    //console.log(data);
     return data;
   })
   .then((data) => {
@@ -91,10 +91,12 @@ fetch("./letters_json_grouped_merged.json")
 
     // clear function
     function clearCanvas() {
+      //resourceTracker.logResources();
       resourceTracker.dispose();
-      //console.log("Disposed!");
+      console.log("Disposed!");
       console.log(scene);
       console.log(renderer.info);
+      //resourceTracker.logResources();
     }
 
     // dispose button (alternative for clearCanvas, used for testing the resource tracker)
@@ -186,6 +188,9 @@ fetch("./letters_json_grouped_merged.json")
           }
         }
         this.resources.clear();
+      }
+      logResources(){
+        console.log(this.resources);
       }
     }
 
@@ -365,18 +370,6 @@ fetch("./letters_json_grouped_merged.json")
       console.log("Wechsel zu Helixansicht!");
     };
 
-    // render button for single place view
-
-    const renderButton = document.getElementById("render");
-    renderButton.onclick = () => {
-      // clear canvas
-      clearCanvas();
-
-      // create single place view
-      initSinglePlaceView();
-      console.log("Wechsel zu Einzelansicht!");
-    };
-
     /* CREATE MAP VIEWS */
 
     /* 1) Default: Kugelansicht */
@@ -410,7 +403,7 @@ fetch("./letters_json_grouped_merged.json")
         // loop over array gltf scene objects and add each child ojb to the clickable list
         // true -> isArray
         makeClickable(gltfSceneObjs, true);
-        console.log(gltfSceneObjs);
+        //console.log(gltfSceneObjs);
 
         roughnessMipmapper.dispose();
         //render();
@@ -503,7 +496,7 @@ fetch("./letters_json_grouped_merged.json")
           letterCount++;
         }
       });
-      console.log(letterCount);
+      //console.log(letterCount);
 
       // Anzahl der Objekte als Textobjekt
       const letterNumMarker = makeLetterNumMarker(letterCount);
@@ -614,7 +607,7 @@ fetch("./letters_json_grouped_merged.json")
     function addKugeltoPlaceMarker(placeMarker) {
       try {
         const city = data[placeMarker.name]; // saves name of place from json data
-        console.log(city, placeMarker.name); // logs city names
+        //console.log(city, placeMarker.name); // logs city names
 
         makeKugeln(placeMarker, city);
       } catch (error) {
@@ -1264,20 +1257,45 @@ fetch("./letters_json_grouped_merged.json")
 
     /* CREATE SINGLE PLACE VIEWS (Einzelansicht)*/
 
-    function initSinglePlaceView() {
+    // render button for single place view
+
+    const renderButton = document.getElementById("render");
+    renderButton.onclick = () => {
+      // clear canvas
+      clearCanvas();
+
+      // create single place view
+      initSinglePlaceView("Frankfurt");
+      console.log("Wechsel zu Einzelansicht!");
+    };
+
+    function initSinglePlaceView(place) {
       // default: Sphären
+      console.log(renderer);
 
       // update renderer, camera and controls
       renderer = loadCSS3DRenderer();
       camera = loadPerspectiveCamera();
       controls = loadOrbitControls();
 
-      makeSpheresForSingleView("Frankfurt");
+      // create spheres
+      makeSpheresForSingleView(place);
+
+      // log
+      console.log("Wechsel zu Einzelansicht!");
+      console.log(renderer);
     }
 
     function singlePlaceViewHelix() {
+      // clear canvas
+      clearCanvas();
+
+      // update renderer, camera and controls
       renderer = loadCSS3DRenderer();
-      loadPerspectiveCameraAndOrbits();
+      camera = loadPerspectiveCamera();
+      controls = loadOrbitControls();
+
+      // create helix
       makeHelixForSingleView();
     }
 
@@ -1321,14 +1339,14 @@ fetch("./letters_json_grouped_merged.json")
       return camera;
     }
 
-    function loadOrbitControls(){
+    function loadOrbitControls() {
       let controls = new OrbitControls(camera, renderer.domElement);
       controls.target.x = 0;
       controls.target.z = 0;
       controls.target.y = 0;
       controls.minPolarAngle = Math.PI / 2;
       controls.maxPolarAngle = Math.PI / 2 + 0.75;
-      // controls.enablePan = false;
+      controls.enablePan = false;
       // controls.enableZoom = false;
       // console.log('azi',controls.getAzimuthalAngle());
       // console.log('pol',controls.getPolarAngle());
@@ -1469,12 +1487,25 @@ fetch("./letters_json_grouped_merged.json")
     /* HELPER FUNCTIONS */
 
     function makeClickable(obj, isArray) {
-      if (isArray) {
-        obj.forEach((o) => {
-          targets.clickable.push(o);
-        });
-      } else {
-        targets.clickable.push(obj);
+      // test ob obj schon in Array enthalten über Namensableich
+
+      // liste aller Objektnamen im Array erstellen
+      let namesOfClickableObjects = [];
+      targets.clickable.forEach((clickObj) => {
+        namesOfClickableObjects.push(clickObj.name);
+      })
+
+      // Namensabgleich mit neuem Objekt, das hinzugefügt werden soll
+      if(!namesOfClickableObjects.includes(obj.name)){
+        // if: obj = array -> loop
+        // else: simply add to array of clickable objects
+        if (isArray) {
+          obj.forEach((o) => {
+            targets.clickable.push(o);
+          });
+        } else {
+          targets.clickable.push(obj);
+        }
       }
     }
 
@@ -1707,12 +1738,16 @@ fetch("./letters_json_grouped_merged.json")
             });
           });
         }
-        console.log(clickedObj);
+        
         // click on placeMarker -> Wechsel zu Einzelansicht
         if (Object.keys(data).includes(clickedObj.name)) {
-          console.log("Klick auf Ortsmarker!");
-          //clearCanvas();
-          //initSinglePlaceView();
+          /* clickedObj.onclick = () => { */
+            // clear canvas
+            clearCanvas();
+
+            console.log("Klick auf Ortsmarker!");
+            initSinglePlaceView(clickedObj.name);
+         /*  }; */
         }
 
         /* if (
