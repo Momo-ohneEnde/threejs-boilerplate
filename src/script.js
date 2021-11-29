@@ -1368,7 +1368,7 @@ fetch("./letters_json_grouped_merged.json")
     /* CREATE SINGLE PLACE VIEWS (Einzelansicht)*/
 
     // render button for single place view
-
+/* 
     const renderButton = document.getElementById("render");
     renderButton.onclick = () => {
       // clear canvas
@@ -1377,7 +1377,7 @@ fetch("./letters_json_grouped_merged.json")
       // create single place view
       initSinglePlaceView("Frankfurt");
       console.log("Wechsel zu Einzelansicht!");
-    };
+    }; */
 
     function initSinglePlaceView(place) {
       // default: Sphären
