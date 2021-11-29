@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ThreeJS Starter</title>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.0/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.0/jquery-ui.js"></script>
     <style>
         body {
             /*background-color: rgb(218, 208, 208);*/
@@ -100,6 +103,17 @@
             color: #000000;
             background-color: rgba(255,255,255,0.75);
         }
+
+        div#ui {
+            max-width: 500px;
+            margin-left: 2em;
+        }
+
+        .ui-widget-header {
+            background: #f6931f;
+            color: #333333;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -116,5 +130,19 @@
         <button id="render">RENDER</button>
         <button id="disposeBtn" onclick="dispose()">DISPOSE</button>
     </div>
+    <div id="ui">
+        <p>
+            <label for="amount">Year range:</label>
+            <input type="text" id="amount" readonly style="border:0; color:#f6931f; font-weight:bold;">
+          </p>
+           
+          <div id="slider-range"></div>
+    </div>
+
+    <!-- <script src="jquery/dist/jquery.min.js">
+        $("#helix").onclick(function () {
+      alert("clicked!");
+    });
+    </script> -->
 </body>
 </html>

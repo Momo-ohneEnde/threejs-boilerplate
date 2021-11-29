@@ -17,6 +17,7 @@ import {
   CSS3DRenderer,
   CSS3DObject,
 } from "three/examples/jsm/renderers/CSS3DRenderer.js";
+import * as jQuery from "jquery/dist/jquery.min.js";
 
 fetch("./letters_json_grouped_merged.json")
   // log response to see whether data is loaded
@@ -93,6 +94,7 @@ fetch("./letters_json_grouped_merged.json")
     function clearCanvas() {
       //resourceTracker.logResources();
       resourceTracker.dispose();
+
       console.log("Disposed!");
       console.log(scene);
       console.log(renderer.info);
@@ -189,7 +191,7 @@ fetch("./letters_json_grouped_merged.json")
         }
         this.resources.clear();
       }
-      logResources(){
+      logResources() {
         console.log(this.resources);
       }
     }
@@ -901,130 +903,167 @@ fetch("./letters_json_grouped_merged.json")
     }
 
     function makeHelixForMap(placeMarker, city) {
+      let old_h = 0.0;
       // aggreagate all letters of one place in an array
-
       Object.keys(city).forEach((year, yearindex) => {
         let letters = city[`${year}`];
-        // loop over array with letter objects
-        //const letters = [];
-        for (let i = 0; i < letters.length; i++) {
-          //letters.push(city[`${year}`][i]);
-          const plane = makePlane();
+        if (letters[0].type != "yearboundary") {
+          letters.unshift({
+            type: "yearboundary",
+            id: year,
+            receiverInitials: year,
+          });
+        }
 
-          // set id for naming the plane (z.B. GB01_1_EB005_0_s)
-          const id = letters[i].id;
-          plane.name = `${id}`;
+        let n = letters.length;
+        let r = n / 10;
+        let h = n / 5;
+        let theta = 0.0;
+        let y = 0.0;
 
-          function getHelixRadius(letterNumber) {
-            const r = letterNumber / 10.5;
-            return r;
+        if (n > 0) {
+          for (let i = 0; i < n; i++) {
+            let plane;
+
+            if (letters[i].type == "yearboundary") {
+              plane = makePlane(0xffff00);
+              // set id for naming the plane (z.B. GB01_1_EB005_0_s)
+              const id = letters[i].id;
+              plane.name = `${id}`;
+
+              // depending if you want to start from 0 or
+              // calculate values for theta and y
+              theta = (2 * Math.PI * i) / n;
+              y = (h * i) / n + old_h;
+              // set values in coords array
+
+              plane.position.setFromCylindricalCoords(r, theta, y + 1.0);
+              vector.x = plane.position.x * 2;
+              vector.y = plane.position.y;
+              vector.z = plane.position.z * 2;
+              //vector.multiplyScalar(2);
+
+              plane.lookAt(vector);
+
+              /* vector.x = plane.position.x * 2;
+              vector.y = plane.position.y;
+              vector.z = plane.position.z * 2; */
+
+              // add letter objects to pivot bc their position is relative to the pivot
+              placeMarker.add(plane);
+
+              const initialsText = makeInitialsText(letters[i]);
+              plane.add(initialsText);
+              initialsText.position.y = 0.07;
+              initialsText.position.x = -0.1;
+              initialsText.position.z = 0.01;
+              initialsText.fontSize = 0.1;
+            } else {
+              if (yearindex % 2) {
+                plane = makePlane(0xcc0000);
+              } else {
+                plane = makePlane(0xffffff);
+              }
+
+              // set id for naming the plane (z.B. GB01_1_EB005_0_s)
+              const id = letters[i].id;
+              plane.name = `${id}`;
+
+              // depending if you want to start from 0 or
+              // calculate values for theta and y
+              theta = (2 * Math.PI * i) / n;
+              y = (h * i) / n + old_h;
+              // set values in coords array
+
+              plane.position.setFromCylindricalCoords(r, theta, y + 1.0);
+              vector.x = plane.position.x * 2;
+              vector.y = plane.position.y;
+              vector.z = plane.position.z * 2;
+              //vector.multiplyScalar(2);
+
+              plane.lookAt(vector);
+
+              /* vector.x = plane.position.x * 2;
+            vector.y = plane.position.y;
+            vector.z = plane.position.z * 2; */
+
+              // add letter objects to pivot bc their position is relative to the pivot
+              placeMarker.add(plane);
+
+              // add planes to array of clickable objects
+              makeClickable(plane, false);
+
+              //axes helper for plane
+              /*  const axesHelperPlane = new THREE.AxesHelper( 1 );
+          plane.add( axesHelperPlane ); */
+
+              /* 
+              create text objects with content to put on planes: id, initials, name, date
+            */
+
+              /* ID */
+              const idText = makeIdText(letters[i]);
+
+              /* INITIALS */
+              const initialsText = makeInitialsText(letters[i]);
+
+              /* NAME */
+              const firstNameText = makeFirstNameText(letters[i]);
+              const lastNameText = makeLastNameText(letters[i]);
+
+              /* DATE */
+              const dateText = makeDateText(letters[i]);
+
+              /* 
+            add content to plane 
+          */
+              plane.add(idText);
+              plane.add(initialsText);
+              plane.add(firstNameText);
+              plane.add(lastNameText);
+              plane.add(dateText);
+
+              /* 
+            make content clickable
+          */
+              makeClickable(initialsText, false);
+              makeClickable(firstNameText, false);
+              makeClickable(lastNameText, false);
+              makeClickable(idText, false);
+
+              /* 
+            position content on plane
+          */
+
+              /* ID */
+              idText.position.y = 0.13;
+              idText.position.x = -0.09;
+              idText.position.z = 0.01;
+
+              /* INITIALS */
+              initialsText.position.y = 0.07;
+              initialsText.position.x = -0.06;
+              initialsText.position.z = 0.01;
+
+              /* NAME */
+              firstNameText.position.y = -0.03;
+              firstNameText.position.x = -0.13;
+              firstNameText.position.z = 0.01;
+
+              lastNameText.position.y = -0.06;
+              lastNameText.position.x = -0.13;
+              lastNameText.position.z = 0.01;
+
+              /* DATE */
+              dateText.position.y = -0.09;
+              dateText.position.x = -0.13;
+              dateText.position.z = 0.01;
+            }
+
+            if (i == n - 1) {
+              old_h += h;
+            }
           }
-          //
-          function getHelixThetaFaktor(r) {
-            const thetaFaktor = r / 0.25;
-            //const thetaFaktor = letterNumber / 200;
-
-            return thetaFaktor;
-          }
-
-          // positioning of planes
-          // wenn der Durchmesser größer wird, muss theta kleiner werden
-          // Anzahl Briefe : 17,5 = Radius
-          // Radius : 11.4285714286 = theta-Faktor
-          /* const theta = i * 0.175 + Math.PI;
-        const y = i * .1; */
-          const theta =
-            i * getHelixThetaFaktor(getHelixRadius(letters.length)) + Math.PI;
-          //const theta = i * 0.175 + Math.PI;
-          const y = i * 0.1;
-
-          plane.position.setFromCylindricalCoords(
-            getHelixRadius(letters.length),
-            theta,
-            y
-          );
-          vector.x = plane.position.x * 2;
-          vector.y = plane.position.y;
-          vector.z = plane.position.z * 2;
-          //vector.multiplyScalar(2);
-
-          plane.lookAt(vector);
-
-          /* vector.x = plane.position.x * 2;
-        vector.y = plane.position.y;
-        vector.z = plane.position.z * 2; */
-
-          // add letter objects to pivot bc their position is relative to the pivot
-          placeMarker.add(plane);
-
-          // add planes to array of clickable objects
-          makeClickable(plane, false);
-
-          //axes helper for plane
-          /*  const axesHelperPlane = new THREE.AxesHelper( 1 );
-      plane.add( axesHelperPlane ); */
-
-          /* 
-          create text objects with content to put on planes: id, initials, name, date
-        */
-
-          /* ID */
-          const idText = makeIdText(letters[i]);
-
-          /* INITIALS */
-          const initialsText = makeInitialsText(letters[i]);
-
-          /* NAME */
-          const firstNameText = makeFirstNameText(letters[i]);
-          const lastNameText = makeLastNameText(letters[i]);
-
-          /* DATE */
-          const dateText = makeDateText(letters[i]);
-
-          /* 
-        add content to plane 
-      */
-          plane.add(idText);
-          plane.add(initialsText);
-          plane.add(firstNameText);
-          plane.add(lastNameText);
-          plane.add(dateText);
-
-          /* 
-        make content clickable
-      */
-          makeClickable(initialsText, false);
-          makeClickable(firstNameText, false);
-          makeClickable(lastNameText, false);
-          makeClickable(idText, false);
-
-          /* 
-        position content on plane
-      */
-
-          /* ID */
-          idText.position.y = 0.13;
-          idText.position.x = -0.09;
-          idText.position.z = 0.01;
-
-          /* INITIALS */
-          initialsText.position.y = 0.07;
-          initialsText.position.x = -0.06;
-          initialsText.position.z = 0.01;
-
-          /* NAME */
-          firstNameText.position.y = -0.03;
-          firstNameText.position.x = -0.13;
-          firstNameText.position.z = 0.01;
-
-          lastNameText.position.y = -0.06;
-          lastNameText.position.x = -0.13;
-          lastNameText.position.z = 0.01;
-
-          /* DATE */
-          dateText.position.y = -0.09;
-          dateText.position.x = -0.13;
-          dateText.position.z = 0.01;
         }
 
         // loop over letters and create helix
@@ -1039,12 +1078,12 @@ fetch("./letters_json_grouped_merged.json")
 
     /* 5.) Helper Functions for Map View */
 
-    function makePlane() {
+    function makePlane(color = 0xcc0000) {
       const geometry = track(new THREE.PlaneGeometry(0.3, 0.3));
       // DoubleSide -> visisble and not visible sides of objects are rendered
       const material = track(
         new THREE.MeshBasicMaterial({
-          color: 0xcc0000,
+          color: color,
           side: THREE.DoubleSide,
           transparent: true,
           opacity: 0.7,
@@ -1221,7 +1260,17 @@ fetch("./letters_json_grouped_merged.json")
         });
     }
 
-    function loopYearMarker(functionForLoop) {
+    function loopYearMarker(functionForLoop, yearArray = [
+      "1764",
+      "1765",
+      "1766",
+      "1767",
+      "1768",
+      "1769",
+      "1770",
+      "1771",
+      "1772",
+    ]) {
       scene.children
         .filter((i) => i.name == "Scene")[0] // scene contains another group "scene" which contains all objects in the gltf file created in blender (Karte und Ortsmarker)
         .children.filter(
@@ -1234,17 +1283,7 @@ fetch("./letters_json_grouped_merged.json")
             const city = data[placeMarker.name]; // saves name of place from json data
             console.log(city, placeMarker.name); // logs city names
             // Array with years (will later be provided by jQuery time filter)
-            [
-              "1764",
-              "1765",
-              "1766",
-              "1767",
-              "1768",
-              "1769",
-              "1770",
-              "1771",
-              "1772",
-            ].forEach((year, index) => {
+            yearArray.forEach((year, index) => {
               // function with code that should be executed in the loop for each yearMarker
               // function for loop needs arguments "placeMarker, city, year, index"
               functionForLoop(placeMarker, city, year, index);
@@ -1392,7 +1431,7 @@ fetch("./letters_json_grouped_merged.json")
       function createSphere(letters, year) {
         for (let i = 0, l = letters.length; i < l; i++) {
           // <div class="element">
-          const element = document.createElement("div");
+          const element = track(document.createElement("div"));
           element.className = "element";
           // Math.random legt einen zufälligen Alpha-Wert für die Hintergrundfarbe fest
           // element.style.backgroundColor = 'rgba(255,0,0,' + ( Math.random() * 0.5 + 0.25 ) + ')';
@@ -1412,13 +1451,13 @@ fetch("./letters_json_grouped_merged.json")
           );
 
           // <div class="id">
-          const id = document.createElement("div");
+          const id = track(document.createElement("div"));
           id.className = "id";
           id.textContent = letters[i].idFormatted;
           element.appendChild(id);
 
           // <div class="initials">
-          const initials = document.createElement("div");
+          const initials = track(document.createElement("div"));
           initials.className = "initials";
           initials.textContent = letters[i].receiverInitials;
           initials.setAttribute(
@@ -1428,7 +1467,7 @@ fetch("./letters_json_grouped_merged.json")
           element.appendChild(initials);
 
           // <div class="name">
-          const name = document.createElement("div");
+          const name = track(document.createElement("div"));
           name.className = "name";
           name.innerHTML = letters[i].receiverFormatted;
           name.setAttribute(
@@ -1438,7 +1477,7 @@ fetch("./letters_json_grouped_merged.json")
           element.appendChild(name);
 
           // <div class="date">
-          const date = document.createElement("div");
+          const date = track(document.createElement("div"));
           date.className = "date";
           date.innerHTML = letters[i].dateFormatted;
           element.appendChild(date);
@@ -1493,10 +1532,10 @@ fetch("./letters_json_grouped_merged.json")
       let namesOfClickableObjects = [];
       targets.clickable.forEach((clickObj) => {
         namesOfClickableObjects.push(clickObj.name);
-      })
+      });
 
       // Namensabgleich mit neuem Objekt, das hinzugefügt werden soll
-      if(!namesOfClickableObjects.includes(obj.name)){
+      if (!namesOfClickableObjects.includes(obj.name)) {
         // if: obj = array -> loop
         // else: simply add to array of clickable objects
         if (isArray) {
@@ -1509,9 +1548,74 @@ fetch("./letters_json_grouped_merged.json")
       }
     }
 
-    // loop over places
+    /**
+     * Steuerungselemente
+     */
 
-    // loop over years
+    /** Slider */
+
+    function range(start, end){
+      console.log(start, end);
+      let yearArray = [];
+      let s = parseInt(start);
+      let en = parseInt(end);
+      for (let i = s, e =en ; i <= e; i++){
+        yearArray.push(i.toString());
+      }
+//      console.log(yearArray);
+      return yearArray;
+    }
+
+    $(function () {
+      $("#slider-range").slider({
+        range: true,
+        min: 1764,
+        max: 1772,
+        values: [1764, 1772],
+        slide: function (event, ui) {
+          $("#amount").val("" + ui.values[0] + "--" + ui.values[1]);
+          console.log('Keep sliding');
+          clearCanvas();
+          const roughnessMipmapper = new RoughnessMipmapper(renderer);
+          // load gltf basemap
+          const loader = new GLTFLoader();
+          loader.load("/gltf/goethe_basemap.glb", function (gltf) {
+            gltf.scene.traverse(function (child) {
+              // travese goes through all the children of an object
+              if (child.isMesh) {
+                roughnessMipmapper.generateMipmaps(child.material); // apply mipmapper before rendering
+              }
+            });
+
+            // add basemap to scene (!gltf has its own scene) and track it
+            scene.add(track(gltf.scene));
+
+            // debug: log scene graph
+            console.log(scene);
+
+            loopYearMarker(addYearMarkerAndSpheres, range(ui.values[0], ui.values[1]));
+
+            // correct position of placemarker "Wiesbaden"
+            correctPositionWiesbaden();
+
+            roughnessMipmapper.dispose();
+            //render();
+          });
+          
+        },
+      });
+      console.log('Ready');
+      $("#amount").val(
+        "" +
+          $("#slider-range").slider("values", 0) +
+          "--" +
+          $("#slider-range").slider("values", 1)
+      );
+    });
+
+    /* $("#helix").onclick(function () {
+      alert("clicked!");
+    }); */
 
     /**
      * Helper Geometries
@@ -1738,16 +1842,16 @@ fetch("./letters_json_grouped_merged.json")
             });
           });
         }
-        
+
         // click on placeMarker -> Wechsel zu Einzelansicht
         if (Object.keys(data).includes(clickedObj.name)) {
           /* clickedObj.onclick = () => { */
-            // clear canvas
-            clearCanvas();
+          // clear canvas
+          clearCanvas();
 
-            console.log("Klick auf Ortsmarker!");
-            initSinglePlaceView(clickedObj.name);
-         /*  }; */
+          console.log("Klick auf Ortsmarker!");
+          initSinglePlaceView(clickedObj.name);
+          /*  }; */
         }
 
         /* if (
