@@ -903,67 +903,133 @@ fetch("./letters_json_grouped_merged.json")
     }
 
     function makeHelixForMap(placeMarker, city) {
+      // height of previous helix, starting point to from which helix is built
       let old_h = 0.0;
+
       // aggreagate all letters of one place in an array
-      Object.keys(city).forEach((year, yearindex) => {
+      [
+        "1764",
+        "1765",
+        "1766",
+        "1767",
+        "1768",
+        "1769",
+        "1770",
+        "1771",
+        "1772",
+      ].forEach((year, yearindex) => {
+        // array of years
         let letters = city[`${year}`];
-        if (letters[0].type != "yearboundary") {
+
+        // if there are no letters for a year, the letters variable is undefined
+        // in this case an array with only one yearboundary object needs to be created
+        if (letters == undefined) {
+          letters = [{ type: "yearboundary_empty_year", id: year, text: year }];
+        }
+
+        // check the first element in array, if it is not a yearboundary object yet, add a yearboundary object
+        // yearboundary objects will become the yearmarkers
+        else if (letters[0].type != "yearboundary") {
           letters.unshift({
             type: "yearboundary",
             id: year,
-            receiverInitials: year,
+            text: year,
           });
         }
 
+        // parameters to calculate helix
         let n = letters.length;
         let r = n / 10;
         let h = n / 5;
         let theta = 0.0;
         let y = 0.0;
 
+        /* MAKE PLANES AND CONTENT ON THEM */
         if (n > 0) {
           for (let i = 0; i < n; i++) {
             let plane;
 
-            if (letters[i].type == "yearboundary") {
-              plane = makePlane(0xffff00);
-              // set id for naming the plane (z.B. GB01_1_EB005_0_s)
+            /* MAKE YEARBOUNDARY PLANES FOR EMPTY YEARS */
+            if(letters[i].type == "yearboundary_empty_year"){
+              plane = makePlane(0xffff00, 0);
+              // id of yearboundary object is the year
               const id = letters[i].id;
               plane.name = `${id}`;
 
-              // depending if you want to start from 0 or
-              // calculate values for theta and y
+              // calculate helix
+              // die Höhe wird hier größer gesetzt als bei den anderen planes, damit die yearmarker nicht zu nah übereinander sitzen
+              h = n / 2;
               theta = (2 * Math.PI * i) / n;
               y = (h * i) / n + old_h;
-              // set values in coords array
 
+              // position planes in helix form
+              // y + 1.0 because helix shall not start directly on the map but slightly above the placemarkers
               plane.position.setFromCylindricalCoords(r, theta, y + 1.0);
+
               vector.x = plane.position.x * 2;
               vector.y = plane.position.y;
               vector.z = plane.position.z * 2;
-              //vector.multiplyScalar(2);
 
               plane.lookAt(vector);
 
-              /* vector.x = plane.position.x * 2;
-              vector.y = plane.position.y;
-              vector.z = plane.position.z * 2; */
-
-              // add letter objects to pivot bc their position is relative to the pivot
+              // add letter objects to pivot (placemarker) bc their position is relative to the pivot
               placeMarker.add(plane);
 
-              const initialsText = makeInitialsText(letters[i]);
-              plane.add(initialsText);
-              initialsText.position.y = 0.07;
-              initialsText.position.x = -0.1;
-              initialsText.position.z = 0.01;
-              initialsText.fontSize = 0.1;
+              // add text to yearboundary plane
+              const yearboundaryText = track(new Text());
+              yearboundaryText.text = letters[i].text;
+              yearboundaryText.name = `yearboundary_${letters.text}`;
+
+              plane.add(yearboundaryText);
+
+              // position yearboundary plane
+              yearboundaryText.position.y = 0.07;
+              yearboundaryText.position.x = -0.1;
+              yearboundaryText.position.z = 0.01;
+              yearboundaryText.fontSize = 0.1;
+              
+            }
+
+            /* MAKE YEARBOUNDARY PLANES FOR YEARS WITH LETTERS*/
+            else if (letters[i].type == "yearboundary") {
+              plane = makePlane(0xffff00);
+              // id of yearboundary object is the year
+              const id = letters[i].id;
+              plane.name = `${id}`;
+
+              // calculate helix
+              theta = (2 * Math.PI * i) / n;
+              y = (h * i) / n + old_h;
+
+              // position planes in helix form
+              // y + 1.0 because helix shall not start directly on the map but slightly above the placemarkers
+              plane.position.setFromCylindricalCoords(r, theta, y + 1.0);
+
+              vector.x = plane.position.x * 2;
+              vector.y = plane.position.y;
+              vector.z = plane.position.z * 2;
+
+              plane.lookAt(vector);
+
+              // add letter objects to pivot (placemarker) bc their position is relative to the pivot
+              placeMarker.add(plane);
+
+              // add text to yearboundary plane
+              const yearboundaryText = track(new Text());
+              yearboundaryText.text = letters[i].text;
+              yearboundaryText.name = `yearboundary_${letters.text}`;
+
+              plane.add(yearboundaryText);
+
+              // position yearboundary plane
+              yearboundaryText.position.y = 0.07;
+              yearboundaryText.position.x = -0.1;
+              yearboundaryText.position.z = 0.01;
+              yearboundaryText.fontSize = 0.1;
+
             } else {
-              if (yearindex % 2) {
-                plane = makePlane(0xcc0000);
-              } else {
-                plane = makePlane(0xffffff);
-              }
+              /* MAKE LETTER PLANES */
+              plane = makePlane(0xcc0000);
 
               // set id for naming the plane (z.B. GB01_1_EB005_0_s)
               const id = letters[i].id;
@@ -1060,6 +1126,8 @@ fetch("./letters_json_grouped_merged.json")
               dateText.position.z = 0.01;
             }
 
+            // when the last plane of a time span is reached, the old_h is updated
+            // so that the next helix starts where the one before ended
             if (i == n - 1) {
               old_h += h;
             }
@@ -1078,7 +1146,7 @@ fetch("./letters_json_grouped_merged.json")
 
     /* 5.) Helper Functions for Map View */
 
-    function makePlane(color = 0xcc0000) {
+    function makePlane(color = 0xcc0000, opacity = 0.7) {
       const geometry = track(new THREE.PlaneGeometry(0.3, 0.3));
       // DoubleSide -> visisble and not visible sides of objects are rendered
       const material = track(
@@ -1086,7 +1154,7 @@ fetch("./letters_json_grouped_merged.json")
           color: color,
           side: THREE.DoubleSide,
           transparent: true,
-          opacity: 0.7,
+          opacity: opacity,
         })
       );
       const plane = track(new THREE.Mesh(geometry, material));
@@ -1218,7 +1286,7 @@ fetch("./letters_json_grouped_merged.json")
 
       // Set styling properties of text object
       yearMarker.fontSize = 0.2;
-      yearMarker.color = 0x9966ff;
+      yearMarker.color = 0xffffff;
 
       // Set position of text object
       // distance of text objects to next text object above
@@ -1260,17 +1328,20 @@ fetch("./letters_json_grouped_merged.json")
         });
     }
 
-    function loopYearMarker(functionForLoop, yearArray = [
-      "1764",
-      "1765",
-      "1766",
-      "1767",
-      "1768",
-      "1769",
-      "1770",
-      "1771",
-      "1772",
-    ]) {
+    function loopYearMarker(
+      functionForLoop,
+      yearArray = [
+        "1764",
+        "1765",
+        "1766",
+        "1767",
+        "1768",
+        "1769",
+        "1770",
+        "1771",
+        "1772",
+      ]
+    ) {
       scene.children
         .filter((i) => i.name == "Scene")[0] // scene contains another group "scene" which contains all objects in the gltf file created in blender (Karte und Ortsmarker)
         .children.filter(
@@ -1554,15 +1625,16 @@ fetch("./letters_json_grouped_merged.json")
 
     /** Slider */
 
-    function range(start, end){
+    // get year range from start and end date
+    function range(start, end) {
       console.log(start, end);
       let yearArray = [];
       let s = parseInt(start);
       let en = parseInt(end);
-      for (let i = s, e =en ; i <= e; i++){
+      for (let i = s, e = en; i <= e; i++) {
         yearArray.push(i.toString());
       }
-//      console.log(yearArray);
+      //      console.log(yearArray);
       return yearArray;
     }
 
@@ -1573,8 +1645,11 @@ fetch("./letters_json_grouped_merged.json")
         max: 1772,
         values: [1764, 1772],
         slide: function (event, ui) {
-          $("#amount").val("" + ui.values[0] + "--" + ui.values[1]);
-          console.log('Keep sliding');
+          $("#amount").val("" + ui.values[0] + " – " + ui.values[1]);
+          console.log("Keep sliding");
+
+          // neue Ansicht auf basis des Sliders aufbauen
+          // Sphäre
           clearCanvas();
           const roughnessMipmapper = new RoughnessMipmapper(renderer);
           // load gltf basemap
@@ -1593,7 +1668,10 @@ fetch("./letters_json_grouped_merged.json")
             // debug: log scene graph
             console.log(scene);
 
-            loopYearMarker(addYearMarkerAndSpheres, range(ui.values[0], ui.values[1]));
+            loopYearMarker(
+              addYearMarkerAndSpheres,
+              range(ui.values[0], ui.values[1])
+            );
 
             // correct position of placemarker "Wiesbaden"
             correctPositionWiesbaden();
@@ -1601,14 +1679,14 @@ fetch("./letters_json_grouped_merged.json")
             roughnessMipmapper.dispose();
             //render();
           });
-          
         },
       });
-      console.log('Ready');
+      console.log("Ready");
+
       $("#amount").val(
         "" +
           $("#slider-range").slider("values", 0) +
-          "--" +
+          " – " +
           $("#slider-range").slider("values", 1)
       );
     });

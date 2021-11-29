@@ -1,148 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ThreeJS Starter</title>
-    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.0/themes/base/jquery-ui.css">
+    <link
+      rel="stylesheet"
+      href="https://code.jquery.com/ui/1.13.0/themes/base/jquery-ui.css"
+    />
     <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
     <script src="https://code.jquery.com/ui/1.13.0/jquery-ui.js"></script>
-    <style>
-        body {
-            /*background-color: rgb(218, 208, 208);*/
-            background-color: black;
-        }
-        
-        a {
-            color: rgba(255,0,0,0.5)
-        }
-
-        #menu {
-            position: absolute;
-            bottom: 20px;
-            width: 100%;
-            text-align: center;
-        }
-
-        .element {
-            width: 120px;
-            height: 160px;
-            
-            border: 1px solid rgba(255,255,255,0.25);
-            font-family: Helvetica, sans-serif;
-            text-align: center;
-            line-height: normal;
-            cursor: default;
-        }
-
-        .element:hover {
-            box-shadow: 0px 0px 12px rgba(255,255,255,0.75);
-            border: 1px solid rgba(255,255,255,0.75);
-        }
-
-            .element .id {
-                position: absolute;
-                top: 20px;
-                right: 20px;
-                font-size: 12px;
-                color: rgba(255,255,255,0.75);
-
-            }
-
-            .element .initials {
-                position: absolute;
-                top: 40px;
-                left: 0px;
-                right: 0px;
-                font-size: 60px;
-                font-weight: bold;
-                color: rgba(255,255,255,0.75);
-                text-shadow: 0 0 10px rgba(175, 174, 174, 0.95);
-            }
-
-            .element .initials:hover {
-                text-shadow: 0px 0px 12px rgba(255,255,255);
-            }
-
-            .element .name {
-                position: absolute;
-                bottom: 30px;
-                left: 0px;
-                right: 0px;
-                font-size: 12px;
-                color: rgba(255,255,255,0.75);
-            }
-
-            .element .name:hover {
-                text-shadow: 0px 0px 12px rgba(255,255,255);
-            }
-
-            .element .date {
-                position: absolute;
-                bottom: 15px;
-                left: 0px;
-                right: 0px;
-                font-size: 12px;
-                color: rgba(255,255,255,0.75);
-            }
-
-        button {
-            color: rgba(255,255,255,0.75);
-            background: transparent;
-            outline: 1px solid rgba(255,255,255,0.75);
-            border: 0px;
-            padding: 5px 10px;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: rgba(255,255,255,0.5);
-        }
-
-        button:active {
-            color: #000000;
-            background-color: rgba(255,255,255,0.75);
-        }
-
-        div#ui {
-            max-width: 500px;
-            margin-left: 2em;
-        }
-
-        .ui-widget-header {
-            background: #f6931f;
-            color: #333333;
-            font-weight: bold;
-        }
-    </style>
-</head>
-<body>
-    
+    <style></style>
+  </head>
+  <body>
     <!-- canvas wird für Kartenansicht mit WebGL renderer verwendet -->
     <canvas id="canvas" class="webgl"></canvas>
+
     <!-- container div wird für Einzelansicht mit css3d renderer verwendet -->
-    <div id="container">
-    </div>
+    <div id="container"></div>
+
     <div id="menu">
-        <button id="kugel">KUGEL</button>
-        <button id="sphere">SPHERE</button>
-        <button id="helix">HELIX</button>
-        <button id="render">RENDER</button>
-        <button id="disposeBtn" onclick="dispose()">DISPOSE</button>
-    </div>
-    <div id="ui">
-        <p>
-            <label for="amount">Year range:</label>
-            <input type="text" id="amount" readonly style="border:0; color:#f6931f; font-weight:bold;">
-          </p>
-           
-          <div id="slider-range"></div>
+      <button id="kugel">KUGEL</button>
+      <button id="sphere">SPHERE</button>
+      <button id="helix">HELIX</button>
+      <button id="render">RENDER</button>
+      <button id="disposeBtn" onclick="dispose()">DISPOSE</button>
     </div>
 
-    <!-- <script src="jquery/dist/jquery.min.js">
-        $("#helix").onclick(function () {
-      alert("clicked!");
-    });
-    </script> -->
-</body>
+    <div id="ui">
+      <div id="time-filter">
+        <p>
+          <label for="amount">Zeitraum: </label>
+          <input type="text" id="amount" readonly />
+        </p>
+
+        <div id="slider-range"></div>
+        
+        <p>Zeitschritt: 1 Jahr</p>
+      </div>
+
+      <div id="letter-status-filter"></div>
+
+      <div id="doc-type-filter"></div>
+
+      <div id="person-filter"></div>
+
+      <div id="infobox"></div>
+    </div>
+  </body>
 </html>
