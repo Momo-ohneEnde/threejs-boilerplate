@@ -102,13 +102,13 @@ fetch("./letters_json_grouped_merged.json")
     }
 
     // dispose button (alternative for clearCanvas, used for testing the resource tracker)
-    let disposeBtn = document.getElementById("disposeBtn");
+    /* let disposeBtn = document.getElementById("disposeBtn");
     disposeBtn.onclick = () => {
       resourceTracker.dispose();
       //console.log("Disposed!");
       console.log(scene);
       console.log(renderer.info);
-    };
+    }; */
 
     /* Allgemeines Vorgehen, um Elemente aus der Szene zu löschen: 
       1.) Komplette Szene durchgehen, 
@@ -539,8 +539,8 @@ fetch("./letters_json_grouped_merged.json")
       const axesHelperLetterNumMarker = new THREE.AxesHelper(1);
       letterNumMarker.add(axesHelperLetterNumMarker); */
 
-      // gui für letterNumMarker
-      letterNumMarkerGui
+      // gui helper für letterNumMarker
+      /* letterNumMarkerGui
         .add(letterNumMarker.position, "y")
         .min(-10)
         .max(10)
@@ -557,7 +557,7 @@ fetch("./letters_json_grouped_merged.json")
         .min(-10)
         .max(10)
         .step(0.01)
-        .name(`z_${letterNumMarker.name}`);
+        .name(`z_${letterNumMarker.name}`); */
     }
 
     function getMaxLettersPerPlace() {
@@ -713,7 +713,7 @@ fetch("./letters_json_grouped_merged.json")
       idText.add( axesHelperidText ); */
 
         // gui helper for idText
-        idTextGui
+        /* idTextGui
           .add(idText.position, "y")
           .min(-10)
           .max(10)
@@ -730,7 +730,7 @@ fetch("./letters_json_grouped_merged.json")
           .min(-10)
           .max(10)
           .step(0.01)
-          .name(`z_${idText.name}`);
+          .name(`z_${idText.name}`); */
 
         /* INITIALS */
         initialsText.position.y = 0.07;
@@ -742,7 +742,7 @@ fetch("./letters_json_grouped_merged.json")
       initialsText.add( axesHelperInitials ); */
 
         // gui helper for initials
-        initialsGui
+        /* initialsGui
           .add(initialsText.position, "y")
           .min(-10)
           .max(10)
@@ -759,7 +759,7 @@ fetch("./letters_json_grouped_merged.json")
           .min(-10)
           .max(10)
           .step(0.01)
-          .name(`z_${idText.name}`);
+          .name(`z_${idText.name}`); */
 
         /* NAME */
         firstNameText.position.y = -0.03;
@@ -778,7 +778,7 @@ fetch("./letters_json_grouped_merged.json")
   lastNameText.add( axesHelperName ); */
 
         // gui helper for firstName
-        firstNameGui
+        /* firstNameGui
           .add(firstNameText.position, "y")
           .min(-10)
           .max(10)
@@ -795,10 +795,10 @@ fetch("./letters_json_grouped_merged.json")
           .min(-10)
           .max(10)
           .step(0.01)
-          .name(`z_${idText.name}`);
+          .name(`z_${idText.name}`); */
 
         // gui helper for lastName
-        lastNameGui
+        /* lastNameGui
           .add(lastNameText.position, "y")
           .min(-10)
           .max(10)
@@ -815,7 +815,7 @@ fetch("./letters_json_grouped_merged.json")
           .min(-10)
           .max(10)
           .step(0.01)
-          .name(`z_${idText.name}`);
+          .name(`z_${idText.name}`); */
 
         /* DATE */
         dateText.position.y = -0.09;
@@ -827,7 +827,7 @@ fetch("./letters_json_grouped_merged.json")
       dateText.add( axesHelperDate ); */
 
         // gui helper for date
-        dateGui
+        /* dateGui
           .add(dateText.position, "y")
           .min(-10)
           .max(10)
@@ -844,7 +844,7 @@ fetch("./letters_json_grouped_merged.json")
           .min(-10)
           .max(10)
           .step(0.01)
-          .name(`z_${idText.name}`);
+          .name(`z_${idText.name}`); */
 
         /* AXES HELPER for pivot */
         /* const axesHelperPivot = new THREE.AxesHelper( 1 );
@@ -1369,7 +1369,7 @@ fetch("./letters_json_grouped_merged.json")
 
     // render button for single place view
 
-    const renderButton = document.getElementById("render");
+    /* const renderButton = document.getElementById("render");
     renderButton.onclick = () => {
       // clear canvas
       clearCanvas();
@@ -1377,7 +1377,7 @@ fetch("./letters_json_grouped_merged.json")
       // create single place view
       initSinglePlaceView("Frankfurt");
       console.log("Wechsel zu Einzelansicht!");
-    };
+    }; */
 
     function initSinglePlaceView(place) {
       // default: Sphären
@@ -1441,6 +1441,8 @@ fetch("./letters_json_grouped_merged.json")
       //camera.position.y = 3000;
       //camera.updateProjectionMatrix();
       //camera.lookAt(new Vector3(0,1000,0));
+
+      // gui helper for camera
       cameraGui.add(camera.position, "y").min(0).max(10000).step(10);
       cameraGui.add(camera.position, "x").min(0).max(10000).step(10);
       cameraGui.add(camera.position, "z").min(0).max(10000).step(10);
@@ -1786,12 +1788,12 @@ fetch("./letters_json_grouped_merged.json")
     // Set GUI folders
     const cameraGui = gui.addFolder("Camera");
     const light = gui.addFolder("Light");
-    const idTextGui = gui.addFolder("idText");
+    /* const idTextGui = gui.addFolder("idText");
     const initialsGui = gui.addFolder("initials");
     const firstNameGui = gui.addFolder("firstname");
     const lastNameGui = gui.addFolder("lastname");
     const dateGui = gui.addFolder("date");
-    const letterNumMarkerGui = gui.addFolder("letterNumMarker");
+    const letterNumMarkerGui = gui.addFolder("letterNumMarker"); */
 
     // Set Debug GUI
     light.add(pointLight.position, "y").min(-10).max(100).step(0.01);

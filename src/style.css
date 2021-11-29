@@ -96,6 +96,16 @@ div#time-filter {
     padding: 0.5em;
 }
 
+/* hat keinen Effekt -> warum? */
+.ui-slider .ui-slider-handle {
+    z-index: 200;
+}
+
+/* hat keinen Effekt -> warum? */
+.ui-slider .ui-slider-range {
+    z-index: 200;
+}
+
 /* SLIDER */
 
 #slider-range {
