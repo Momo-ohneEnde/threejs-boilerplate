@@ -242,7 +242,22 @@ fetch("./letters_json_grouped_merged.json")
 
     /* 1) Default: Kugelansicht */
     // Karte laden, dann Aufruf von makeKugeln()
-    function mapViewKugeln() {
+    function mapViewKugeln(
+      yearArray = [
+        "1764",
+        "1765",
+        "1766",
+        "1767",
+        "1768",
+        "1769",
+        "1770",
+        "1771",
+        "1772",
+      ]
+    ) {
+      // set view id to "kugel"
+      setViewId("kugel");
+
       const roughnessMipmapper = new RoughnessMipmapper(renderer);
       // load gltf basemap
       const loader = new GLTFLoader();
@@ -261,7 +276,7 @@ fetch("./letters_json_grouped_merged.json")
         console.log(scene);
 
         // add kugeln
-        loopPlaceMarker(addKugeltoPlaceMarker);
+        loopPlaceMarker(addKugeltoPlaceMarker, yearArray);
 
         // correct position of placemarker "Wiesbaden"
         correctPositionWiesbaden();
@@ -292,6 +307,9 @@ fetch("./letters_json_grouped_merged.json")
     const vector = new Vector3();
 
     function mapViewSpheres() {
+      // set view id to "sphere"
+      setViewId("sphere");
+
       const roughnessMipmapper = new RoughnessMipmapper(renderer);
       // load gltf basemap
       const loader = new GLTFLoader();
@@ -321,6 +339,9 @@ fetch("./letters_json_grouped_merged.json")
 
     /* 4) Helix-Ansicht */
     function mapViewHelix() {
+      // set view id to "helix"
+      setViewId("helix");
+
       const roughnessMipmapper = new RoughnessMipmapper(renderer);
       // load gltf basemap
       const loader = new GLTFLoader();
@@ -352,16 +373,22 @@ fetch("./letters_json_grouped_merged.json")
 
     /* 1) Kugeln */
     // wird in init aufgerufen
-    function makeKugeln(placeMarker, city) {
+    function makeKugeln(placeMarker, city, yearArray) {
       // erhält übergeben: placeMarker, Ortsobjekt
       // Iteration über Jahre, dann Objekten in Jahren
       // Anzahl der Objekte ermitteln
       let letterCount = 0;
-      Object.keys(city).forEach((year) => {
-        let yearArray = city[`${year}`];
-        // loop over array with letter objects
-        for (let i = 0; i < yearArray.length; i++) {
-          letterCount++;
+      yearArray.forEach((year) => {
+        // testen obj Jahreszahl aus dem Array tatsächlich in Daten vorhanden
+        console.log(city);
+        console.log(year);
+        if (yearArray.includes(year)) {
+          let yearArrayData = city[`${year}`];
+          console.log(city[`${year}`]);
+          // loop over array with letter objects
+          for (let i = 0; i < yearArrayData.length; i++) {
+            letterCount++;
+          }
         }
       });
       //console.log(letterCount);
@@ -472,12 +499,12 @@ fetch("./letters_json_grouped_merged.json")
     }
 
     // implementation of functionForLoop in loop over placemarker
-    function addKugeltoPlaceMarker(placeMarker) {
+    function addKugeltoPlaceMarker(placeMarker, yearArray) {
       try {
         const city = data[placeMarker.name]; // saves name of place from json data
         //console.log(city, placeMarker.name); // logs city names
 
-        makeKugeln(placeMarker, city);
+        makeKugeln(placeMarker, city, yearArray);
       } catch (error) {
         console.log(error);
       }
@@ -854,8 +881,7 @@ fetch("./letters_json_grouped_merged.json")
               yearboundaryText.position.z = 0.01;
               yearboundaryText.fontSize = 0.1;
             } else if (letters[i].type == "yearboundary") {
-
-            /* MAKE YEARBOUNDARY PLANES FOR YEARS WITH LETTERS*/
+              /* MAKE YEARBOUNDARY PLANES FOR YEARS WITH LETTERS*/
               plane = makePlane(0xffff00);
               // id of yearboundary object is the year
               const id = letters[i].id;
@@ -1009,6 +1035,13 @@ fetch("./letters_json_grouped_merged.json")
 
     /* 5.) Helper Functions for Map View */
 
+    function setViewId(viewName) {
+      const view = track(document.createElement("div"));
+      view.id = "viewId";
+      view.name = `${viewName}`;
+      document.body.prepend(view);
+    }
+
     function makeClickable(obj, isArray) {
       // test ob obj schon in Array enthalten über Namensableich
 
@@ -1154,15 +1187,6 @@ fetch("./letters_json_grouped_merged.json")
       return dateText;
     }
 
-    function correctPositionWiesbaden() {
-      scene.children
-        .filter((i) => i.name == "Scene")[0]
-        .children.filter((i) => i.name == "Wiesbaden")
-        .forEach(
-          (wiesbadenPlacemarker) => (wiesbadenPlacemarker.position.y = 3.8)
-        );
-    }
-
     function makeYearMarker(year, index) {
       const yearMarker = track(new Text());
       yearMarker.name = `yearMarker${year}`;
@@ -1200,7 +1224,16 @@ fetch("./letters_json_grouped_merged.json")
       return letterNumMarker;
     }
 
-    function loopPlaceMarker(functionForLoop) {
+    function correctPositionWiesbaden() {
+      scene.children
+        .filter((i) => i.name == "Scene")[0]
+        .children.filter((i) => i.name == "Wiesbaden")
+        .forEach(
+          (wiesbadenPlacemarker) => (wiesbadenPlacemarker.position.y = 3.8)
+        );
+    }
+
+    function loopPlaceMarker(functionForLoop, yearArray) {
       scene.children
         .filter((i) => i.name == "Scene")[0] // scene contains another group "scene" which contains all objects in the gltf file created in blender (Karte und Ortsmarker)
         .children.filter(
@@ -1210,7 +1243,7 @@ fetch("./letters_json_grouped_merged.json")
         .forEach((placeMarker) => {
           // function with code that should be executed in the loop for each placeMarker
           // functionForLoop must have argument "placeMarker"
-          functionForLoop(placeMarker);
+          functionForLoop(placeMarker, yearArray);
         });
     }
 
@@ -1281,36 +1314,45 @@ fetch("./letters_json_grouped_merged.json")
           console.log("Keep sliding");
 
           // neue Ansicht auf basis des Sliders aufbauen
-          // Sphäre
-          clearCanvas();
-          const roughnessMipmapper = new RoughnessMipmapper(renderer);
-          // load gltf basemap
-          const loader = new GLTFLoader();
-          loader.load("/gltf/goethe_basemap.glb", function (gltf) {
-            gltf.scene.traverse(function (child) {
-              // travese goes through all the children of an object
-              if (child.isMesh) {
-                roughnessMipmapper.generateMipmaps(child.material); // apply mipmapper before rendering
-              }
+          // welche Ansicht aufgebaut wird, hängt von der view id ab
+
+          // console.log(document.getElementById("viewId").name);
+          if (document.getElementById("viewId").name == "kugel") {
+            console.log("Hi Kugel!");
+          }
+
+          if (document.getElementById("viewId").name == "sphere") {
+            // Sphäre
+            clearCanvas();
+            const roughnessMipmapper = new RoughnessMipmapper(renderer);
+            // load gltf basemap
+            const loader = new GLTFLoader();
+            loader.load("/gltf/goethe_basemap.glb", function (gltf) {
+              gltf.scene.traverse(function (child) {
+                // travese goes through all the children of an object
+                if (child.isMesh) {
+                  roughnessMipmapper.generateMipmaps(child.material); // apply mipmapper before rendering
+                }
+              });
+
+              // add basemap to scene (!gltf has its own scene) and track it
+              scene.add(track(gltf.scene));
+
+              // debug: log scene graph
+              console.log(scene);
+
+              loopYearMarker(
+                addYearMarkerAndSpheres,
+                range(ui.values[0], ui.values[1])
+              );
+
+              // correct position of placemarker "Wiesbaden"
+              correctPositionWiesbaden();
+
+              roughnessMipmapper.dispose();
+              //render();
             });
-
-            // add basemap to scene (!gltf has its own scene) and track it
-            scene.add(track(gltf.scene));
-
-            // debug: log scene graph
-            console.log(scene);
-
-            loopYearMarker(
-              addYearMarkerAndSpheres,
-              range(ui.values[0], ui.values[1])
-            );
-
-            // correct position of placemarker "Wiesbaden"
-            correctPositionWiesbaden();
-
-            roughnessMipmapper.dispose();
-            //render();
-          });
+          }
         },
       });
       console.log("Ready");
