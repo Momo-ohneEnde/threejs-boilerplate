@@ -11,27 +11,21 @@ html,
 body {
   font-family: Helvetica, sans-serif;
   background: black;
+  color: whitesmoke;
 }
 
 h1 {
-  font-size: 20rem;
+  font-size: 2rem;
   text-transform: uppercase;
   color: whitesmoke;
   text-align: center;
-  border-bottom: 5px solid whitesmoke;
   margin-bottom: 0.01em;
-}
-
-h2 {
-  font-size: 5.1rem;
-  text-transform: uppercase;
-  color: whitesmoke;
-  text-align: center;
+  margin-top: 0.5rem;
 }
 
 p {
-    margin-top: 0.5rem;
-    margin-bottom: 0.5rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
 a {
@@ -48,11 +42,18 @@ a {
   /*mix-blend-mode: color-burn;*/
 }
 
-.container {
+#container {
   height: 100vh;
   display: grid;
   place-items: center;
+  position: relative;
+  z-index: 2;
+  padding-top: 0.5em;
 }
+
+/* #content {
+  display: inline-flex;
+} */
 
 /* MENU */
 
@@ -60,7 +61,7 @@ a {
   position: absolute;
   bottom: 20px;
   width: 100%;
-  text-align: center;
+  text-align: right;
 }
 
 /* BUTTONS */
@@ -89,11 +90,14 @@ div#ui {
   margin-top: 1em;
   color: white;
   width: 20%;
+  /* flex-shrink: 0; */
+  position: absolute;
+  z-index: 1;
 }
 
 div#time-filter {
-    border: 1px solid white;
-    padding: 0.5em;
+  border: 1px solid white;
+  padding: 0.5em;
 }
 
 /* SLIDER */
@@ -114,7 +118,6 @@ div#time-filter {
   color: #f6931f;
   font-weight: bold;
 }
-
 
 /* SINGLE PLACE VIEW */
 .element {

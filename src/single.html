@@ -13,42 +13,40 @@
     <style></style>
   </head>
   <body>
-    <!-- canvas wird für Kartenansicht mit WebGL renderer verwendet -->
-    <!-- <canvas id="canvas" class="webgl"></canvas> -->
+    <div id="content">
+      <div id="ui">
+        <div id="time-filter">
+          <p>
+            <label for="amount">Zeitraum: </label>
+            <input type="text" id="amount" readonly />
+          </p>
 
-    <!-- container div wird für Einzelansicht mit css3d renderer verwendet -->
-    <div id="container"></div>
+          <div id="slider-range"></div>
 
-    <h1>Hi there!</h1>
+          <p>Zeitschritt: 1 Jahr</p>
+        </div>
 
+        <div id="letter-status-filter"></div>
 
-    <div id="menu">
-      <button id="kugel">KUGEL</button>
-      <button id="sphere">SPHERE</button>
-      <button id="helix">HELIX</button>
-      <button id="render">RENDER</button>
-      <button id="disposeBtn" onclick="dispose()">DISPOSE</button>
-    </div>
+        <div id="doc-type-filter"></div>
 
-    <div id="ui">
-      <div id="time-filter">
-        <p>
-          <label for="amount">Zeitraum: </label>
-          <input type="text" id="amount" readonly />
-        </p>
+        <div id="person-filter"></div>
 
-        <div id="slider-range"></div>
-        
-        <p>Zeitschritt: 1 Jahr</p>
+        <div id="infobox"></div>
       </div>
 
-      <div id="letter-status-filter"></div>
-
-      <div id="doc-type-filter"></div>
-
-      <div id="person-filter"></div>
-
-      <div id="infobox"></div>
+      <!-- container div wird für Einzelansicht mit css3d renderer verwendet -->
+      <div id="container"></div>
     </div>
+
+    <div id="menu">
+      <!-- <button id="kugel">KUGEL</button>
+      <button id="sphere">SPHERE</button>
+      <button id="helix">HELIX</button> -->
+      <!-- <button id="render">RENDER</button> -->
+      <button id="disposeBtn" onclick="dispose()">DISPOSE</button>
+      <a href="index.html"><button id="render">ZUR KARTE</button></a>
+    </div>
+    
   </body>
 </html>
