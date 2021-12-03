@@ -57,11 +57,19 @@ a {
 
 /* MENU */
 
-#menu {
+#menuSingle {
   position: absolute;
   bottom: 20px;
   width: 100%;
   text-align: right;
+  padding-right: 0.5em;
+}
+
+#menuMap {
+  position: absolute;
+  bottom: 20px;
+  width: 100%;
+  text-align: center;
 }
 
 /* BUTTONS */
@@ -114,13 +122,13 @@ div#time-filter {
 
 #amount {
   border: 0;
-  background-color: black;
+  background-color: rgba(0, 0, 0, 0);
   color: #f6931f;
   font-weight: bold;
 }
 
 /* SINGLE PLACE VIEW */
-.element {
+.letter {
   width: 120px;
   height: 160px;
 
@@ -131,12 +139,12 @@ div#time-filter {
   cursor: default;
 }
 
-.element:hover {
+.letter:hover {
   box-shadow: 0px 0px 12px rgba(255, 255, 255, 0.75);
   border: 1px solid rgba(255, 255, 255, 0.75);
 }
 
-.element .id {
+.letter .id {
   position: absolute;
   top: 20px;
   right: 20px;
@@ -144,7 +152,11 @@ div#time-filter {
   color: rgba(255, 255, 255, 0.75);
 }
 
-.element .initials {
+.letter .id:hover{
+  text-shadow: 0px 0px 12px rgba(255, 255, 255);
+}
+
+.letter .initials {
   position: absolute;
   top: 40px;
   left: 0px;
@@ -155,11 +167,11 @@ div#time-filter {
   text-shadow: 0 0 10px rgba(175, 174, 174, 0.95);
 }
 
-.element .initials:hover {
+.letter .initials:hover {
   text-shadow: 0px 0px 12px rgba(255, 255, 255);
 }
 
-.element .name {
+.letter .name {
   position: absolute;
   bottom: 30px;
   left: 0px;
@@ -168,15 +180,23 @@ div#time-filter {
   color: rgba(255, 255, 255, 0.75);
 }
 
-.element .name:hover {
+.letter .name:hover {
   text-shadow: 0px 0px 12px rgba(255, 255, 255);
 }
 
-.element .date {
+.letter .date {
   position: absolute;
   bottom: 15px;
   left: 0px;
   right: 0px;
   font-size: 12px;
   color: rgba(255, 255, 255, 0.75);
+}
+
+.year {
+  position: absolute;
+  font-size: 60px;
+  font-weight: bold;
+  color: #f6931f;
+  /* text-shadow: 0 0 10px rgba(255, 255, 255, 0.95); */
 }

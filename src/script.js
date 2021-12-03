@@ -5,7 +5,6 @@
 import "./style.css";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { FirstPersonControls } from "three/examples/jsm/controls/FirstPersonControls.js";
 import * as dat from "dat.gui";
 import { PointLight, AmbientLight, Vector3 } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
@@ -13,10 +12,6 @@ import { RoughnessMipmapper } from "three/examples/jsm/utils/RoughnessMipmapper.
 import { Text } from "troika-three-text";
 import * as R from "ramda";
 import * as d3 from "d3";
-import {
-  CSS3DRenderer,
-  CSS3DObject,
-} from "three/examples/jsm/renderers/CSS3DRenderer.js";
 import * as jQuery from "jquery/dist/jquery.min.js";
 
 fetch("./letters_json_grouped_merged.json")
@@ -102,13 +97,13 @@ fetch("./letters_json_grouped_merged.json")
     }
 
     // dispose button (alternative for clearCanvas, used for testing the resource tracker)
-    let disposeBtn = document.getElementById("disposeBtn");
+    /* let disposeBtn = document.getElementById("disposeBtn");
     disposeBtn.onclick = () => {
       resourceTracker.dispose();
       //console.log("Disposed!");
       console.log(scene);
       console.log(renderer.info);
-    };
+    }; */
 
     /* Allgemeines Vorgehen, um Elemente aus der Szene zu löschen: 
       1.) Komplette Szene durchgehen, 
@@ -204,7 +199,6 @@ fetch("./letters_json_grouped_merged.json")
     function init() {
       // default
       mapViewKugeln();
-      //mapViewHelix();
     }
     init();
 
@@ -215,52 +209,6 @@ fetch("./letters_json_grouped_merged.json")
     kugelButton.onclick = () => {
       // clear canvas
       clearCanvas();
-
-      /* reset renderer and camera 
-       why necessary?
-       In case the button is clicked coming from the single place view,
-       where the css3d renderer and the perspective camera are used,
-       the renderer must be changed to  WebGl and the camera must be changed to orthographic
-    */
-      if (renderer.name != "WebGL") {
-        renderer = (() => {
-          let renderer = new THREE.WebGLRenderer({
-            canvas: canvas,
-            // makes background transparent
-            alpha: true,
-          });
-          renderer.name = "WebGL";
-          renderer.setSize(sizes.width, sizes.height);
-          renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-          // shows render info e.g. how many objects are currently in memory
-          console.log(renderer.info);
-          return renderer;
-        })();
-
-        camera = new THREE.OrthographicCamera(
-          sizes.width / -2,
-          sizes.width / 2,
-          sizes.height / 2,
-          sizes.height / -2,
-          0,
-          2000
-        );
-        camera.position.x = 0;
-        camera.position.y = 25;
-        camera.position.z = 20;
-        camera.zoom = 10;
-        camera.updateProjectionMatrix();
-        controls = new OrbitControls(camera, canvas);
-
-        // wichtig!
-        /* Wenn der css3d renderer verwendet wird, muss das container-div im Vordergrund sein,
-        wenn der webgl renderer verwendet wird, muss das canvas-Element im Vordergrund sein.
-        Daher bekommt das canvas-Element hier einen z-Index von 100 
-        und das Menü mit den Buttons einen z-Index von 200 (Menü soll über allen Visus sitzen und klickbar sein).
-        */
-        document.getElementById("canvas").style.zIndex = "100";
-        document.getElementById("menu").style.zIndex = "200";
-      }
 
       // create Kugelansicht
       mapViewKugeln();
@@ -273,47 +221,6 @@ fetch("./letters_json_grouped_merged.json")
       // clear canvas
       clearCanvas();
 
-      // reset renderer
-      if (renderer.name != "WebGL") {
-        renderer = (() => {
-          let renderer = new THREE.WebGLRenderer({
-            canvas: canvas,
-            // makes background transparent
-            alpha: true,
-          });
-          renderer.name = "WebGL";
-          renderer.setSize(sizes.width, sizes.height);
-          renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-          // shows render info e.g. how many objects are currently in memory
-          console.log(renderer.info);
-          return renderer;
-        })();
-
-        camera = new THREE.OrthographicCamera(
-          sizes.width / -2,
-          sizes.width / 2,
-          sizes.height / 2,
-          sizes.height / -2,
-          0,
-          2000
-        );
-        camera.position.x = 0;
-        camera.position.y = 25;
-        camera.position.z = 20;
-        camera.zoom = 10;
-        camera.updateProjectionMatrix();
-        controls = new OrbitControls(camera, canvas);
-
-        // wichtig!
-        /* Wenn der css3d renderer verwendet wird, muss das container-div im Vordergrund sein,
-        wenn der webgl renderer verwendet wird, muss das canvas-Element im Vordergrund sein.
-        Daher bekommt das canvas-Element hier einen z-Index von 100 
-        und das Menü mit den Buttons einen z-Index von 200 (Menü soll über allen Visus sitzen und klickbar sein).
-        */
-        document.getElementById("canvas").style.zIndex = "100";
-        document.getElementById("menu").style.zIndex = "200";
-      }
-
       // create Sphärenansicht
       mapViewSpheres();
       console.log("Wechsel zu Sphärenansicht!");
@@ -325,47 +232,6 @@ fetch("./letters_json_grouped_merged.json")
     helixButton.onclick = () => {
       // clear canvas
       clearCanvas();
-
-      // reset renderer
-      if (renderer.name != "WebGL") {
-        renderer = (() => {
-          let renderer = new THREE.WebGLRenderer({
-            canvas: canvas,
-            // makes background transparent
-            alpha: true,
-          });
-          renderer.name = "WebGL";
-          renderer.setSize(sizes.width, sizes.height);
-          renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-          // shows render info e.g. how many objects are currently in memory
-          console.log(renderer.info);
-          return renderer;
-        })();
-
-        camera = new THREE.OrthographicCamera(
-          sizes.width / -2,
-          sizes.width / 2,
-          sizes.height / 2,
-          sizes.height / -2,
-          0,
-          2000
-        );
-        camera.position.x = 0;
-        camera.position.y = 25;
-        camera.position.z = 20;
-        camera.zoom = 10;
-        camera.updateProjectionMatrix();
-        controls = new OrbitControls(camera, canvas);
-
-        // wichtig!
-        /* Wenn der css3d renderer verwendet wird, muss das container-div im Vordergrund sein,
-        wenn der webgl renderer verwendet wird, muss das canvas-Element im Vordergrund sein.
-        Daher bekommt das canvas-Element hier einen z-Index von 100 
-        und das Menü mit den Buttons einen z-Index von 200 (Menü soll über allen Visus sitzen und klickbar sein).
-        */
-        document.getElementById("canvas").style.zIndex = "100";
-        document.getElementById("menu").style.zIndex = "200";
-      }
 
       // create Helixansicht
       mapViewHelix();
@@ -950,7 +816,7 @@ fetch("./letters_json_grouped_merged.json")
             let plane;
 
             /* MAKE YEARBOUNDARY PLANES FOR EMPTY YEARS */
-            if(letters[i].type == "yearboundary_empty_year"){
+            if (letters[i].type == "yearboundary_empty_year") {
               plane = makePlane(0xffff00, 0);
               // id of yearboundary object is the year
               const id = letters[i].id;
@@ -987,11 +853,9 @@ fetch("./letters_json_grouped_merged.json")
               yearboundaryText.position.x = -0.1;
               yearboundaryText.position.z = 0.01;
               yearboundaryText.fontSize = 0.1;
-              
-            }
+            } else if (letters[i].type == "yearboundary") {
 
             /* MAKE YEARBOUNDARY PLANES FOR YEARS WITH LETTERS*/
-            else if (letters[i].type == "yearboundary") {
               plane = makePlane(0xffff00);
               // id of yearboundary object is the year
               const id = letters[i].id;
@@ -1026,7 +890,6 @@ fetch("./letters_json_grouped_merged.json")
               yearboundaryText.position.x = -0.1;
               yearboundaryText.position.z = 0.01;
               yearboundaryText.fontSize = 0.1;
-
             } else {
               /* MAKE LETTER PLANES */
               plane = makePlane(0xcc0000);
@@ -1145,6 +1008,29 @@ fetch("./letters_json_grouped_merged.json")
     }
 
     /* 5.) Helper Functions for Map View */
+
+    function makeClickable(obj, isArray) {
+      // test ob obj schon in Array enthalten über Namensableich
+
+      // liste aller Objektnamen im Array erstellen
+      let namesOfClickableObjects = [];
+      targets.clickable.forEach((clickObj) => {
+        namesOfClickableObjects.push(clickObj.name);
+      });
+
+      // Namensabgleich mit neuem Objekt, das hinzugefügt werden soll
+      if (!namesOfClickableObjects.includes(obj.name)) {
+        // if: obj = array -> loop
+        // else: simply add to array of clickable objects
+        if (isArray) {
+          obj.forEach((o) => {
+            targets.clickable.push(o);
+          });
+        } else {
+          targets.clickable.push(obj);
+        }
+      }
+    }
 
     function makePlane(color = 0xcc0000, opacity = 0.7) {
       const geometry = track(new THREE.PlaneGeometry(0.3, 0.3));
@@ -1365,260 +1251,6 @@ fetch("./letters_json_grouped_merged.json")
         });
     }
 
-    /* CREATE SINGLE PLACE VIEWS (Einzelansicht)*/
-
-    // render button for single place view
-/* 
-    const renderButton = document.getElementById("render");
-    renderButton.onclick = () => {
-      // clear canvas
-      clearCanvas();
-
-      // create single place view
-      initSinglePlaceView("Frankfurt");
-      console.log("Wechsel zu Einzelansicht!");
-    }; */
-
-    function initSinglePlaceView(place) {
-      // default: Sphären
-      console.log(renderer);
-
-      // update renderer, camera and controls
-      renderer = loadCSS3DRenderer();
-      camera = loadPerspectiveCamera();
-      controls = loadOrbitControls();
-
-      // create spheres
-      makeSpheresForSingleView(place);
-
-      // log
-      console.log("Wechsel zu Einzelansicht!");
-      console.log(renderer);
-    }
-
-    function singlePlaceViewHelix() {
-      // clear canvas
-      clearCanvas();
-
-      // update renderer, camera and controls
-      renderer = loadCSS3DRenderer();
-      camera = loadPerspectiveCamera();
-      controls = loadOrbitControls();
-
-      // create helix
-      makeHelixForSingleView();
-    }
-
-    /* FUNCTIONS FOR SINGLE PLACE VIEW */
-
-    /* Basis für Einzelansicht */
-    function loadCSS3DRenderer() {
-      let renderer = new CSS3DRenderer();
-      renderer.name = "CSS3D";
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      // im div mit id = container werdend die Objekte gerendert
-      document.getElementById("container").appendChild(renderer.domElement);
-      return renderer;
-    }
-
-    function loadPerspectiveCamera() {
-      let camera = new THREE.PerspectiveCamera(
-        40,
-        window.innerWidth / window.innerHeight,
-        1,
-        10000
-      );
-      camera.position.y = 0;
-      camera.position.z = 0;
-      camera.position.x = 0;
-
-      camera.position.z = 10000;
-      camera.position.x = 7500;
-      camera.position.y = 5000;
-      camera.zoom = 1;
-      //camera.updateProjectionMatrix();
-      //camera.lookAt(new Vector3(0,1000,0));
-      //camera.position.y = 3000;
-      //camera.updateProjectionMatrix();
-      //camera.lookAt(new Vector3(0,1000,0));
-      cameraGui.add(camera.position, "y").min(0).max(10000).step(10);
-      cameraGui.add(camera.position, "x").min(0).max(10000).step(10);
-      cameraGui.add(camera.position, "z").min(0).max(10000).step(10);
-
-      console.log(camera);
-      return camera;
-    }
-
-    function loadOrbitControls() {
-      let controls = new OrbitControls(camera, renderer.domElement);
-      controls.target.x = 0;
-      controls.target.z = 0;
-      controls.target.y = 0;
-      controls.minPolarAngle = Math.PI / 2;
-      controls.maxPolarAngle = Math.PI / 2 + 0.75;
-      controls.enablePan = false;
-      // controls.enableZoom = false;
-      // console.log('azi',controls.getAzimuthalAngle());
-      // console.log('pol',controls.getPolarAngle());
-      console.log(controls.target);
-      //   canvas.addEventListener( 'wheel', function(event){
-      //     //...
-      //     event.preventDefault();
-      //     let scale = 0;
-      //     console.log(event.deltaY);
-      //     scale += event.deltaY;
-
-      //     // Restrict scale
-
-      //     console.log(scale);
-      //     camera.position.y += scale * 10;
-      //     //...
-      //  })
-      //controls.enableRotate = false;
-
-      return controls;
-    }
-
-    /* Einzelansicht: Sphären */
-    function makeSpheresForSingleView(placename) {
-      // Instanziierung eines leeren 3D-Vektors
-      const vector = new THREE.Vector3();
-
-      // get data for place
-      let place = data[`${placename}`];
-
-      // loop over years, put letters from each year in an array and use it to create a sphere
-      Object.keys(place).forEach((year, index) => {
-        let yearArray = place[`${year}`];
-        console.log(yearArray);
-        // loop over array with letter objects
-        let letters = [];
-        for (let i = 0; i < yearArray.length; i++) {
-          letters.push(yearArray[i]);
-        }
-        createSphere(letters, index);
-      });
-
-      function createSphere(letters, year) {
-        for (let i = 0, l = letters.length; i < l; i++) {
-          // <div class="element">
-          const element = track(document.createElement("div"));
-          element.className = "element";
-          // Math.random legt einen zufälligen Alpha-Wert für die Hintergrundfarbe fest
-          // element.style.backgroundColor = 'rgba(255,0,0,' + ( Math.random() * 0.5 + 0.25 ) + ')';
-          // ohne Math.random
-
-          if (letters[i].receiverGender == "Weiblich") {
-            element.style.backgroundColor = "rgb(237, 125, 49, 0.5)";
-          } else if (letters[i].receiverGender == "Männlich") {
-            element.style.backgroundColor = "rgb(231, 230, 230, 0.5)";
-          } else {
-            element.style.backgroundColor = "rgb(0, 0, 0, 0.5)";
-          }
-          //element.style.backgroundColor = 'rgb(231, 230, 230, 0.5)';
-          element.setAttribute(
-            "onclick",
-            "window.open(' " + letters[i].propyURL + "')"
-          );
-
-          // <div class="id">
-          const id = track(document.createElement("div"));
-          id.className = "id";
-          id.textContent = letters[i].idFormatted;
-          element.appendChild(id);
-
-          // <div class="initials">
-          const initials = track(document.createElement("div"));
-          initials.className = "initials";
-          initials.textContent = letters[i].receiverInitials;
-          initials.setAttribute(
-            "onclick",
-            "window.open(' " + letters[i].receiverId + "')"
-          );
-          element.appendChild(initials);
-
-          // <div class="name">
-          const name = track(document.createElement("div"));
-          name.className = "name";
-          name.innerHTML = letters[i].receiverFormatted;
-          name.setAttribute(
-            "onclick",
-            "window.open(' " + letters[i].receiverId + "')"
-          );
-          element.appendChild(name);
-
-          // <div class="date">
-          const date = track(document.createElement("div"));
-          date.className = "date";
-          date.innerHTML = letters[i].dateFormatted;
-          element.appendChild(date);
-
-          // erstellt ein CSS3DObjekt aus Variable element
-          // die Anfangsposition der Elemente wird zufällig festgelegt
-          const objectCSS = track(new CSS3DObject(element));
-          /* objectCSS.position.x = Math.random() * 400 - 200;
-          objectCSS.position.y = Math.random() * 400 - 200;
-          objectCSS.position.z = Math.random() * 400 - 200; */
-
-          // Berechnung von Winkeln, die für die Positionierung in sphärischem Koordinatensystem notwendig sind
-          // Basiert auf Index und Länge des Objekt-Arrays
-          // phi = polar angle in radians from the y (up) axis
-          // theta = equator angle in radians around the y (up) axis
-          const phi = Math.acos(-1 + (2 * i) / l);
-          const theta = Math.sqrt(l * Math.PI) * phi;
-
-          // Objekt (Element) wird in einem sphärischem Koordinatensystem d.h. auf der Kugel platziert
-          // https://en.wikipedia.org/wiki/Spherical_coordinate_system
-          // Mehr Infos zu sphärischen Koordinaten in three.js: https://threejs.org/docs/index.html?q=vector#api/en/math/Spherical
-          // Parameter: radial distance from point to origin (Mittelpunkt), phi, theta
-          objectCSS.position.setFromSphericalCoords(500, phi, theta);
-
-          // im Vektor wird die Position des Objekts gespeichert und skalar mit 2 multipliziert
-          // warum?
-          vector.copy(objectCSS.position).multiplyScalar(2);
-
-          // Objekt und Vektor schauen sich an
-          // Objekt wird so rotiert, dass siene interne Z-Achse zum Vektor zeigt
-          // was auch immer das heißen soll???
-          objectCSS.lookAt(vector);
-          scene.add(objectCSS);
-
-          objectCSS.position.y += 1200 * year;
-
-          // Objekt wird zum Sphären Array im Targets-Objekt hinzugefügt
-          targets.sphere.push(objectCSS);
-        }
-      }
-    }
-
-    /* Einzelansicht: Helix */
-    function makeHelixForSingleView() {}
-
-    /* HELPER FUNCTIONS */
-
-    function makeClickable(obj, isArray) {
-      // test ob obj schon in Array enthalten über Namensableich
-
-      // liste aller Objektnamen im Array erstellen
-      let namesOfClickableObjects = [];
-      targets.clickable.forEach((clickObj) => {
-        namesOfClickableObjects.push(clickObj.name);
-      });
-
-      // Namensabgleich mit neuem Objekt, das hinzugefügt werden soll
-      if (!namesOfClickableObjects.includes(obj.name)) {
-        // if: obj = array -> loop
-        // else: simply add to array of clickable objects
-        if (isArray) {
-          obj.forEach((o) => {
-            targets.clickable.push(o);
-          });
-        } else {
-          targets.clickable.push(obj);
-        }
-      }
-    }
-
     /**
      * Steuerungselemente
      */
@@ -1690,10 +1322,6 @@ fetch("./letters_json_grouped_merged.json")
           $("#slider-range").slider("values", 1)
       );
     });
-
-    /* $("#helix").onclick(function () {
-      alert("clicked!");
-    }); */
 
     /**
      * Helper Geometries

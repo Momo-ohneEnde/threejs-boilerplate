@@ -5,12 +5,10 @@
 import "./style.css";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { FirstPersonControls } from "three/examples/jsm/controls/FirstPersonControls.js";
 import * as dat from "dat.gui";
 import { PointLight, AmbientLight, Vector3 } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { RoughnessMipmapper } from "three/examples/jsm/utils/RoughnessMipmapper.js";
-import { Text } from "troika-three-text";
 import * as R from "ramda";
 import * as d3 from "d3";
 import {
@@ -271,37 +269,36 @@ fetch("./letters_json_grouped_merged.json")
         }
         createSphere(letters, index);
 
-        const yearMarker = makeYearMarker(year, index);
-        scene.add(yearMarker);
+        makeYearMarker(year, index);
       });
 
       function createSphere(letters, yearIndex) {
         for (let i = 0, l = letters.length; i < l; i++) {
           // <div class="element">
-          const element = track(document.createElement("div"));
-          element.className = "element";
+          const letterElement = track(document.createElement("div"));
+          letterElement.className = "letter";
           // Math.random legt einen zufälligen Alpha-Wert für die Hintergrundfarbe fest
           // element.style.backgroundColor = 'rgba(255,0,0,' + ( Math.random() * 0.5 + 0.25 ) + ')';
           // ohne Math.random
 
           if (letters[i].receiverGender == "Weiblich") {
-            element.style.backgroundColor = "rgb(237, 125, 49, 0.5)";
+            letterElement.style.backgroundColor = "rgb(237, 125, 49, 0.5)";
           } else if (letters[i].receiverGender == "Männlich") {
-            element.style.backgroundColor = "rgb(231, 230, 230, 0.5)";
+            letterElement.style.backgroundColor = "rgb(231, 230, 230, 0.5)";
           } else {
-            element.style.backgroundColor = "rgb(0, 0, 0, 0.5)";
+            letterElement.style.backgroundColor = "rgb(0, 0, 0, 0.5)";
           }
           //element.style.backgroundColor = 'rgb(231, 230, 230, 0.5)';
-          element.setAttribute(
-            "onclick",
-            "window.open(' " + letters[i].propyURL + "')"
-          );
 
           // <div class="id">
           const id = track(document.createElement("div"));
           id.className = "id";
           id.textContent = letters[i].idFormatted;
-          element.appendChild(id);
+          id.setAttribute(
+            "onclick",
+            "window.open(' " + letters[i].propyURL + "')"
+          )
+          letterElement.appendChild(id);
 
           // <div class="initials">
           const initials = track(document.createElement("div"));
@@ -311,7 +308,7 @@ fetch("./letters_json_grouped_merged.json")
             "onclick",
             "window.open(' " + letters[i].receiverId + "')"
           );
-          element.appendChild(initials);
+          letterElement.appendChild(initials);
 
           // <div class="name">
           const name = track(document.createElement("div"));
@@ -321,17 +318,17 @@ fetch("./letters_json_grouped_merged.json")
             "onclick",
             "window.open(' " + letters[i].receiverId + "')"
           );
-          element.appendChild(name);
+          letterElement.appendChild(name);
 
           // <div class="date">
           const date = track(document.createElement("div"));
           date.className = "date";
           date.innerHTML = letters[i].dateFormatted;
-          element.appendChild(date);
+          letterElement.appendChild(date);
 
           // erstellt ein CSS3DObjekt aus Variable element
           // die Anfangsposition der Elemente wird zufällig festgelegt
-          const objectCSS = track(new CSS3DObject(element));
+          const objectCSS = track(new CSS3DObject(letterElement));
           /* objectCSS.position.x = Math.random() * 400 - 200;
           objectCSS.position.y = Math.random() * 400 - 200;
           objectCSS.position.z = Math.random() * 400 - 200; */
@@ -373,46 +370,15 @@ fetch("./letters_json_grouped_merged.json")
     /* HELPER FUNCTIONS */
 
     function makeYearMarker(year, index) {
-      const yearMarker = track(new Text());
-      yearMarker.name = `yearMarker${year}`;
+      const yearMarker = track(document.createElement("div"));
+      yearMarker.className = "year";
+      yearMarker.textContent = year;
+      document.body.appendChild(yearMarker);
 
-      // Set content of text object (property "text")
-      yearMarker.text = year;
+      const marker = track(new CSS3DObject(yearMarker));
+      scene.add(marker);
 
-      // Set styling properties of text object
-      yearMarker.fontSize = 0.2;
-      yearMarker.color = 0xffffff;
-
-      // Set position of text object
-      // distance of text objects to next text object above
-      yearMarker.position.y += 1 + index * 2.5;
-
-      // Update the rendering:
-      yearMarker.sync();
-      return yearMarker;
-    }
-
-    function makeClickable(obj, isArray) {
-      // test ob obj schon in Array enthalten über Namensableich
-
-      // liste aller Objektnamen im Array erstellen
-      let namesOfClickableObjects = [];
-      targets.clickable.forEach((clickObj) => {
-        namesOfClickableObjects.push(clickObj.name);
-      });
-
-      // Namensabgleich mit neuem Objekt, das hinzugefügt werden soll
-      if (!namesOfClickableObjects.includes(obj.name)) {
-        // if: obj = array -> loop
-        // else: simply add to array of clickable objects
-        if (isArray) {
-          obj.forEach((o) => {
-            targets.clickable.push(o);
-          });
-        } else {
-          targets.clickable.push(obj);
-        }
-      }
+      marker.position.y += 1200 * index;
     }
 
     function loopYearMarker(
@@ -706,7 +672,7 @@ fetch("./letters_json_grouped_merged.json")
     console.log(controls.target);
 
     /**
-     * Mouse interaction and Raycasting
+     * Mouse interaction
      */
 
     // speichert Koordinaten der Maus
@@ -736,124 +702,6 @@ fetch("./letters_json_grouped_merged.json")
       mousemove.normalizedMouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
     });
 
-    // Raycast passiert nur bei Mausklick
-    document.addEventListener("click", (e) => {
-      // der Raycaster gibt ein Array mit den vom Strahl getroffenen
-      // Objekten zurück. Dieses Array ist leer (Länge == 0), wenn
-      // keine Objekte getroffen wurden.
-      console.log(targets.clickable);
-      let intersects = raycaster.intersectObjects(targets.clickable);
-      //console.log(scene.children[4].children);
-      // Alle Elemente in der Szene. Klick auf den LightHelper logged bspw. diesen.
-      // Statt scene.children kann auch ein Array relevanter Objekte angegeben werden: [ objectPlanet ]
-      // Wenn der intersects Array Objekte enthält (length > 0), dann wird der string "Klick" ausgegeben plus das Objekt
-
-      if (intersects.length > 0) {
-        // log clicks
-        let clickedObj = intersects[0].object;
-        console.log("Klick ", clickedObj);
-
-        /* Define click events for different objects*/
-
-        // click on letter object (planes)
-        // nur zum Test
-        if (clickedObj.geometry.type == "PlaneGeometry") {
-          console.log("Briefelement angeklickt");
-        }
-
-        // click on id -> link to platform
-        if (clickedObj.name.includes("GB01 Nr.")) {
-          // öffnet neuen Tab mit Beispielbrief
-          window.open("https://goethe-biographica.de/id/GB02_BR005_0");
-          // perspektivisch (wenn Briefe auf Plattform verlinkt)
-          // Lookup: Welcher Brief gehört zum Plane? evtl. BriefId als Name des Planes festlegen damit es funktioniert, dann property "propyURL" in window() einsetzen
-          // maybe useful:
-          // get id of letter (without _s or _r)
-          /* let id = R.replace(/_[sr]/g, "", clickedObj.parent.name);
-               console.log(id); */
-        }
-
-        // click on initals or name -> link to gnd of person
-        if (
-          clickedObj.name.includes("initials") ||
-          clickedObj.name.includes("name")
-        ) {
-          let searchObj = {}; // will be object with id of the respective letter
-          // loop over places
-          Object.keys(data).forEach((place) => {
-            // loop over years
-            Object.keys(data[`${place}`]).forEach((year) => {
-              let yearArray = data[`${place}`][`${year}`];
-              // loop over array with letter objects
-              for (let i = 0; i < yearArray.length; i++) {
-                // test if id of current obj = name of parent obj in scene (i.e. id of plane)
-                // if yes, save current obj in var searchObj and link to gnd
-                if (yearArray[i].id == clickedObj.parent.name) {
-                  searchObj = yearArray[i];
-                  // use gnd url stored in property "receiverId" to open link in new tab
-                  window.open(searchObj.receiverId);
-                }
-              }
-            });
-          });
-        }
-
-        // click on placeMarker -> Wechsel zu Einzelansicht
-        if (Object.keys(data).includes(clickedObj.name)) {
-          /* clickedObj.onclick = () => { */
-          // clear canvas
-          clearCanvas();
-
-          console.log("Klick auf Ortsmarker!");
-          initSinglePlaceView(clickedObj.name);
-          /*  }; */
-        }
-
-        /* if (
-          clickedObj.parent.name == "Scene" &&
-          clickedObj.parent.type == "Group" &&
-          clickedObj.name != "GOOGLE_SAT_WM" &&
-          clickedObj.name != "GOOGLE_MAP_WM" &&
-          clickedObj.name != "OSM_MAPNIK_WM" &&
-          clickedObj.name != "EXPORT_OSM_MAPNIK_WM"
-        ) {
-          console.log("Klick auf Ortsmarker!");
-          //clearCanvas();
-          //initSinglePlaceView();
-        } */
-      } else {
-        console.log("No intersections.");
-      }
-    });
-
-    // Raycast-event bei gedrückt gehaltener Maustaste
-    document.addEventListener("mousedown", (e) => {
-      // der Raycaster gibt ein Array mit den vom Strahl getroffenen
-      // Objekten zurück. Dieses Array ist leer (Länge == 0), wenn
-      // keine Objekte getroffen wurden.
-      let intersects = raycaster.intersectObjects(scene.children);
-
-      if (intersects.length > 0) {
-        //let planet = intersects[0].object;
-        //console.log("Mousedown ", planet);
-        // Skaliert die Größe des Objekts hoch
-        //planet.scale.x = orig.x * 1.2;
-        //planet.scale.y = orig.y * 1.2;
-        //planet.scale.z = orig.z * 1.2;
-      }
-    });
-
-    document.addEventListener("mouseup", (e) => {
-      // Setzt die Größe des Planeten auf den Anfangswert
-      // sobald die Maustaste nicht mehr gehalten wird
-      //object.scale.x = orig.x;
-      //object.scale.y = orig.y;
-      //object.scale.z = orig.z;
-    });
-
-    // Instanziiert den Raycaster
-    const raycaster = new THREE.Raycaster();
-
     const clock = new THREE.Clock();
 
     const tick = () => {
@@ -862,20 +710,6 @@ fetch("./letters_json_grouped_merged.json")
 
       const elapsedTime = clock.getElapsedTime();
 
-      // Update objects
-      /* object.rotation.y = 0.3 * elapsedTime;
-    
-      object.rotation.y += 0.5 * (mousemove.targetX - object.rotation.y);
-      object.rotation.x += 0.5 * (mousemove.targetY - object.rotation.x);
-      object.rotation.z += 0.005 * (mousemove.targetY - object.rotation.x); */
-      // Update Orbital Controls
-      //controls.update()
-
-      // Raycaster
-      // hier wird der Raycaster mit den jeweils aktuellen Mauskoordinaten
-      // aktualisiert, so dass der Strahl von der korrekten Position
-      // geschossen wird
-      raycaster.setFromCamera(mousemove.normalizedMouse, camera);
 
       // Render
       renderer.render(scene, camera);
