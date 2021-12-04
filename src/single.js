@@ -91,13 +91,13 @@ fetch("./letters_json_grouped_merged.json")
     }
 
     // dispose button (alternative for clearCanvas, used for testing the resource tracker)
-    let disposeBtn = document.getElementById("disposeBtn");
+    /* let disposeBtn = document.getElementById("disposeBtn");
     disposeBtn.onclick = () => {
       resourceTracker.dispose();
       //console.log("Disposed!");
       console.log(scene);
       console.log(renderer.info);
-    };
+    }; */
 
     /* Allgemeines Vorgehen, um Elemente aus der Szene zu löschen: 
       1.) Komplette Szene durchgehen, 

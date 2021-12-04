@@ -306,7 +306,19 @@ fetch("./letters_json_grouped_merged.json")
     // vector to which the planes will be facing
     const vector = new Vector3();
 
-    function mapViewSpheres() {
+    function mapViewSpheres(
+      yearArray = [
+        "1764",
+        "1765",
+        "1766",
+        "1767",
+        "1768",
+        "1769",
+        "1770",
+        "1771",
+        "1772",
+      ]
+    ) {
       // set view id to "sphere"
       setViewId("sphere");
 
@@ -327,7 +339,7 @@ fetch("./letters_json_grouped_merged.json")
         // debug: log scene graph
         console.log(scene);
 
-        loopYearMarker(addYearMarkerAndSpheres);
+        loopYearMarker(addYearMarkerAndSpheres, yearArray);
 
         // correct position of placemarker "Wiesbaden"
         correctPositionWiesbaden();
@@ -338,7 +350,19 @@ fetch("./letters_json_grouped_merged.json")
     }
 
     /* 4) Helix-Ansicht */
-    function mapViewHelix() {
+    function mapViewHelix(
+      yearArray = [
+        "1764",
+        "1765",
+        "1766",
+        "1767",
+        "1768",
+        "1769",
+        "1770",
+        "1771",
+        "1772",
+      ]
+    ) {
       // set view id to "helix"
       setViewId("helix");
 
@@ -359,7 +383,7 @@ fetch("./letters_json_grouped_merged.json")
         // debug: log scene graph
         console.log(scene);
 
-        loopPlaceMarker(addHelixtoPlaceMarker);
+        loopPlaceMarker(addHelixtoPlaceMarker, yearArray);
 
         // correct position of placemarker "Wiesbaden"
         correctPositionWiesbaden();
@@ -374,17 +398,14 @@ fetch("./letters_json_grouped_merged.json")
     /* 1) Kugeln */
     // wird in init aufgerufen
     function makeKugeln(placeMarker, city, yearArray) {
-      // erhält übergeben: placeMarker, Ortsobjekt
+      // erhält übergeben: placeMarker, Ortsobjekt, yearArray
       // Iteration über Jahre, dann Objekten in Jahren
       // Anzahl der Objekte ermitteln
       let letterCount = 0;
       yearArray.forEach((year) => {
-        // testen obj Jahreszahl aus dem Array tatsächlich in Daten vorhanden
-        console.log(city);
-        console.log(year);
-        if (yearArray.includes(year)) {
+        // Bedingung: Jahreszahl aus dem übergebenen yearArray (Infos aus Zeitfilter) in den Daten vorhanden sein, sonst undefined Error
+        if (Object.keys(city).includes(year)) {
           let yearArrayData = city[`${year}`];
-          console.log(city[`${year}`]);
           // loop over array with letter objects
           for (let i = 0; i < yearArrayData.length; i++) {
             letterCount++;
@@ -784,33 +805,23 @@ fetch("./letters_json_grouped_merged.json")
 
     /* 4) Helix */
     // implementation of functionForLoop in loop over placemarker
-    function addHelixtoPlaceMarker(placeMarker) {
+    function addHelixtoPlaceMarker(placeMarker, yearArray) {
       try {
         const city = data[placeMarker.name]; // saves name of place from json data
         console.log(city, placeMarker.name); // logs city names
 
-        makeHelixForMap(placeMarker, city);
+        makeHelixForMap(placeMarker, city, yearArray);
       } catch (error) {
         console.log(error);
       }
     }
 
-    function makeHelixForMap(placeMarker, city) {
+    function makeHelixForMap(placeMarker, city, yearArray) {
       // height of previous helix, starting point to from which helix is built
       let old_h = 0.0;
 
       // aggreagate all letters of one place in an array
-      [
-        "1764",
-        "1765",
-        "1766",
-        "1767",
-        "1768",
-        "1769",
-        "1770",
-        "1771",
-        "1772",
-      ].forEach((year, yearindex) => {
+      yearArray.forEach((year, yearindex) => {
         // array of years
         let letters = city[`${year}`];
 
@@ -1036,10 +1047,21 @@ fetch("./letters_json_grouped_merged.json")
     /* 5.) Helper Functions for Map View */
 
     function setViewId(viewName) {
-      const view = track(document.createElement("div"));
-      view.id = "viewId";
-      view.name = `${viewName}`;
-      document.body.prepend(view);
+      // if there is no div with id "viewId" -> create dif
+      if (!document.getElementById("viewId")) {
+        const view = track(document.createElement("div"));
+        view.id = "viewId";
+        view.name = `${viewName}`;
+        document.body.prepend(view);
+        console.log("div 'viewName' created, name: ", viewName);
+      }
+
+      // if there already is a div, update its name
+      else if (document.getElementById("viewId").name != viewName) {
+        const view = document.getElementById("viewId");
+        view.name = `${viewName}`;
+        console.log("div 'viewName': name set to ", viewName);
+      }
     }
 
     function makeClickable(obj, isArray) {
@@ -1247,20 +1269,7 @@ fetch("./letters_json_grouped_merged.json")
         });
     }
 
-    function loopYearMarker(
-      functionForLoop,
-      yearArray = [
-        "1764",
-        "1765",
-        "1766",
-        "1767",
-        "1768",
-        "1769",
-        "1770",
-        "1771",
-        "1772",
-      ]
-    ) {
+    function loopYearMarker(functionForLoop, yearArray) {
       scene.children
         .filter((i) => i.name == "Scene")[0] // scene contains another group "scene" which contains all objects in the gltf file created in blender (Karte und Ortsmarker)
         .children.filter(
@@ -1299,7 +1308,7 @@ fetch("./letters_json_grouped_merged.json")
       for (let i = s, e = en; i <= e; i++) {
         yearArray.push(i.toString());
       }
-      //      console.log(yearArray);
+      // console.log(yearArray);
       return yearArray;
     }
 
@@ -1316,46 +1325,29 @@ fetch("./letters_json_grouped_merged.json")
           // neue Ansicht auf basis des Sliders aufbauen
           // welche Ansicht aufgebaut wird, hängt von der view id ab
 
+          /* KUGEL */
           // console.log(document.getElementById("viewId").name);
           if (document.getElementById("viewId").name == "kugel") {
-            console.log("Hi Kugel!");
+            clearCanvas();
+            let timeFilterRange = range(ui.values[0], ui.values[1]);
+            mapViewKugeln(timeFilterRange);
           }
 
+          /* SPHÄRE */
           if (document.getElementById("viewId").name == "sphere") {
-            // Sphäre
             clearCanvas();
-            const roughnessMipmapper = new RoughnessMipmapper(renderer);
-            // load gltf basemap
-            const loader = new GLTFLoader();
-            loader.load("/gltf/goethe_basemap.glb", function (gltf) {
-              gltf.scene.traverse(function (child) {
-                // travese goes through all the children of an object
-                if (child.isMesh) {
-                  roughnessMipmapper.generateMipmaps(child.material); // apply mipmapper before rendering
-                }
-              });
+            let timeFilterRange = range(ui.values[0], ui.values[1]);
+            mapViewSpheres(timeFilterRange);
+          }
 
-              // add basemap to scene (!gltf has its own scene) and track it
-              scene.add(track(gltf.scene));
-
-              // debug: log scene graph
-              console.log(scene);
-
-              loopYearMarker(
-                addYearMarkerAndSpheres,
-                range(ui.values[0], ui.values[1])
-              );
-
-              // correct position of placemarker "Wiesbaden"
-              correctPositionWiesbaden();
-
-              roughnessMipmapper.dispose();
-              //render();
-            });
+          /* HELIX */
+          if (document.getElementById("viewId").name == "helix") {
+            clearCanvas();
+            let timeFilterRange = range(ui.values[0], ui.values[1]);
+            mapViewHelix(timeFilterRange);
           }
         },
       });
-      console.log("Ready");
 
       $("#amount").val(
         "" +
