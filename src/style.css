@@ -47,7 +47,6 @@ a {
   display: grid;
   place-items: center;
   position: relative;
-  /* z-index: 2; */
   padding-top: 0.5em;
 }
 
@@ -100,7 +99,6 @@ div#ui {
   width: 20%;
   /* flex-shrink: 0; */
   position: absolute;
-  /* z-index: 1; */
 }
 
 /* filter:time */

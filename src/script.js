@@ -212,6 +212,16 @@ fetch("./letters_json_grouped_merged.json")
 
       // create Kugelansicht
       mapViewKugeln();
+
+      // reset all color filters
+      /* const checkboxes = document.querySelectorAll('input[type=checkbox]');
+
+      checkboxes.forEach((checkbox) => {
+        checkbox.checked = false;
+      }) */
+
+      //$("#checkbox").prop("unchecked", true);
+
       console.log("Wechsel zu Kugelansicht!");
     };
 
@@ -1090,7 +1100,7 @@ fetch("./letters_json_grouped_merged.json")
     function makePlane(color = 0xcc0000, opacity = 0.7) {
       const geometry = track(new THREE.PlaneGeometry(0.3, 0.3));
       // DoubleSide -> visisble and not visible sides of objects are rendered
-      const material = track(
+      let material = track(
         new THREE.MeshBasicMaterial({
           color: color,
           side: THREE.DoubleSide,
@@ -1293,11 +1303,68 @@ fetch("./letters_json_grouped_merged.json")
         });
     }
 
+    /* Helper functions for Filter */
+
+    // returns an array of all the planes currently visible on the scene
+    function getCurrentPlanesOnScene() {
+      let currentPlanesOnScene = [];
+      scene.children
+        .filter((i) => i.name == "Scene")[0] // scene contains another group "scene" which contains all objects in the gltf file created in blender (Karte und Ortsmarker)
+        .children.filter(
+          (i) =>
+            ["Frankfurt", "Darmstadt", "Wiesbaden", "Worms"].includes(i.name) // temporary! filters which objects (Ortsmarker) from the scene group should be included
+        )
+        .forEach((place) => {
+          // the scenegraph is different in sphere and helix view -> need to be treated separately
+          // sphäre
+          if(document.getElementById("viewId").name == "sphere"){
+            place.children.forEach((yearMarker) => {
+              yearMarker.children.forEach((plane) => {
+                currentPlanesOnScene.push(plane);
+              });
+            });
+          }
+          // helix
+          if(document.getElementById("viewId").name == "helix"){
+            // children can be yearMarker or letter planes, make sure only letter planes are added to the array by testing for "GB" at start of name
+            place.children.forEach((child) => {
+              if(child.name.startsWith("GB")){
+                currentPlanesOnScene.push(child);
+              }
+            })
+          }
+          
+        });
+      //console.log("Array aller Planes: ");
+      //console.log(currentPlanesOnScene);
+      return currentPlanesOnScene;
+    }
+
+    // returns an array of all the ids of the planes currently visible on the scene
+    // parameter: array of all planes on the scene
+    function getIdsOfCurrentPlanesOnScene(currentPlanesOnScene) {
+      let idsOfCurrentPlanesOnScene = [];
+      currentPlanesOnScene.forEach((plane) => {
+        idsOfCurrentPlanesOnScene.push(plane.name);
+      });
+      //console.log("Liste der Ids:");
+      //console.log(idsOfCurrentPlanesOnScene);
+      return idsOfCurrentPlanesOnScene;
+    }
+
+    // changes color of plane
+    function changePlaneColor(currentPlanesOnScene, id, color){
+      // get plane associated with the current id
+      let currPlane = currentPlanesOnScene.find(plane => plane.name == id);
+      // change color of the plane (must use set method!!!)
+      currPlane.material.color.set(color);
+    }
+
     /**
      * Steuerungselemente
      */
 
-    /** Slider */
+    /** Slider: Zeitfilter */
 
     // get year range from start and end date
     function range(start, end) {
@@ -1355,6 +1422,204 @@ fetch("./letters_json_grouped_merged.json")
           " – " +
           $("#slider-range").slider("values", 1)
       );
+    });
+
+    /* Briefstatus-Filter */
+
+    // SENT
+    $(".sent").change(function () {
+      // sets plane color of sent letters to 'darckorchid' if checkbox is checked
+      if ($(this).is(":checked")) {
+        // get array of all planes currently on the scene
+        let currentPlanesOnScene = getCurrentPlanesOnScene();
+        // get array of all the ids of the planes
+        let idsOfCurrentPlanesOnScene =
+          getIdsOfCurrentPlanesOnScene(currentPlanesOnScene);
+        // loop over ids and determine if letter has status sent/received by end of idString (r or s)
+        idsOfCurrentPlanesOnScene.forEach((id) => {
+          if(id.endsWith("s")){
+            changePlaneColor(currentPlanesOnScene, id, 0x9932CC);
+          }
+        })
+
+      } else {
+        // sets plane color of sent letters back to red if checkbox is unchecked
+        let currentPlanesOnScene = getCurrentPlanesOnScene();
+
+        let idsOfCurrentPlanesOnScene =
+          getIdsOfCurrentPlanesOnScene(currentPlanesOnScene);
+
+          idsOfCurrentPlanesOnScene.forEach((id) => {
+          if(id.endsWith("s")){
+            changePlaneColor(currentPlanesOnScene, id, 0xcc0000);
+          }
+        })
+      }
+    });
+
+    // RECEIVED
+    $(".received").change(function () {
+      // sets plane color of received letters to 'plum' if checkbox is checked
+      if ($(this).is(":checked")) {
+        // get array of all planes currently on the scene
+        let currentPlanesOnScene = getCurrentPlanesOnScene();
+        // get array of all the ids of the planes
+        let idsOfCurrentPlanesOnScene =
+          getIdsOfCurrentPlanesOnScene(currentPlanesOnScene);
+        // loop over ids and determine if letter has status sent/received by end of idString (r or s)
+        idsOfCurrentPlanesOnScene.forEach((id) => {
+          if(id.endsWith("r")){
+            changePlaneColor(currentPlanesOnScene, id, 0xDDA0DD);
+          }
+        })
+      } else {
+        // sets plane color of received letters back to red if checkbox is unchecked
+        let currentPlanesOnScene = getCurrentPlanesOnScene();
+
+        let idsOfCurrentPlanesOnScene =
+          getIdsOfCurrentPlanesOnScene(currentPlanesOnScene);
+
+          idsOfCurrentPlanesOnScene.forEach((id) => {
+          if(id.endsWith("r")){
+            changePlaneColor(currentPlanesOnScene, id, 0xcc0000);
+          }
+        })
+      }
+    });
+
+    /* Documenttyp-Filter */
+
+    // LETTERS
+    $(".goetheletter").change(function () {
+      // sets plane color to 'red' if checkbox is checked and doctype is goetheletter
+      if ($(this).is(":checked")) {
+        // get array of all planes currently on the scene
+        let currentPlanesOnScene = getCurrentPlanesOnScene();
+        // get array of all the ids of the planes
+        let idsOfCurrentPlanesOnScene =
+          getIdsOfCurrentPlanesOnScene(currentPlanesOnScene);
+        // loop over ids and determine if document is letter
+        idsOfCurrentPlanesOnScene.forEach((id) => {
+          if(id.startsWith("GB")){
+            changePlaneColor(currentPlanesOnScene, id, 0xcc0000);
+          }
+        })
+
+      } else {
+        // sets plane color to default color if checkbox is unchecked and doctype is goetheletter
+        let currentPlanesOnScene = getCurrentPlanesOnScene();
+
+        let idsOfCurrentPlanesOnScene =
+          getIdsOfCurrentPlanesOnScene(currentPlanesOnScene);
+
+          idsOfCurrentPlanesOnScene.forEach((id) => {
+          if(id.startsWith("GB")){
+            changePlaneColor(currentPlanesOnScene, id, 0xcc0000);
+          }
+        })
+      }
+    });
+
+    // DIARIES
+    $(".goethediary").change(function () {
+      // sets plane color to blue if checkbox is checked and doctype is goethediary
+      if ($(this).is(":checked")) {
+        // get array of all planes currently on the scene
+        let currentPlanesOnScene = getCurrentPlanesOnScene();
+        // get array of all the ids of the planes
+        let idsOfCurrentPlanesOnScene =
+          getIdsOfCurrentPlanesOnScene(currentPlanesOnScene);
+        // loop over ids and determine if document is diary
+        idsOfCurrentPlanesOnScene.forEach((id) => {
+          if(id.startsWith("GT")){
+            changePlaneColor(currentPlanesOnScene, id, 0xCBE7F9);
+          }
+        })
+
+      } else {
+        // sets plane color to default color if checkbox is unchecked and doctype is goethediary
+        let currentPlanesOnScene = getCurrentPlanesOnScene();
+
+        let idsOfCurrentPlanesOnScene =
+          getIdsOfCurrentPlanesOnScene(currentPlanesOnScene);
+
+          idsOfCurrentPlanesOnScene.forEach((id) => {
+          if(id.startsWith("GT")){
+            changePlaneColor(currentPlanesOnScene, id, 0xcc0000);
+          }
+        })
+      }
+    });
+
+    /* Geschlecht-Filter */
+
+    // MALE
+    $(".male").change(function () {
+      // sets plane color of letters with male receiver to grey if checkbox is checked
+      if ($(this).is(":checked")) {
+        // get array of all planes currently on the scene
+        let currentPlanesOnScene = getCurrentPlanesOnScene();
+        // get array of all the ids of the planes
+        let idsOfCurrentPlanesOnScene =
+          getIdsOfCurrentPlanesOnScene(currentPlanesOnScene);
+        // loop ids, look up the accoring entry in data to check gender of recipient
+        idsOfCurrentPlanesOnScene.forEach((id) => {
+         // TODO: go through all data, make array of all letters currently visible in scene, lookup in data for receiverGender with this id
+
+          if(letters[i].receiverGender == "männlich"){
+            changePlaneColor(currentPlanesOnScene, id, 0x808080);
+          }
+        })
+
+      } else {
+        // sets plane color of letters with male receiver to default color if checkbox is unchecked
+        let currentPlanesOnScene = getCurrentPlanesOnScene();
+
+        let idsOfCurrentPlanesOnScene =
+          getIdsOfCurrentPlanesOnScene(currentPlanesOnScene);
+
+          /* idsOfCurrentPlanesOnScene.forEach((id) => {
+          if(letters[i].receiverGender == "männlich"){
+            changePlaneColor(currentPlanesOnScene, id, 0xcc0000);
+          }
+        }) */
+      }
+    });
+
+    // FEMALE
+    $(".female").change(function () {
+      // sets plane color of letters with female receiver to orange if checkbox is checked
+      if ($(this).is(":checked")) {
+        // get array of all planes currently on the scene
+        let currentPlanesOnScene = getCurrentPlanesOnScene();
+        // get array of all the ids of the planes
+        let idsOfCurrentPlanesOnScene =
+          getIdsOfCurrentPlanesOnScene(currentPlanesOnScene);
+        // loop over ids and determine if letter has status sent/received by end of idString (r or s)
+        idsOfCurrentPlanesOnScene.forEach((id) => {
+
+          // TODO: data lookup!!!
+
+         /*  if(letters[i].receiverGender == "weiblich"){
+            changePlaneColor(currentPlanesOnScene, id, 0xffa500);
+          } */
+        })
+
+      } else {
+        // sets plane color of letters with female receiver to default color if checkbox is unchecked
+        let currentPlanesOnScene = getCurrentPlanesOnScene();
+
+        let idsOfCurrentPlanesOnScene =
+          getIdsOfCurrentPlanesOnScene(currentPlanesOnScene);
+
+          idsOfCurrentPlanesOnScene.forEach((id) => {
+
+            // TODO: data lookup!!!
+          /* if(letters[i].receiverGender == "weiblich"){
+            changePlaneColor(currentPlanesOnScene, id, 0xcc0000);
+          } */
+        })
+      }
     });
 
     /**
