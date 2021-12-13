@@ -162,6 +162,11 @@ label.female {
   padding-left: 1.5rem;
 }
 
+label.other {
+  color: white;
+  padding-left: 1.5rem;
+}
+
 /* checkbox styling */
 
 input[type=checkbox]{

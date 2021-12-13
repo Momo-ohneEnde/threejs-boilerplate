@@ -70,7 +70,12 @@ fetch("./letters_json_grouped_merged.json")
      */
     const targets = { table: [], sphere: [], helix: [], clickable: [] };
 
-    // Ortsname muss bei Klick auf Ortsmarker über Link weitergegeben werden
+    /* placename */
+    // gets currrent url e.g. single.html#frankfurt
+    const url = window.location.href;
+    // splits on # -> Array[0] = single.html, Array[1] = placename
+    /* let urlArray = url.split('#');
+    let placename = urlArray[1]; */
     let placename = "Frankfurt";
 
     /**
