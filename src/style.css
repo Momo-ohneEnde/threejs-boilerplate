@@ -108,6 +108,11 @@ div#time-filter {
   padding: 0.5em;
 }
 
+/* filter-mode */
+div#filter-mode {
+  margin-top: 1rem;
+}
+
 /* filter: letter status */
 
 div#letter-status-filter {
