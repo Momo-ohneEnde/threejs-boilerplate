@@ -101,6 +101,17 @@ div#ui {
   position: absolute;
 }
 
+div#ui-single {
+  max-width: 500px;
+  margin-left: 2em;
+  margin-top: 1em;
+  color: white;
+  width: 20%;
+  /* flex-shrink: 0; */
+  position: absolute;
+  z-index: 1;
+}
+
 /* filter:time */
 
 div#time-filter {

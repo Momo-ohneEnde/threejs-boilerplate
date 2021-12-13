@@ -270,6 +270,14 @@ fetch("./letters_json_grouped_merged.json")
       // set view id to "kugel"
       setViewId("kugel");
 
+      // Sichtbarkeit Steuerungselemente
+      document.getElementById("filter-mode").style.visibility = "hidden";
+      document.getElementById("letter-status-filter").style.visibility =
+        "hidden";
+      document.getElementById("doc-type-filter").style.visibility = "hidden";
+      document.getElementById("person-filter").style.visibility = "hidden";
+      document.getElementById("infobox").style.visibility = "hidden";
+
       const roughnessMipmapper = new RoughnessMipmapper(renderer);
       // load gltf basemap
       const loader = new GLTFLoader();
@@ -334,6 +342,14 @@ fetch("./letters_json_grouped_merged.json")
       // set view id to "sphere"
       setViewId("sphere");
 
+      // Sichtbarkeit Steuerungselemente
+      document.getElementById("filter-mode").style.visibility = "visible";
+      document.getElementById("letter-status-filter").style.visibility =
+        "visible";
+      document.getElementById("doc-type-filter").style.visibility = "visible";
+      document.getElementById("person-filter").style.visibility = "visible";
+      document.getElementById("infobox").style.visibility = "visible";
+
       const roughnessMipmapper = new RoughnessMipmapper(renderer);
       // load gltf basemap
       const loader = new GLTFLoader();
@@ -377,6 +393,14 @@ fetch("./letters_json_grouped_merged.json")
     ) {
       // set view id to "helix"
       setViewId("helix");
+
+      // Sichtbarkeit Steuerungselemente
+      document.getElementById("filter-mode").style.visibility = "visible";
+      document.getElementById("letter-status-filter").style.visibility =
+        "visible";
+      document.getElementById("doc-type-filter").style.visibility = "visible";
+      document.getElementById("person-filter").style.visibility = "visible";
+      document.getElementById("infobox").style.visibility = "visible";
 
       const roughnessMipmapper = new RoughnessMipmapper(renderer);
       // load gltf basemap
