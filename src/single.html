@@ -20,26 +20,31 @@
             <label for="amount">Zeitraum: </label>
             <input type="text" id="amount" readonly />
           </p>
-  
+
           <div id="slider-range"></div>
-  
+
           <p>Zeitschritt: 1 Jahr</p>
         </div>
-  
+
         <div id="filter-mode">
           <label for="filter" class="filter">Filter-Modus</label>
-          <input type="checkbox" name="filter" class="filter" unchecked="true" />
+          <input
+            type="checkbox"
+            name="filter"
+            class="filter"
+            unchecked="true"
+          />
           <br />
         </div>
-  
+
         <div id="letter-status-filter">
           <label for="letterStatus" class="letterStatus">Briefstatus</label>
           <br />
-  
+
           <label for="sent" class="sent">gesendet</label>
           <input type="checkbox" name="sent" class="sent" unchecked="true" />
           <br />
-  
+
           <label for="received" class="received">empfangen</label>
           <input
             type="checkbox"
@@ -48,11 +53,11 @@
             unchecked="true"
           />
         </div>
-  
+
         <div id="doc-type-filter">
           <label for="docType" class="docType">Zeugnistyp</label>
           <br />
-  
+
           <label for="goetheletter" class="goetheletter">Brief</label>
           <input
             type="checkbox"
@@ -61,7 +66,7 @@
             unchecked="true"
           />
           <br />
-  
+
           <label for="goethediary" class="goethediary">Tagebuch</label>
           <input
             type="checkbox"
@@ -70,25 +75,29 @@
             unchecked="true"
           />
         </div>
-  
+
         <div id="person-filter">
           <label for="person" class="person">Geschlecht der Empfänger:in</label>
           <br />
-  
+
           <label for="male" class="male">männlich</label>
           <input type="checkbox" name="male" class="male" unchecked="true" />
           <br />
-  
+
           <label for="female" class="female">weiblich</label>
-          <input type="checkbox" name="female" class="female" unchecked="true" />
+          <input
+            type="checkbox"
+            name="female"
+            class="female"
+            unchecked="true"
+          />
           <br />
-  
+
           <label for="other" class="other">andere/unbekannt</label>
           <input type="checkbox" name="other" class="other" unchecked="true" />
         </div>
-  
+
         <div id="infobox">
-          <p>Infobox</p>
         </div>
       </div>
 
@@ -97,9 +106,15 @@
     </div>
 
     <div id="menuSingle">
-      <!-- <button id="disposeBtn" onclick="dispose()">DISPOSE</button> -->
       <a href="index.html"><button id="toMap">ZUR KARTE</button></a>
     </div>
-    
+
+    <div id="dialog" title="Zur Benutzung">
+      <p>
+        <strong>Verschieben</strong> nach ↑ ↓ mit Pfeiltasten
+      </p>
+      <p><strong>Rotation:</strong> Drehen mit der linken Maustaste</p>
+      <p><strong>Zoom:</strong> Mausrad</p>
+    </div>
   </body>
 </html>

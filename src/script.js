@@ -98,15 +98,6 @@ fetch("./letters_json_grouped_merged.json")
       //resourceTracker.logResources();
     }
 
-    // dispose button (alternative for clearCanvas, used for testing the resource tracker)
-    /* let disposeBtn = document.getElementById("disposeBtn");
-    disposeBtn.onclick = () => {
-      resourceTracker.dispose();
-      //console.log("Disposed!");
-      console.log(scene);
-      console.log(renderer.info);
-    }; */
-
     /* Allgemeines Vorgehen, um Elemente aus der Szene zu löschen: 
       1.) Komplette Szene durchgehen, 
       2.) alle Elemente in Szene von der Szene entfernen mit remove(), 
@@ -199,7 +190,7 @@ fetch("./letters_json_grouped_merged.json")
 
     /* INIT */
     function init() {
-      // default
+      // default: Kugelansicht
       mapViewKugeln(timeFilterRange);
     }
     init();
@@ -575,15 +566,6 @@ fetch("./letters_json_grouped_merged.json")
     // i = index position, l = length of dataset, pivot = point around which sphere will be centered
     function makeSpheresForMap(pivot, letters) {
       for (let i = 0, l = letters.length; i < l; i++) {
-        // for later: filtering options
-        /* if (data[i].receiverGender == "Weiblich") {
-      element.style.backgroundColor = "rgb(237, 125, 49, 0.5)";
-    } else if (data[i].receiverGender == "Männlich") {
-      element.style.backgroundColor = "rgb(231, 230, 230, 0.5)";
-    } else {
-      element.style.backgroundColor = "rgb(0, 0, 0, 0.5)";
-    } */
-
         /* 
         create planes and position them as a sphere 
       */

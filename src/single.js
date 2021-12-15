@@ -97,28 +97,6 @@ fetch("./letters_json_grouped_merged.json")
       //resourceTracker.logResources();
     }
 
-    // dispose button (alternative for clearCanvas, used for testing the resource tracker)
-    /* let disposeBtn = document.getElementById("disposeBtn");
-    disposeBtn.onclick = () => {
-      resourceTracker.dispose();
-      //console.log("Disposed!");
-      console.log(scene);
-      console.log(renderer.info);
-    }; */
-
-    /* Allgemeines Vorgehen, um Elemente aus der Szene zu löschen: 
-      1.) Komplette Szene durchgehen, 
-      2.) alle Elemente in Szene von der Szene entfernen mit remove(), 
-      3.) dann mit dispose() aus dem Speicher löschen, bzw. geometry, material, textures müssen auch einzeln gelöscht werden
-     */
-
-    /* Vorgehen mit Resource Tracker:
-     * Tracker legt ein Set mit zu löschenden Objekten an
-     * Tracker hat eine track-function, mit der Objekte in das Set aufgenommen werden
-     * d.h. immer wenn ein neues Objekt erstellt wird, dann muss es von der Funktion track() umschlossen werden
-     * am Ende kann dann dispose() auf das Set angewandt werden, sodass alle Objekte gleichzeitig gelöscht werden
-     */
-
     // resource tracker class (tracks objects which will be removed later)
     class ResourceTracker {
       constructor() {
@@ -196,24 +174,17 @@ fetch("./letters_json_grouped_merged.json")
     const resourceTracker = new ResourceTracker();
     const track = resourceTracker.track.bind(resourceTracker);
 
-    /* INIT */
-    /* function init() {
-      // default
-      mapViewKugeln();
-      //mapViewHelix();
-    }
-    init();
- */
+    /* BUTTONS */
 
-    /* CREATE SINGLE PLACE VIEWS (Einzelansicht)*/
-
-    // render button for single place view
-
+    // toMap-Button (Wechsel zur Kartenansicht)
     /* const toMapButton = document.getElementById("toMap");
     toMapButton.onclick = () => {
       // CODE
     }; */
 
+    /* CREATE SINGLE PLACE VIEWS (Einzelansicht)*/
+
+    /* INIT: SPHERE */
     function initSinglePlaceView(placename, timeFilterRange) {
       // clear canvas
       clearCanvas();
@@ -224,16 +195,15 @@ fetch("./letters_json_grouped_merged.json")
       // create spheres
       makeSpheresForSingleView(placename, timeFilterRange);
 
-      // altert with "how to use" infos
-      alert(
-        "How to interact with the visualization:\nTo move up and down use: ↑ and ↓\nTo rotate: grab with mouse"
-      );
+      // create infobox
+      makeInfoBox();
 
       // log
       console.log("Wechsel zu Einzelansicht!");
     }
     initSinglePlaceView(placename, timeFilterRange);
 
+    /* HELIX (todo) */
     function singlePlaceViewHelix(placename) {
       // clear canvas
       clearCanvas();
@@ -282,16 +252,7 @@ fetch("./letters_json_grouped_merged.json")
           const letterElement = track(document.createElement("div"));
           letterElement.className = "letter";
 
-          /* if (letters[i].receiverGender == "Weiblich") {
-            letterElement.style.backgroundColor = "rgb(237, 125, 49, 0.5)";
-          } else if (letters[i].receiverGender == "Männlich") {
-            letterElement.style.backgroundColor = "rgb(231, 230, 230, 0.5)";
-          } else {
-            letterElement.style.backgroundColor = "rgb(0, 0, 0, 0.5)";
-          } */
-
-          letterElement.style.backgroundColor  = 'rgb(204, 0, 0, 0.5)';
-
+          letterElement.style.backgroundColor = "rgb(204, 0, 0, 0.5)";
 
           // <div class="id">
           const id = track(document.createElement("div"));
@@ -329,13 +290,9 @@ fetch("./letters_json_grouped_merged.json")
           date.innerHTML = letters[i].dateFormatted;
           letterElement.appendChild(date);
 
-          // erstellt ein CSS3DObjekt aus Variable element
-          // die Anfangsposition der Elemente wird zufällig festgelegt
+          // erstellt ein CSS3DObjekt aus Variable letterElement
           const objectCSS = track(new CSS3DObject(letterElement));
           objectCSS.name = letters[i].id;
-          /* objectCSS.position.x = Math.random() * 400 - 200;
-          objectCSS.position.y = Math.random() * 400 - 200;
-          objectCSS.position.z = Math.random() * 400 - 200; */
 
           // Berechnung von Winkeln, die für die Positionierung in sphärischem Koordinatensystem notwendig sind
           // Basiert auf Index und Länge des Objekt-Arrays
@@ -351,12 +308,10 @@ fetch("./letters_json_grouped_merged.json")
           objectCSS.position.setFromSphericalCoords(500, phi, theta);
 
           // im Vektor wird die Position des Objekts gespeichert und skalar mit 2 multipliziert
-          // warum?
           vector.copy(objectCSS.position).multiplyScalar(2);
 
           // Objekt und Vektor schauen sich an
           // Objekt wird so rotiert, dass siene interne Z-Achse zum Vektor zeigt
-          // was auch immer das heißen soll???
           objectCSS.lookAt(vector);
           scene.add(objectCSS);
 
@@ -368,7 +323,7 @@ fetch("./letters_json_grouped_merged.json")
       }
     }
 
-    /* Einzelansicht: Helix */
+    /* Einzelansicht: Helix (todo) */
     function makeHelixForSingleView() {}
 
     /* HELPER FUNCTIONS */
@@ -386,65 +341,19 @@ fetch("./letters_json_grouped_merged.json")
       marker.position.y += 1200 * index;
     }
 
-    function loopYearMarker(
-      functionForLoop,
-      yearArray = [
-        "1764",
-        "1765",
-        "1766",
-        "1767",
-        "1768",
-        "1769",
-        "1770",
-        "1771",
-        "1772",
-      ]
-    ) {
-      scene.children
-        .filter((i) => i.name == "Scene")[0] // scene contains another group "scene" which contains all objects in the gltf file created in blender (Karte und Ortsmarker)
-        .children.filter(
-          (i) =>
-            ["Frankfurt", "Darmstadt", "Wiesbaden", "Worms"].includes(i.name) // temporary! filters which objects (Ortsmarker) from the scene group should be included
-        )
-        .forEach((placeMarker) => {
-          // loop over Ortsmarker objects
-          try {
-            const city = data[placeMarker.name]; // saves name of place from json data
-            console.log(city, placeMarker.name); // logs city names
-            // Array with years (will later be provided by jQuery time filter)
-            yearArray.forEach((year, index) => {
-              // function with code that should be executed in the loop for each yearMarker
-              // function for loop needs arguments "placeMarker, city, year, index"
-              functionForLoop(placeMarker, city, year, index);
-            });
-          } catch (error) {
-            console.log(error);
-          }
-        });
+    // remove chlildren of infobox div (needed when infobox is updated)
+    function removeContentOfInfobox() {
+      const parent = document.getElementById("infobox");
+
+      // removes last child until there are no more children
+      while (parent.lastChild) {
+        parent.removeChild(parent.lastChild);
+      }
     }
 
     /* Helper functions for Filter */
 
-    // retuns an array of all letter objects currently displayed on the scene
-    function getlettersCurrentlyVisibleOnScene(idsOfCurrentLetterObjectsOnScene) {
-      let lettersCurrentlyVisibleOnScene = [];
-
-      // find letters currently visivle in scene and put them into the array
-      Object.values(data).forEach((place) => {
-        Object.values(place).forEach((year) => {
-          for (let i = 0; i < year.length; i++) {
-            if (idsOfCurrentLetterObjectsOnScene.includes(year[i].id)) {
-              lettersCurrentlyVisibleOnScene.push(year[i]);
-              //console.log(lettersCurrentlyVisibleOnScene);
-            }
-          }
-        });
-      });
-
-      return lettersCurrentlyVisibleOnScene;
-    }
-
-    // returns an array of all the letter objects currently visible on the scene
+    // returns an array of all the letter objects (three.js objects) currently on the scene
     function getCurrentLetterObjectsOnScene() {
       let currentLetterObjectsOnScene = [];
       scene.children.forEach((child) => {
@@ -456,22 +365,56 @@ fetch("./letters_json_grouped_merged.json")
       return currentLetterObjectsOnScene;
     }
 
-    // returns an array of all the ids of the planes currently visible on the scene
-    // parameter: array of all planes on the scene
-    function getIdsOfCurrentLetterObjectsOnScene(currentLetterObjectsOnScene) {
-      let idsOfCurrentLetterObjectsOnScene = [];
-      currentLetterObjectsOnScene.forEach((object) => {
-        idsOfCurrentLetterObjectsOnScene.push(object.name);
+    // returns an array of only the visible letter objects on the scene (property "visible" must be true)
+    function getCurrentlyVisibleLetterObjectsOnScene() {
+      let currentlyVisibleLetterObjectsOnScene = [];
+      scene.children.forEach((child) => {
+        if (child.name.startsWith("GB") && child.visible == true) {
+          currentlyVisibleLetterObjectsOnScene.push(child);
+        }
+      });
+      //console.log("Letter Objects", currentLetterObjectsOnScene);
+      return currentlyVisibleLetterObjectsOnScene;
+    }
+
+    // returns an array of all the ids of the letter objects passed as parameter
+    // parameter: array of letter objects
+    function getIdsOfLetterObjects(letterObjectsArray) {
+      let idsOfLetterObjects = [];
+      letterObjectsArray.forEach((object) => {
+        idsOfLetterObjects.push(object.name);
       });
       //console.log("Liste der Ids:");
       //console.log(idsOfCurrentLetterObjectsOnScene);
-      return idsOfCurrentLetterObjectsOnScene;
+      return idsOfLetterObjects;
     }
-    
+
+    // retuns an array of all letters data associated to the letter objects (three.js objects)
+    // parameter: array with ids of letter objects
+    function getletterDataOfLetterObjects(idsOfLetterObjects) {
+      let letterDataArray = [];
+
+      // find letters currently in scene and put them into the array
+      Object.values(data).forEach((place) => {
+        Object.values(place).forEach((year) => {
+          for (let i = 0; i < year.length; i++) {
+            if (idsOfLetterObjects.includes(year[i].id)) {
+              letterDataArray.push(year[i]);
+              //console.log(lettersCurrentlyOnScene);
+            }
+          }
+        });
+      });
+
+      return letterDataArray;
+    }
+
     // changes color of letter object
     function changeLetterObjectColor(currentLetterObjectsOnScene, id, color) {
       // get letter object associated with the current id
-      let currLetterObj = currentLetterObjectsOnScene.find((letter) => letter.name == id);
+      let currLetterObj = currentLetterObjectsOnScene.find(
+        (letter) => letter.name == id
+      );
       // change color of the letter object
       currLetterObj.element.style.backgroundColor = color;
     }
@@ -479,20 +422,29 @@ fetch("./letters_json_grouped_merged.json")
     // hides letter object
     function hideLetterObject(currentLetterObjectsOnScene, id) {
       // get letter object associated with the current id
-      let currLetterObj = currentLetterObjectsOnScene.find((letter) => letter.name == id);
+      let currLetterObj = currentLetterObjectsOnScene.find(
+        (letter) => letter.name == id
+      );
       currLetterObj.visible = false;
     }
 
     // shows letter object (after it had been hidden)
     function showLetterObject(currentLetterObjectsOnScene, id) {
       // get letter object associated with the current id
-      let currLetterObj = currentLetterObjectsOnScene.find((letter) => letter.name == id);
+      let currLetterObj = currentLetterObjectsOnScene.find(
+        (letter) => letter.name == id
+      );
       currLetterObj.visible = true;
     }
 
     /**
      * Steuerungselemente
      */
+
+    /* Dialog-Box (Infos zur Benutzung der Einzelansicht) */
+    $(function () {
+      $("#dialog").dialog();
+    });
 
     /** Slider: Zeitfilter */
 
@@ -509,6 +461,7 @@ fetch("./letters_json_grouped_merged.json")
       return yearArray;
     }
 
+    // what happens when slider is used
     $(function () {
       $("#slider-range").slider({
         range: true,
@@ -525,8 +478,14 @@ fetch("./letters_json_grouped_merged.json")
           // clear canvas
           clearCanvas();
 
+          // reomove infobox
+          removeContentOfInfobox();
+
           // create spheres
           makeSpheresForSingleView(placename, timeFilterRange);
+
+          // update infobox
+          makeInfoBox();
         },
       });
       console.log("Ready");
@@ -550,24 +509,34 @@ fetch("./letters_json_grouped_merged.json")
         // get array of all planes currently on the scene
         let currentLetterObjectsOnScene = getCurrentLetterObjectsOnScene();
         // get array of all the ids of the planes
-        let idsOfCurrentLetterObjectsOnScene =
-        getIdsOfCurrentLetterObjectsOnScene(currentLetterObjectsOnScene);
+        let idsOfCurrentLetterObjectsOnScene = getIdsOfLetterObjects(
+          currentLetterObjectsOnScene
+        );
         // loop over ids and determine if letter has status sent/received by end of idString (r or s)
         idsOfCurrentLetterObjectsOnScene.forEach((id) => {
           if (id.endsWith("s")) {
-            changeLetterObjectColor(currentLetterObjectsOnScene, id, 'rgb(153, 50, 204, 0.5)');
+            changeLetterObjectColor(
+              currentLetterObjectsOnScene,
+              id,
+              "rgb(153, 50, 204, 0.5)"
+            );
           }
         });
       } else {
         // sets letter object color color of sent letters back to red if checkbox is unchecked
         let currentLetterObjectsOnScene = getCurrentLetterObjectsOnScene();
 
-        let idsOfCurrentLetterObjectsOnScene =
-        getIdsOfCurrentLetterObjectsOnScene(currentLetterObjectsOnScene);
+        let idsOfCurrentLetterObjectsOnScene = getIdsOfLetterObjects(
+          currentLetterObjectsOnScene
+        );
 
         idsOfCurrentLetterObjectsOnScene.forEach((id) => {
           if (id.endsWith("s")) {
-            changeLetterObjectColor(currentLetterObjectsOnScene, id, 'rgb(204, 0, 0, 0.5)');
+            changeLetterObjectColor(
+              currentLetterObjectsOnScene,
+              id,
+              "rgb(204, 0, 0, 0.5)"
+            );
           }
         });
       }
@@ -577,27 +546,37 @@ fetch("./letters_json_grouped_merged.json")
     $(".received").change(function () {
       // sets letter object color color of received letters to 'plum' if checkbox is checked
       if ($(this).is(":checked")) {
-        // get array of all planes currently on the scene
+        // get array of all letter objects currently on the scene
         let currentLetterObjectsOnScene = getCurrentLetterObjectsOnScene();
-        // get array of all the ids of the planes
-        let idsOfCurrentLetterObjectsOnScene =
-        getIdsOfCurrentLetterObjectsOnScene(currentLetterObjectsOnScene);
+        // get array of all the ids of the letter objects
+        let idsOfCurrentLetterObjectsOnScene = getIdsOfLetterObjects(
+          currentLetterObjectsOnScene
+        );
         // loop over ids and determine if letter has status sent/received by end of idString (r or s)
         idsOfCurrentLetterObjectsOnScene.forEach((id) => {
           if (id.endsWith("r")) {
-            changeLetterObjectColor(currentLetterObjectsOnScene, id, 'rgb(221, 160, 221)');
+            changeLetterObjectColor(
+              currentLetterObjectsOnScene,
+              id,
+              "rgb(221, 160, 221)"
+            );
           }
         });
       } else {
         // sets letter object color color of received letters back to red if checkbox is unchecked
         let currentLetterObjectsOnScene = getCurrentLetterObjectsOnScene();
 
-        let idsOfCurrentLetterObjectsOnScene =
-        getIdsOfCurrentLetterObjectsOnScene(currentLetterObjectsOnScene);
+        let idsOfCurrentLetterObjectsOnScene = getIdsOfLetterObjects(
+          currentLetterObjectsOnScene
+        );
 
         idsOfCurrentLetterObjectsOnScene.forEach((id) => {
           if (id.endsWith("r")) {
-            changeLetterObjectColor(currentLetterObjectsOnScene, id, 'rgb(204, 0, 0, 0.5)');
+            changeLetterObjectColor(
+              currentLetterObjectsOnScene,
+              id,
+              "rgb(204, 0, 0, 0.5)"
+            );
           }
         });
       }
@@ -607,62 +586,79 @@ fetch("./letters_json_grouped_merged.json")
 
     // SENT
     $(".sent").change(function () {
-      // hides planes of sent letters if sent-checkbox is checked and Filter-Mode-box is also checked
+      // remove content of infobox
+      removeContentOfInfobox();
+
+      // hides letter objects of sent letters if sent-checkbox is checked and Filter-Mode-box is also checked
       if ($(this).is(":checked") && $(".filter").is(":checked")) {
         // get array of all planes currently on the scene
         let currentLetterObjectsOnScene = getCurrentLetterObjectsOnScene();
         // get array of all the ids of the planes
-        let idsOfCurrentLetterObjectsOnScene =
-          getIdsOfCurrentLetterObjectsOnScene(currentLetterObjectsOnScene);
+        let idsOfCurrentLetterObjectsOnScene = getIdsOfLetterObjects(
+          currentLetterObjectsOnScene
+        );
         // loop over ids and determine if letter has status sent/received by end of idString (r or s)
         idsOfCurrentLetterObjectsOnScene.forEach((id) => {
-          if (id.endsWith("s")) {
+          // hides all letters which do  not have the status "sent"
+          if (!id.endsWith("s")) {
             hideLetterObject(currentLetterObjectsOnScene, id);
           }
         });
       } else {
-        // shows planes again once the sent-box is unchecked
+        // shows letter objects again once the sent-box is unchecked
         let currentLetterObjectsOnScene = getCurrentLetterObjectsOnScene();
 
-        let idsOfCurrentLetterObjectsOnScene =
-          getIdsOfCurrentLetterObjectsOnScene(currentLetterObjectsOnScene);
+        let idsOfCurrentLetterObjectsOnScene = getIdsOfLetterObjects(
+          currentLetterObjectsOnScene
+        );
 
         idsOfCurrentLetterObjectsOnScene.forEach((id) => {
-          if (id.endsWith("s")) {
+          if (!id.endsWith("s")) {
             showLetterObject(currentLetterObjectsOnScene, id);
           }
         });
       }
+      // update infobox content
+      makeInfoBox();
     });
 
     // RECEIVED
-    // hides planes of received letters if received-checkbox is checked and Filter-Mode-box is also checked
+    // hides letter objects of received letters if received-checkbox is checked and Filter-Mode-box is also checked
     $(".received").change(function () {
+      // remove content of infobox
+      removeContentOfInfobox();
+
       if ($(this).is(":checked") && $(".filter").is(":checked")) {
-        // get array of all planes currently on the scene
+        // get array of all letter objects currently on the scene
         let currentLetterObjectsOnScene = getCurrentLetterObjectsOnScene();
-        // get array of all the ids of the planes
-        let idsOfCurrentLetterObjectsOnScene =
-          getIdsOfCurrentLetterObjectsOnScene(currentLetterObjectsOnScene);
+        // get array of all the ids of the letter objects
+        let idsOfCurrentLetterObjectsOnScene = getIdsOfLetterObjects(
+          currentLetterObjectsOnScene
+        );
         // loop over ids and determine if letter has status sent/received by end of idString (r or s)
         idsOfCurrentLetterObjectsOnScene.forEach((id) => {
-          if (id.endsWith("r")) {
+          // hides all letter which do not have the letter status "received"
+          if (!id.endsWith("r")) {
             hideLetterObject(currentLetterObjectsOnScene, id);
           }
         });
       } else {
-        // shows planes again once the received-box is unchecked
+        // shows letter objects again once the received-box is unchecked
         let currentLetterObjectsOnScene = getCurrentLetterObjectsOnScene();
 
-        let idsOfCurrentLetterObjectsOnScene =
-          getIdsOfCurrentLetterObjectsOnScene(currentLetterObjectsOnScene);
+        let idsOfCurrentLetterObjectsOnScene = getIdsOfLetterObjects(
+          currentLetterObjectsOnScene
+        );
 
         idsOfCurrentLetterObjectsOnScene.forEach((id) => {
-          if (id.endsWith("r")) {
+          if (!id.endsWith("r")) {
             showLetterObject(currentLetterObjectsOnScene, id);
           }
         });
       }
+
+      // update infobox content
+      makeInfoBox();
     });
 
     /* Documenttyp-Filter */
@@ -671,29 +667,39 @@ fetch("./letters_json_grouped_merged.json")
 
     // LETTERS
     $(".goetheletter").change(function () {
-      // sets plane color to 'red' if checkbox is checked and doctype is goetheletter
+      // sets letter objects color to 'red' if checkbox is checked and doctype is goetheletter
       if ($(this).is(":checked")) {
-        // get array of all planes currently on the scene
+        // get array of all letter objects currently on the scene
         let currentLetterObjectsOnScene = getCurrentLetterObjectsOnScene();
         // get array of all the ids of the planes
-        let idsOfCurrentLetterObjectsOnScene =
-          getIdsOfCurrentLetterObjectsOnScene(currentLetterObjectsOnScene);
+        let idsOfCurrentLetterObjectsOnScene = getIdsOfLetterObjects(
+          currentLetterObjectsOnScene
+        );
         // loop over ids and determine if document is letter
         idsOfCurrentLetterObjectsOnScene.forEach((id) => {
           if (id.startsWith("GB")) {
-            changeLetterObjectColor(currentLetterObjectsOnScene, id, 'rgb(204, 0, 0, 0.5)');
+            changeLetterObjectColor(
+              currentLetterObjectsOnScene,
+              id,
+              "rgb(204, 0, 0, 0.5)"
+            );
           }
         });
       } else {
-        // sets plane color to default color if checkbox is unchecked and doctype is goetheletter
+        // sets letter objects color to default color if checkbox is unchecked and doctype is goetheletter
         let currentLetterObjectsOnScene = getCurrentLetterObjectsOnScene();
 
-        let idsOfCurrentLetterObjectsOnScene =
-          getIdsOfCurrentLetterObjectsOnScene(currentLetterObjectsOnScene);
+        let idsOfCurrentLetterObjectsOnScene = getIdsOfLetterObjects(
+          currentLetterObjectsOnScene
+        );
 
         idsOfCurrentLetterObjectsOnScene.forEach((id) => {
           if (id.startsWith("GB")) {
-            changeLetterObjectColor(currentLetterObjectsOnScene, id, 'rgb(204, 0, 0, 0.5)');
+            changeLetterObjectColor(
+              currentLetterObjectsOnScene,
+              id,
+              "rgb(204, 0, 0, 0.5)"
+            );
           }
         });
       }
@@ -701,29 +707,39 @@ fetch("./letters_json_grouped_merged.json")
 
     // DIARIES
     $(".goethediary").change(function () {
-      // sets plane color to blue if checkbox is checked and doctype is goethediary
+      // sets letter objects color to blue if checkbox is checked and doctype is goethediary
       if ($(this).is(":checked")) {
-        // get array of all planes currently on the scene
+        // get array of all letter objects currently on the scene
         let currentLetterObjectsOnScene = getCurrentLetterObjectsOnScene();
-        // get array of all the ids of the planes
-        let idsOfCurrentLetterObjectsOnScene =
-          getIdsOfCurrentLetterObjectsOnScene(currentLetterObjectsOnScene);
+        // get array of all the ids of the letter objects
+        let idsOfCurrentLetterObjectsOnScene = getIdsOfLetterObjects(
+          currentLetterObjectsOnScene
+        );
         // loop over ids and determine if document is diary
         idsOfCurrentLetterObjectsOnScene.forEach((id) => {
           if (id.startsWith("GT")) {
-            changeLetterObjectColor(currentLetterObjectsOnScene, id, 'rgb(203, 231, 249, 0.5)');
+            changeLetterObjectColor(
+              currentLetterObjectsOnScene,
+              id,
+              "rgb(203, 231, 249, 0.5)"
+            );
           }
         });
       } else {
-        // sets plane color to default color if checkbox is unchecked and doctype is goethediary
+        // sets letter objects color to default color if checkbox is unchecked and doctype is goethediary
         let currentLetterObjectsOnScene = getCurrentLetterObjectsOnScene();
 
-        let idsOfCurrentLetterObjectsOnScene =
-          getIdsOfCurrentLetterObjectsOnScene(currentLetterObjectsOnScene);
+        let idsOfCurrentLetterObjectsOnScene = getIdsOfLetterObjects(
+          currentLetterObjectsOnScene
+        );
 
         idsOfCurrentLetterObjectsOnScene.forEach((id) => {
           if (id.startsWith("GT")) {
-            changeLetterObjectColor(currentLetterObjectsOnScene, id, 'rgb(204, 0, 0, 0.5)');
+            changeLetterObjectColor(
+              currentLetterObjectsOnScene,
+              id,
+              "rgb(204, 0, 0, 0.5)"
+            );
           }
         });
       }
@@ -733,62 +749,79 @@ fetch("./letters_json_grouped_merged.json")
 
     // LETTERS
     $(".goetheletter").change(function () {
-      // hides letter planes if letter-box and filter-mode-box are checked
+      // remove content of infobox
+      removeContentOfInfobox();
+
+      // hides letter letter objects if letter-box and filter-mode-box are checked
       if ($(this).is(":checked") && $(".filter").is(":checked")) {
-        // get array of all planes currently on the scene
+        // get array of all letter objects currently on the scene
         let currentLetterObjectsOnScene = getCurrentLetterObjectsOnScene();
-        // get array of all the ids of the planes
-        let idsOfCurrentLetterObjectsOnScene =
-          getIdsOfCurrentLetterObjectsOnScene(currentLetterObjectsOnScene);
+        // get array of all the ids of the letter objects
+        let idsOfCurrentLetterObjectsOnScene = getIdsOfLetterObjects(
+          currentLetterObjectsOnScene
+        );
         // loop over ids and determine if document is letter
         idsOfCurrentLetterObjectsOnScene.forEach((id) => {
-          if (id.startsWith("GB")) {
+          // hides all documents which are not of type GB
+          if (!id.startsWith("GB")) {
             hideLetterObject(currentLetterObjectsOnScene, id);
           }
         });
       } else {
-        // shows planes again once letter-box is unchecked
+        // shows letter objects again once letter-box is unchecked
         let currentLetterObjectsOnScene = getCurrentLetterObjectsOnScene();
 
-        let idsOfCurrentLetterObjectsOnScene =
-          getIdsOfCurrentLetterObjectsOnScene(currentLetterObjectsOnScene);
+        let idsOfCurrentLetterObjectsOnScene = getIdsOfLetterObjects(
+          currentLetterObjectsOnScene
+        );
 
         idsOfCurrentLetterObjectsOnScene.forEach((id) => {
-          if (id.startsWith("GB")) {
+          if (!id.startsWith("GB")) {
             showLetterObject(currentLetterObjectsOnScene, id);
           }
         });
       }
+
+      // update infobox content
+      makeInfoBox();
     });
 
     // DIARIES
     $(".goethediary").change(function () {
-      // hides diary planes if diary-box and filter-mode-box are checked
+      // remove content of infobox
+      removeContentOfInfobox();
+
+      // hides diary letter objects if diary-box and filter-mode-box are checked
       if ($(this).is(":checked") && $(".filter").is(":checked")) {
-        // get array of all planes currently on the scene
+        // get array of all letter objects currently on the scene
         let currentLetterObjectsOnScene = getCurrentLetterObjectsOnScene();
-        // get array of all the ids of the planes
-        let idsOfCurrentLetterObjectsOnScene =
-          getIdsOfCurrentLetterObjectsOnScene(currentLetterObjectsOnScene);
+        // get array of all the ids of the letter objects
+        let idsOfCurrentLetterObjectsOnScene = getIdsOfLetterObjects(
+          currentLetterObjectsOnScene
+        );
         // loop over ids and determine if document is diary
         idsOfCurrentLetterObjectsOnScene.forEach((id) => {
-          if (id.startsWith("GT")) {
+          // hides all documents which are not of type "GT"
+          if (!id.startsWith("GT")) {
             hideLetterObject(currentLetterObjectsOnScene, id);
           }
         });
       } else {
-        // shows planes again once diary-box is unchecked
+        // shows letter objects again once diary-box is unchecked
         let currentLetterObjectsOnScene = getCurrentLetterObjectsOnScene();
 
-        let idsOfCurrentLetterObjectsOnScene =
-          getIdsOfCurrentLetterObjectsOnScene(currentLetterObjectsOnScene);
+        let idsOfCurrentLetterObjectsOnScene = getIdsOfLetterObjects(
+          currentLetterObjectsOnScene
+        );
 
         idsOfCurrentLetterObjectsOnScene.forEach((id) => {
-          if (id.startsWith("GT")) {
+          if (!id.startsWith("GT")) {
             showLetterObject(currentLetterObjectsOnScene, id);
           }
         });
       }
+      // update infobox content
+      makeInfoBox();
     });
 
     /* Personen-Filter */
@@ -798,28 +831,29 @@ fetch("./letters_json_grouped_merged.json")
     // MALE
     $(".male").change(function () {
       // CHECKED
-      // sets plane color of letters with male receiver to grey if checkbox is checked
+      // sets letter objects color of letters with male receiver to grey if checkbox is checked
       if ($(this).is(":checked")) {
         // get array of all planes currently on the scene
         let currentLetterObjectsOnScene = getCurrentLetterObjectsOnScene();
         // get array of all the ids of the planes
-        let idsOfCurrentLetterObjectsOnScene =
-          getIdsOfCurrentLetterObjectsOnScene(currentLetterObjectsOnScene);
+        let idsOfCurrentLetterObjectsOnScene = getIdsOfLetterObjects(
+          currentLetterObjectsOnScene
+        );
 
-        let lettersCurrentlyVisibleOnScene = getlettersCurrentlyVisibleOnScene(
+        let lettersCurrentlyOnScene = getletterDataOfLetterObjects(
           idsOfCurrentLetterObjectsOnScene
         );
 
         // count number of male recipients
         let maleCounter = 0;
 
-        for (let i = 0; i < lettersCurrentlyVisibleOnScene.length; i++) {
-          if (lettersCurrentlyVisibleOnScene[i].receiverGender == "Männlich") {
+        for (let i = 0; i < lettersCurrentlyOnScene.length; i++) {
+          if (lettersCurrentlyOnScene[i].receiverGender == "Männlich") {
             //console.log(i, "männlich");
             changeLetterObjectColor(
               currentLetterObjectsOnScene,
-              lettersCurrentlyVisibleOnScene[i].id,
-              'rgb(203, 231, 249, 0.5)'
+              lettersCurrentlyOnScene[i].id,
+              "rgb(203, 231, 249, 0.5)"
             );
             maleCounter++;
           }
@@ -828,24 +862,25 @@ fetch("./letters_json_grouped_merged.json")
 
       // UNCHECKED
       if (!$(this).is(":checked")) {
-        // get array of all planes currently on the scene
+        // get array of all letter objects currently on the scene
         let currentLetterObjectsOnScene = getCurrentLetterObjectsOnScene();
-        // get array of all the ids of the planes
-        let idsOfCurrentLetterObjectsOnScene =
-          getIdsOfCurrentLetterObjectsOnScene(currentLetterObjectsOnScene);
+        // get array of all the ids of the letter objects
+        let idsOfCurrentLetterObjectsOnScene = getIdsOfLetterObjects(
+          currentLetterObjectsOnScene
+        );
 
-        let lettersCurrentlyVisibleOnScene = getlettersCurrentlyVisibleOnScene(
+        let lettersCurrentlyOnScene = getletterDataOfLetterObjects(
           idsOfCurrentLetterObjectsOnScene
         );
 
-        for (let i = 0; i < lettersCurrentlyVisibleOnScene.length; i++) {
-          if (lettersCurrentlyVisibleOnScene[i].receiverGender == "Männlich") {
+        for (let i = 0; i < lettersCurrentlyOnScene.length; i++) {
+          if (lettersCurrentlyOnScene[i].receiverGender == "Männlich") {
             //console.log(i, "männlich");
             changeLetterObjectColor(
               currentLetterObjectsOnScene,
-              lettersCurrentlyVisibleOnScene[i].id,
+              lettersCurrentlyOnScene[i].id,
               // default color
-              'rgb(204, 0, 0, 0.5)'
+              "rgb(204, 0, 0, 0.5)"
             );
           }
         }
@@ -855,28 +890,29 @@ fetch("./letters_json_grouped_merged.json")
     // FEMALE
     $(".female").change(function () {
       // CHECKED
-      // sets plane color of letters with female receiver to oange if checkbox is checked
+      // sets letter objects color of letters with female receiver to oange if checkbox is checked
       if ($(this).is(":checked")) {
-        // get array of all planes currently on the scene
+        // get array of all letter objects currently on the scene
         let currentLetterObjectsOnScene = getCurrentLetterObjectsOnScene();
-        // get array of all the ids of the planes
-        let idsOfCurrentLetterObjectsOnScene =
-          getIdsOfCurrentLetterObjectsOnScene(currentLetterObjectsOnScene);
+        // get array of all the ids of the letter objects
+        let idsOfCurrentLetterObjectsOnScene = getIdsOfLetterObjects(
+          currentLetterObjectsOnScene
+        );
 
-        let lettersCurrentlyVisibleOnScene = getlettersCurrentlyVisibleOnScene(
+        let lettersCurrentlyOnScene = getletterDataOfLetterObjects(
           idsOfCurrentLetterObjectsOnScene
         );
 
         // count number of female recipients
         let femaleCounter = 0;
 
-        for (let i = 0; i < lettersCurrentlyVisibleOnScene.length; i++) {
-          if (lettersCurrentlyVisibleOnScene[i].receiverGender == "Weiblich") {
+        for (let i = 0; i < lettersCurrentlyOnScene.length; i++) {
+          if (lettersCurrentlyOnScene[i].receiverGender == "Weiblich") {
             //console.log(i, "weiblich");
             changeLetterObjectColor(
               currentLetterObjectsOnScene,
-              lettersCurrentlyVisibleOnScene[i].id,
-              'rgb(255, 165, 0, 0.5)'
+              lettersCurrentlyOnScene[i].id,
+              "rgb(255, 165, 0, 0.5)"
             );
             femaleCounter++;
           }
@@ -885,24 +921,25 @@ fetch("./letters_json_grouped_merged.json")
 
       // UNCHECKED
       if (!$(this).is(":checked")) {
-        // get array of all planes currently on the scene
+        // get array of all letter objects currently on the scene
         let currentLetterObjectsOnScene = getCurrentLetterObjectsOnScene();
-        // get array of all the ids of the planes
-        let idsOfCurrentLetterObjectsOnScene =
-          getIdsOfCurrentLetterObjectsOnScene(currentLetterObjectsOnScene);
+        // get array of all the ids of the letter objects
+        let idsOfCurrentLetterObjectsOnScene = getIdsOfLetterObjects(
+          currentLetterObjectsOnScene
+        );
 
-        let lettersCurrentlyVisibleOnScene = getlettersCurrentlyVisibleOnScene(
+        let lettersCurrentlyOnScene = getletterDataOfLetterObjects(
           idsOfCurrentLetterObjectsOnScene
         );
 
-        for (let i = 0; i < lettersCurrentlyVisibleOnScene.length; i++) {
-          if (lettersCurrentlyVisibleOnScene[i].receiverGender == "Weiblich") {
+        for (let i = 0; i < lettersCurrentlyOnScene.length; i++) {
+          if (lettersCurrentlyOnScene[i].receiverGender == "Weiblich") {
             //console.log(i, "weiblich");
             changeLetterObjectColor(
               currentLetterObjectsOnScene,
-              lettersCurrentlyVisibleOnScene[i].id,
+              lettersCurrentlyOnScene[i].id,
               // default color
-              'rgb(204, 0, 0, 0.5)'
+              "rgb(204, 0, 0, 0.5)"
             );
           }
         }
@@ -912,30 +949,29 @@ fetch("./letters_json_grouped_merged.json")
     // OTHER / UNKNOWN
     $(".other").change(function () {
       // CHECKED
-      // sets plane color of letters with unknown receiver to transparent if checkbox is checked
+      // sets letter objects color of letters with unknown receiver to transparent if checkbox is checked
       if ($(this).is(":checked")) {
-        // get array of all planes currently on the scene
+        // get array of all letter objects currently on the scene
         let currentLetterObjectsOnScene = getCurrentLetterObjectsOnScene();
-        // get array of all the ids of the planes
-        let idsOfCurrentLetterObjectsOnScene =
-          getIdsOfCurrentLetterObjectsOnScene(currentLetterObjectsOnScene);
+        // get array of all the ids of the letter objects
+        let idsOfCurrentLetterObjectsOnScene = getIdsOfLetterObjects(
+          currentLetterObjectsOnScene
+        );
 
-        let lettersCurrentlyVisibleOnScene = getlettersCurrentlyVisibleOnScene(
+        let lettersCurrentlyOnScene = getletterDataOfLetterObjects(
           idsOfCurrentLetterObjectsOnScene
         );
 
         // count number of female recipients
         let otherCounter = 0;
 
-        for (let i = 0; i < lettersCurrentlyVisibleOnScene.length; i++) {
-          if (
-            lettersCurrentlyVisibleOnScene[i].receiverGender == "Keine Info"
-          ) {
+        for (let i = 0; i < lettersCurrentlyOnScene.length; i++) {
+          if (lettersCurrentlyOnScene[i].receiverGender == "Keine Info") {
             //console.log(i, "Keine Info");
             changeLetterObjectColor(
               currentLetterObjectsOnScene,
-              lettersCurrentlyVisibleOnScene[i].id,
-              'rgb(0,0,0, 0.5)'
+              lettersCurrentlyOnScene[i].id,
+              "rgb(0,0,0, 0.5)"
             );
             otherCounter++;
           }
@@ -944,26 +980,25 @@ fetch("./letters_json_grouped_merged.json")
 
       // UNCHECKED
       if (!$(this).is(":checked")) {
-        // get array of all planes currently on the scene
+        // get array of all letter objects currently on the scene
         let currentLetterObjectsOnScene = getCurrentLetterObjectsOnScene();
-        // get array of all the ids of the planes
-        let idsOfCurrentLetterObjectsOnScene =
-          getIdsOfCurrentLetterObjectsOnScene(currentLetterObjectsOnScene);
+        // get array of all the ids of the letter objects
+        let idsOfCurrentLetterObjectsOnScene = getIdsOfLetterObjects(
+          currentLetterObjectsOnScene
+        );
 
-        let lettersCurrentlyVisibleOnScene = getlettersCurrentlyVisibleOnScene(
+        let lettersCurrentlyOnScene = getletterDataOfLetterObjects(
           idsOfCurrentLetterObjectsOnScene
         );
 
-        for (let i = 0; i < lettersCurrentlyVisibleOnScene.length; i++) {
-          if (
-            lettersCurrentlyVisibleOnScene[i].receiverGender == "Keine Info"
-          ) {
+        for (let i = 0; i < lettersCurrentlyOnScene.length; i++) {
+          if (lettersCurrentlyOnScene[i].receiverGender == "Keine Info") {
             //console.log(i, "Keine Info");
             changeLetterObjectColor(
               currentLetterObjectsOnScene,
-              lettersCurrentlyVisibleOnScene[i].id,
+              lettersCurrentlyOnScene[i].id,
               // default color
-              'rgb(204, 0, 0, 0.5)'
+              "rgb(204, 0, 0, 0.5)"
             );
           }
         }
@@ -974,168 +1009,376 @@ fetch("./letters_json_grouped_merged.json")
 
     // MALE
     $(".male").change(function () {
-      // CHECKED
-      // hides planes with male receiver if male-checkbox and filter-mode-checkbox are checked
-      if ($(this).is(":checked") && $(".filter").is(":checked")) {
-        // get array of all planes currently on the scene
-        let currentLetterObjectsOnScene = getCurrentLetterObjectsOnScene();
-        // get array of all the ids of the planes
-        let idsOfCurrentLetterObjectsOnScene =
-          getIdsOfCurrentLetterObjectsOnScene(currentLetterObjectsOnScene);
+      // remove content of infobox
+      removeContentOfInfobox();
 
-        let lettersCurrentlyVisibleOnScene = getlettersCurrentlyVisibleOnScene(
+      // CHECKED
+      // hides letter objects with male receiver if male-checkbox and filter-mode-checkbox are checked
+      if ($(this).is(":checked") && $(".filter").is(":checked")) {
+        // get array of all letter objects currently on the scene
+        let currentLetterObjectsOnScene = getCurrentLetterObjectsOnScene();
+        // get array of all the ids of the letter objects
+        let idsOfCurrentLetterObjectsOnScene = getIdsOfLetterObjects(
+          currentLetterObjectsOnScene
+        );
+
+        let lettersCurrentlyOnScene = getletterDataOfLetterObjects(
           idsOfCurrentLetterObjectsOnScene
         );
 
         // count number of male recipients
         let maleCounter = 0;
 
-        for (let i = 0; i < lettersCurrentlyVisibleOnScene.length; i++) {
-          if (lettersCurrentlyVisibleOnScene[i].receiverGender == "Männlich") {
+        for (let i = 0; i < lettersCurrentlyOnScene.length; i++) {
+          // hides all letters with non-male receivers
+          if (lettersCurrentlyOnScene[i].receiverGender != "Männlich") {
             //console.log(i, "männlich");
             hideLetterObject(
               currentLetterObjectsOnScene,
-              lettersCurrentlyVisibleOnScene[i].id
+              lettersCurrentlyOnScene[i].id
             );
             maleCounter++;
           }
         }
+        // update infobox content
+        makeInfoBox();
       }
 
       // UNCHECKED
       if (!$(this).is(":checked")) {
-        // get array of all planes currently on the scene
+        // get array of all letter objects currently on the scene
         let currentLetterObjectsOnScene = getCurrentLetterObjectsOnScene();
-        // get array of all the ids of the planes
-        let idsOfCurrentLetterObjectsOnScene =
-          getIdsOfCurrentLetterObjectsOnScene(currentLetterObjectsOnScene);
+        // get array of all the ids of the letter objects
+        let idsOfCurrentLetterObjectsOnScene = getIdsOfLetterObjects(
+          currentLetterObjectsOnScene
+        );
 
-        let lettersCurrentlyVisibleOnScene = getlettersCurrentlyVisibleOnScene(
+        let lettersCurrentlyOnScene = getletterDataOfLetterObjects(
           idsOfCurrentLetterObjectsOnScene
         );
 
-        for (let i = 0; i < lettersCurrentlyVisibleOnScene.length; i++) {
-          if (lettersCurrentlyVisibleOnScene[i].receiverGender == "Männlich") {
+        for (let i = 0; i < lettersCurrentlyOnScene.length; i++) {
+          if (lettersCurrentlyOnScene[i].receiverGender != "Männlich") {
             //console.log(i, "männlich");
             showLetterObject(
               currentLetterObjectsOnScene,
-              lettersCurrentlyVisibleOnScene[i].id
+              lettersCurrentlyOnScene[i].id
             );
           }
         }
+        // update infobox content
+        makeInfoBox();
       }
     });
 
     // FEMALE
     $(".female").change(function () {
-      // CHECKED
-      // hides planes with female receiver if female-checkbox and filter-mode-checkbox are checked
-      if ($(this).is(":checked") && $(".filter").is(":checked")) {
-        // get array of all planes currently on the scene
-        let currentLetterObjectsOnScene = getCurrentLetterObjectsOnScene();
-        // get array of all the ids of the planes
-        let idsOfCurrentLetterObjectsOnScene =
-          getIdsOfCurrentLetterObjectsOnScene(currentLetterObjectsOnScene);
+      // remove content of infobox
+      removeContentOfInfobox();
 
-        let lettersCurrentlyVisibleOnScene = getlettersCurrentlyVisibleOnScene(
+      // CHECKED
+      // hides letter objects with female receiver if female-checkbox and filter-mode-checkbox are checked
+      if ($(this).is(":checked") && $(".filter").is(":checked")) {
+        // get array of all letter objects currently on the scene
+        let currentLetterObjectsOnScene = getCurrentLetterObjectsOnScene();
+        // get array of all the ids of the letter objects
+        let idsOfCurrentLetterObjectsOnScene = getIdsOfLetterObjects(
+          currentLetterObjectsOnScene
+        );
+
+        let lettersCurrentlyOnScene = getletterDataOfLetterObjects(
           idsOfCurrentLetterObjectsOnScene
         );
 
         // count number of female recipients
         let femaleCounter = 0;
 
-        for (let i = 0; i < lettersCurrentlyVisibleOnScene.length; i++) {
-          if (lettersCurrentlyVisibleOnScene[i].receiverGender == "Weiblich") {
+        for (let i = 0; i < lettersCurrentlyOnScene.length; i++) {
+          // hides all letters with non-female receivers
+          if (lettersCurrentlyOnScene[i].receiverGender != "Weiblich") {
             //console.log(i, "weiblich");
             hideLetterObject(
               currentLetterObjectsOnScene,
-              lettersCurrentlyVisibleOnScene[i].id
+              lettersCurrentlyOnScene[i].id
             );
             femaleCounter++;
           }
         }
+        // update infobox content
+        makeInfoBox();
       }
 
       // UNCHECKED
       if (!$(this).is(":checked")) {
-        // get array of all planes currently on the scene
+        // get array of all letter objects currently on the scene
         let currentLetterObjectsOnScene = getCurrentLetterObjectsOnScene();
-        // get array of all the ids of the planes
-        let idsOfCurrentLetterObjectsOnScene =
-          getIdsOfCurrentLetterObjectsOnScene(currentLetterObjectsOnScene);
+        // get array of all the ids of the letter objects
+        let idsOfCurrentLetterObjectsOnScene = getIdsOfLetterObjects(
+          currentLetterObjectsOnScene
+        );
 
-        let lettersCurrentlyVisibleOnScene = getlettersCurrentlyVisibleOnScene(
+        let lettersCurrentlyOnScene = getletterDataOfLetterObjects(
           idsOfCurrentLetterObjectsOnScene
         );
 
-        for (let i = 0; i < lettersCurrentlyVisibleOnScene.length; i++) {
-          if (lettersCurrentlyVisibleOnScene[i].receiverGender == "Weiblich") {
+        for (let i = 0; i < lettersCurrentlyOnScene.length; i++) {
+          if (lettersCurrentlyOnScene[i].receiverGender != "Weiblich") {
             //console.log(i, "weiblich");
             showLetterObject(
               currentLetterObjectsOnScene,
-              lettersCurrentlyVisibleOnScene[i].id
+              lettersCurrentlyOnScene[i].id
             );
           }
         }
+        // update infobox content
+        makeInfoBox();
       }
     });
 
     // OTHER / UNKNOWN
     $(".other").change(function () {
+      // remove content of infobox
+      removeContentOfInfobox();
+
       // CHECKED
       if ($(this).is(":checked") && $(".filter").is(":checked")) {
-        // get array of all planes currently on the scene
+        // get array of all letter objects currently on the scene
         let currentLetterObjectsOnScene = getCurrentLetterObjectsOnScene();
-        // get array of all the ids of the planes
-        let idsOfCurrentLetterObjectsOnScene =
-          getIdsOfCurrentLetterObjectsOnScene(currentLetterObjectsOnScene);
+        // get array of all the ids of the letter objects
+        let idsOfCurrentLetterObjectsOnScene = getIdsOfLetterObjects(
+          currentLetterObjectsOnScene
+        );
 
-        let lettersCurrentlyVisibleOnScene = getlettersCurrentlyVisibleOnScene(
+        let lettersCurrentlyOnScene = getletterDataOfLetterObjects(
           idsOfCurrentLetterObjectsOnScene
         );
 
         // count number of female recipients
         let otherCounter = 0;
 
-        for (let i = 0; i < lettersCurrentlyVisibleOnScene.length; i++) {
-          if (
-            lettersCurrentlyVisibleOnScene[i].receiverGender == "Keine Info"
-          ) {
+        for (let i = 0; i < lettersCurrentlyOnScene.length; i++) {
+          // hides all letters which do not have "Keine Info" as gender info, i.e. male and female
+          if (lettersCurrentlyOnScene[i].receiverGender != "Keine Info") {
             //console.log(i, "Keine Info");
             hideLetterObject(
               currentLetterObjectsOnScene,
-              lettersCurrentlyVisibleOnScene[i].id
+              lettersCurrentlyOnScene[i].id
             );
             otherCounter++;
           }
         }
+        // update infobox content
+        makeInfoBox();
       }
 
       // UNCHECKED
       if (!$(this).is(":checked")) {
-        // get array of all planes currently on the scene
+        // get array of all letter objects currently on the scene
         let currentLetterObjectsOnScene = getCurrentLetterObjectsOnScene();
-        // get array of all the ids of the planes
-        let idsOfCurrentLetterObjectsOnScene =
-          getIdsOfCurrentLetterObjectsOnScene(currentLetterObjectsOnScene);
+        // get array of all the ids of the letter objects
+        let idsOfCurrentLetterObjectsOnScene = getIdsOfLetterObjects(
+          currentLetterObjectsOnScene
+        );
 
-        let lettersCurrentlyVisibleOnScene = getlettersCurrentlyVisibleOnScene(
+        let lettersCurrentlyOnScene = getletterDataOfLetterObjects(
           idsOfCurrentLetterObjectsOnScene
         );
 
-        for (let i = 0; i < lettersCurrentlyVisibleOnScene.length; i++) {
-          if (
-            lettersCurrentlyVisibleOnScene[i].receiverGender == "Keine Info"
-          ) {
+        for (let i = 0; i < lettersCurrentlyOnScene.length; i++) {
+          if (lettersCurrentlyOnScene[i].receiverGender != "Keine Info") {
             //console.log(i, "Keine Info");
             showLetterObject(
               currentLetterObjectsOnScene,
-              lettersCurrentlyVisibleOnScene[i].id
+              lettersCurrentlyOnScene[i].id
             );
           }
         }
+        // update infobox content
+        makeInfoBox();
       }
     });
+
+    /**
+     * Infobox
+     */
+
+    function getLetterDataOfLetterObjectsCurrentlyVisibleOnScene() {
+      let currentlyVisibleLetterObjectsOnScene =
+        getCurrentlyVisibleLetterObjectsOnScene();
+      let idsOfCurrentLetterObjectsOnScene = getIdsOfLetterObjects(
+        currentlyVisibleLetterObjectsOnScene
+      );
+      let letterDataOfCurrentlyVisibleLettersOnScene =
+        getletterDataOfLetterObjects(idsOfCurrentLetterObjectsOnScene);
+      console.log(
+        "letters visible",
+        letterDataOfCurrentlyVisibleLettersOnScene
+      );
+      return letterDataOfCurrentlyVisibleLettersOnScene;
+    }
+
+    // Gesamtanzahl Briefe
+    function getNumLetters() {
+      const lettersCurrentlyOnScene =
+        getLetterDataOfLetterObjectsCurrentlyVisibleOnScene();
+      let numLetters = lettersCurrentlyOnScene.length;
+      return numLetters;
+    }
+
+    // Anzahl gesendete Briefe
+    function getNumSent() {
+      const lettersCurrentlyOnScene =
+        getLetterDataOfLetterObjectsCurrentlyVisibleOnScene();
+      let numSent = 0;
+      lettersCurrentlyOnScene.forEach((letter) => {
+        if (letter.id.endsWith("s")) {
+          numSent++;
+        }
+      });
+      return numSent;
+    }
+
+    // Anzahl empfangene Briefe
+    function getNumReceived() {
+      const lettersCurrentlyOnScene =
+        getLetterDataOfLetterObjectsCurrentlyVisibleOnScene();
+      let numReceived = 0;
+      lettersCurrentlyOnScene.forEach((letter) => {
+        if (letter.id.endsWith("r")) {
+          numReceived++;
+        }
+      });
+      return numReceived;
+    }
+
+    // Anzahl Briefe mit weiblichen Adressatinnen
+    function getNumFemale() {
+      const lettersCurrentlyOnScene =
+        getLetterDataOfLetterObjectsCurrentlyVisibleOnScene();
+      let numFemale = 0;
+      lettersCurrentlyOnScene.forEach((letter) => {
+        if (letter.receiverGender == "Weiblich") {
+          numFemale++;
+        }
+      });
+      return numFemale;
+    }
+
+    // Anzahl Briefe mit männlichen Adressaten
+    function getNumMale() {
+      const lettersCurrentlyOnScene =
+        getLetterDataOfLetterObjectsCurrentlyVisibleOnScene();
+      let numMale = 0;
+      lettersCurrentlyOnScene.forEach((letter) => {
+        if (letter.receiverGender == "Männlich") {
+          numMale++;
+        }
+      });
+      return numMale;
+    }
+
+    // Anzahl Briefe mit Adressaten unbekannten Geschlechts
+    function getNumOther() {
+      const lettersCurrentlyOnScene =
+        getLetterDataOfLetterObjectsCurrentlyVisibleOnScene();
+      let numOther = 0;
+      lettersCurrentlyOnScene.forEach((letter) => {
+        if (letter.receiverGender == "Keine Info") {
+          numOther++;
+        }
+      });
+      return numOther;
+    }
+
+    /*     function getInfosforBox() {
+      const lettersCurrentlyOnScene = getLetterArray();
+
+      // Gesamtanzahl Briefe
+      let numLetters = lettersCurrentlyOnScene.length;
+
+      // Anzahl gesendete Briefe
+      let numSent = 0;
+      lettersCurrentlyOnScene.forEach((letter) => {
+        if (letter.id.endsWith("s")) {
+          numSent++;
+        }
+      });
+
+      // Anzahl empfangene Briefe
+      let numReceived = 0;
+      lettersCurrentlyOnScene.forEach((letter) => {
+        if (letter.id.endsWith("r")) {
+          numReceived++;
+        }
+      });
+
+      // Anzahl Briefe mit weiblichen Adressatinnen
+      let numFemale = 0;
+      lettersCurrentlyOnScene.forEach((letter) => {
+        if (letter.receiverGender == "Weiblich") {
+          numFemale++;
+        }
+      });
+
+      // Anzahl Briefe mit männlichen Adressaten
+      let numMale = 0;
+      lettersCurrentlyOnScene.forEach((letter) => {
+        if (letter.receiverGender == "Männlich") {
+          numMale++;
+        }
+      });
+
+      // Anzahl Briefe mit Adressaten unbekannten Geschlechts
+      let numOther = 0;
+      lettersCurrentlyOnScene.forEach((letter) => {
+        if (letter.receiverGender == "Keine Info") {
+          numOther++;
+        }
+      });
+
+      return `${numLetters} Briefe Goethes werden angezeigt\n
+      davon ${numFemale} Adressat:innen mit Geschlecht "weiblich"\n
+      davon ${numMale} Adressat:innen mit Geschlecht "männlich"\n
+      davon ${numOther} Adressat:innen mit Geschlecht "andere/unbekannt"\n
+      davon ${numSent} aus ${placename} gesesendet\n
+      davon ${numReceived} in ${placename} empfangen`;
+    } */
+
+    function makeInfoBox() {
+      const numLetters = getNumLetters();
+      const numSent = getNumSent();
+      const numReceived = getNumReceived();
+      const numFemale = getNumFemale();
+      const numMale = getNumMale();
+      const numOther = getNumOther();
+
+      // make p elements
+      const pNumLetters = document.createElement("p");
+      pNumLetters.textContent = `${numLetters} Briefe Goethes werden angezeigt`;
+
+      const pNumSent = document.createElement("p");
+      pNumSent.textContent = `${numSent} aus ${placename} gesesendet`;
+
+      const pNumReceived = document.createElement("p");
+      pNumReceived.textContent = `${numReceived} in ${placename} empfangen`;
+
+      const pNumFemale = document.createElement("p");
+      pNumFemale.textContent = `${numFemale} Adressat:innen mit Geschlecht "weiblich"`;
+
+      const pNumMale = document.createElement("p");
+      pNumMale.textContent = `${numMale} Adressat:innen mit Geschlecht "männlich"`;
+
+      const pNumOther = document.createElement("p");
+      pNumOther.textContent = `${numOther} Adressat:innen mit Geschlecht "andere/unbekannt"`;
+
+      const infobox = document.getElementById("infobox");
+      infobox.appendChild(pNumLetters);
+      infobox.appendChild(pNumSent);
+      infobox.appendChild(pNumReceived);
+      infobox.appendChild(pNumFemale);
+      infobox.appendChild(pNumMale);
+      infobox.appendChild(pNumOther);
+    }
 
     /**
      * Helper Geometries
@@ -1170,11 +1413,11 @@ fetch("./letters_json_grouped_merged.json")
      */
 
     // AmbientLight -> leuchtet alles gleichmäßig aus, kein Schatten
-    const ambient_light = new THREE.AmbientLight(0x404040, 1.0);
-    scene.add(ambient_light);
+    /* const ambient_light = new THREE.AmbientLight(0x404040, 1.0);
+    scene.add(ambient_light); */
 
     // PointLight
-    const pointLight = new THREE.PointLight(
+    /* const pointLight = new THREE.PointLight(
       // Farbe
       0xffffff,
       // Intensität
@@ -1185,7 +1428,7 @@ fetch("./letters_json_grouped_merged.json")
     pointLight.position.z = 6;
     scene.add(pointLight);
 
-    const pointLightColor = { color: 0xff0000 };
+    const pointLightColor = { color: 0xff0000 }; */
 
     /**
      * Helper geos for lights
@@ -1193,8 +1436,10 @@ fetch("./letters_json_grouped_merged.json")
 
     // creates a geometric form that represents the light so you know where exactly the light is
     // there is a helper for every kind of light
-    const pointLighthelper = new THREE.PointLightHelper(pointLight, 1);
+
+    /* const pointLighthelper = new THREE.PointLightHelper(pointLight, 1);
     scene.add(pointLighthelper);
+ */
     //const pointLight2helper = new THREE.PointLightHelper(pointLight2, 1);
     //scene.add(pointLight2helper);
 
@@ -1221,28 +1466,28 @@ fetch("./letters_json_grouped_merged.json")
     /**
      * Debug GUI
      */
-    const gui = new dat.GUI();
+    //const gui = new dat.GUI();
     // must be wider than default, so that also long labels are visible e.g. "y_GB01 Nr.EB013"
-    gui.width = 310;
+    //gui.width = 310;
 
     // Set GUI folders
-    const cameraGui = gui.addFolder("Camera");
+    /* const cameraGui = gui.addFolder("Camera");
     const light = gui.addFolder("Light");
     const idTextGui = gui.addFolder("idText");
     const initialsGui = gui.addFolder("initials");
     const firstNameGui = gui.addFolder("firstname");
     const lastNameGui = gui.addFolder("lastname");
     const dateGui = gui.addFolder("date");
-    const letterNumMarkerGui = gui.addFolder("letterNumMarker");
+    const letterNumMarkerGui = gui.addFolder("letterNumMarker"); */
 
     // Set Debug GUI
-    light.add(pointLight.position, "y").min(-10).max(100).step(0.01);
+    /*  light.add(pointLight.position, "y").min(-10).max(100).step(0.01);
     light.add(pointLight.position, "x").min(-10).max(10).step(0.01);
     light.add(pointLight.position, "z").min(-10).max(10).step(0.01);
     light.add(pointLight, "intensity").min(0).max(15).step(0.01);
     light.addColor(pointLightColor, "color").onChange(() => {
       pointLight.color.set(pointLightColor.color);
-    });
+    }); */
 
     /**
      * Camera
@@ -1267,9 +1512,11 @@ fetch("./letters_json_grouped_merged.json")
     //camera.position.y = 3000;
     //camera.updateProjectionMatrix();
     //camera.lookAt(new Vector3(0,1000,0));
-    cameraGui.add(camera.position, "y").min(0).max(10000).step(10);
+
+    /* cameraGui.add(camera.position, "y").min(0).max(10000).step(10);
     cameraGui.add(camera.position, "x").min(0).max(10000).step(10);
-    cameraGui.add(camera.position, "z").min(0).max(10000).step(10);
+    cameraGui.add(camera.position, "z").min(0).max(10000).step(10); */
+
     camera.updateProjectionMatrix();
     scene.add(camera);
 
