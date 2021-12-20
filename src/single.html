@@ -10,7 +10,6 @@
     />
     <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
     <script src="https://code.jquery.com/ui/1.13.0/jquery-ui.js"></script>
-    <style></style>
   </head>
   <body>
     <div id="content">
@@ -28,12 +27,7 @@
 
         <div id="filter-mode">
           <label for="filter" class="filter">Filter-Modus</label>
-          <input
-            type="checkbox"
-            name="filter"
-            class="filter"
-            unchecked="true"
-          />
+          <input type="checkbox" name="filter" class="filter" />
           <br />
         </div>
 
@@ -42,16 +36,11 @@
           <br />
 
           <label for="sent" class="sent">gesendet</label>
-          <input type="checkbox" name="sent" class="sent" unchecked="true" />
+          <input type="checkbox" name="sent" class="sent" />
           <br />
 
           <label for="received" class="received">empfangen</label>
-          <input
-            type="checkbox"
-            name="received"
-            class="received"
-            unchecked="true"
-          />
+          <input type="checkbox" name="received" class="received" />
         </div>
 
         <div id="doc-type-filter">
@@ -63,17 +52,12 @@
             type="checkbox"
             name="goetheletter"
             class="goetheletter"
-            unchecked="true"
+            checked="true"
           />
           <br />
 
           <label for="goethediary" class="goethediary">Tagebuch</label>
-          <input
-            type="checkbox"
-            name="goethediary"
-            class="goethediary"
-            unchecked="true"
-          />
+          <input type="checkbox" name="goethediary" class="goethediary" />
         </div>
 
         <div id="person-filter">
@@ -81,24 +65,18 @@
           <br />
 
           <label for="male" class="male">männlich</label>
-          <input type="checkbox" name="male" class="male" unchecked="true" />
+          <input type="checkbox" name="male" class="male" />
           <br />
 
           <label for="female" class="female">weiblich</label>
-          <input
-            type="checkbox"
-            name="female"
-            class="female"
-            unchecked="true"
-          />
+          <input type="checkbox" name="female" class="female" />
           <br />
 
           <label for="other" class="other">andere/unbekannt</label>
-          <input type="checkbox" name="other" class="other" unchecked="true" />
+          <input type="checkbox" name="other" class="other" />
         </div>
 
-        <div id="infobox">
-        </div>
+        <div id="infobox"></div>
       </div>
 
       <!-- container div wird für Einzelansicht mit css3d renderer verwendet -->
@@ -110,9 +88,7 @@
     </div>
 
     <div id="dialog" title="Zur Benutzung">
-      <p>
-        <strong>Verschieben</strong> nach ↑ ↓ mit Pfeiltasten
-      </p>
+      <p><strong>Verschieben</strong> nach oben und unten mit + und -</p>
       <p><strong>Rotation:</strong> Drehen mit der linken Maustaste</p>
       <p><strong>Zoom:</strong> Mausrad</p>
     </div>

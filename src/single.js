@@ -54,7 +54,7 @@ fetch("./letters_json_grouped_merged.json")
     let renderer = (() => {
       let renderer = new CSS3DRenderer();
       renderer.name = "CSS3D";
-      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setSize(window.innerWidth, 1000);
       // im div mit id = container werdend die Objekte gerendert
       document.getElementById("container").appendChild(renderer.domElement);
       return renderer;
@@ -74,10 +74,7 @@ fetch("./letters_json_grouped_merged.json")
 
     /* placename */
     // gets currrent url e.g. single.html#frankfurt
-    const url = window.location.href;
-    // splits on # -> Array[0] = single.html, Array[1] = placename
-    /* let urlArray = url.split('#');
-    let placename = urlArray[1]; */
+    //let placename = window.location.hash.slice(1);
     let placename = "Frankfurt";
 
     /**
@@ -251,6 +248,7 @@ fetch("./letters_json_grouped_merged.json")
           // <div class="element">
           const letterElement = track(document.createElement("div"));
           letterElement.className = "letter";
+          letterElement.dataset.gender = letters[i].receiverGender;
 
           letterElement.style.backgroundColor = "rgb(204, 0, 0, 0.5)";
 
@@ -437,6 +435,197 @@ fetch("./letters_json_grouped_merged.json")
       currLetterObj.visible = true;
     }
 
+    function getCheckboxGenderState() {
+      let state = {
+        male: $(".male").is(":checked"),
+        female: $(".female").is(":checked"),
+        other: $(".other").is(":checked"),
+        string: `${$(".male").is(":checked")}-${$(".female").is(
+          ":checked"
+        )}-${$(".other").is(":checked")}`,
+      };
+      return state;
+    }
+
+    function genderFilter(){
+      let state = getCheckboxGenderState();
+
+      if ($(".filter").is(":checked")) {
+        let currentLetterObjectsOnScene = getCurrentLetterObjectsOnScene();
+        // get array of all the ids of the letter objects
+        let idsOfCurrentLetterObjectsOnScene = getIdsOfLetterObjects(
+          currentLetterObjectsOnScene
+        );
+
+        let lettersCurrentlyOnScene = getletterDataOfLetterObjects(
+          idsOfCurrentLetterObjectsOnScene
+        );
+        console.log("letter objects", currentLetterObjectsOnScene);
+
+        switch (state.string) {
+          // male-female-other
+          // alles gecheckt
+          case "true-true-true":
+            // shows objects if hidden
+            for (let i = 0; i < currentLetterObjectsOnScene.length; i++) {
+              if (currentLetterObjectsOnScene[i].visible == false) {
+                showLetterObject(
+                  currentLetterObjectsOnScene,
+                  lettersCurrentlyOnScene[i].id
+                );
+              }
+            }
+            // update infobox content
+            makeInfoBox();
+
+            break;
+          // nichts gecheckt
+          case "false-false-false":
+            // hides object if visible
+            for (let i = 0; i < currentLetterObjectsOnScene.length; i++) {
+              if (currentLetterObjectsOnScene[i].visible == true) {
+                hideLetterObject(
+                  currentLetterObjectsOnScene,
+                  lettersCurrentlyOnScene[i].id
+                );
+              }
+            }
+            // update infobox content
+            makeInfoBox();
+            break;
+
+          // nur male geckeckt
+          case "true-false-false":
+            for (let i = 0; i < currentLetterObjectsOnScene.length; i++) {
+              // hides all letters with non-male receivers
+              if (currentLetterObjectsOnScene[i].element.dataset.gender != "Männlich") {
+                //console.log(i, "männlich");
+                hideLetterObject(
+                  currentLetterObjectsOnScene,
+                  lettersCurrentlyOnScene[i].id
+                );
+              } else {
+                showLetterObject(
+                  currentLetterObjectsOnScene,
+                  lettersCurrentlyOnScene[i].id
+                );
+              }
+            }
+            // update infobox content
+            makeInfoBox();
+            break;
+          // nur female gecheckt
+          case "false-true-false":
+            for (let i = 0; i < currentLetterObjectsOnScene.length; i++) {
+              // hides all letters with non-male receivers
+              if (currentLetterObjectsOnScene[i].element.dataset.gender != "Weiblich") {
+                //console.log(i, "männlich");
+                hideLetterObject(
+                  currentLetterObjectsOnScene,
+                  lettersCurrentlyOnScene[i].id
+                );
+              }  else {
+                showLetterObject(
+                  currentLetterObjectsOnScene,
+                  lettersCurrentlyOnScene[i].id
+                );
+              }
+            }
+            // update infobox content
+            makeInfoBox();
+            break;
+          // nur other gecheckt
+          case "false-false-true":
+            for (let i = 0; i < currentLetterObjectsOnScene.length; i++) {
+              // hides all letters with non-male receivers
+              if (
+                currentLetterObjectsOnScene[i].element.dataset.gender != "Keine Info"
+              ) {
+                //console.log(i, "männlich");
+                hideLetterObject(
+                  currentLetterObjectsOnScene,
+                  lettersCurrentlyOnScene[i].id
+                );
+              }  else {
+                showLetterObject(
+                  currentLetterObjectsOnScene,
+                  lettersCurrentlyOnScene[i].id
+                );
+              }
+            }
+            // update infobox content
+            makeInfoBox();
+            break;
+
+          // male und female gecheckt
+          case "true-true-false":
+            for (let i = 0; i < currentLetterObjectsOnScene.length; i++) {
+              // hides all letters with non-male receivers
+              if (
+                currentLetterObjectsOnScene[i].element.dataset.gender == "Keine Info"
+              ) {
+                //console.log(i, "männlich");
+                hideLetterObject(
+                  currentLetterObjectsOnScene,
+                  lettersCurrentlyOnScene[i].id
+                );
+              }  else {
+                showLetterObject(
+                  currentLetterObjectsOnScene,
+                  lettersCurrentlyOnScene[i].id
+                );
+              }
+            }
+            // update infobox content
+            makeInfoBox();
+            break;
+          // male und other gecheckt
+          case "true-false-true":
+            for (let i = 0; i < currentLetterObjectsOnScene.length; i++) {
+              // hides all letters with non-male receivers
+              if (currentLetterObjectsOnScene[i].element.dataset.gender == "Weiblich") {
+                //console.log(i, "männlich");
+                hideLetterObject(
+                  currentLetterObjectsOnScene,
+                  lettersCurrentlyOnScene[i].id
+                );
+              } else {
+                showLetterObject(
+                  currentLetterObjectsOnScene,
+                  lettersCurrentlyOnScene[i].id
+                );
+              }
+            }
+            // update infobox content
+            makeInfoBox();
+            break;
+          // female und other
+          case "false-true-true":
+            for (let i = 0; i < currentLetterObjectsOnScene.length; i++) {
+              // hides all letters with non-male receivers
+              if (currentLetterObjectsOnScene[i].element.dataset.gender == "Männlich") {
+                //console.log(i, "männlich");
+                hideLetterObject(
+                  currentLetterObjectsOnScene,
+                  lettersCurrentlyOnScene[i].id
+                );
+              } else {
+                showLetterObject(
+                  currentLetterObjectsOnScene,
+                  lettersCurrentlyOnScene[i].id
+                );
+              }
+            }
+            // update infobox content
+            makeInfoBox();
+            break;
+          default:
+            console.log("Error!");
+            break;
+        }
+      }
+    }
+
     /**
      * Steuerungselemente
      */
@@ -478,7 +667,7 @@ fetch("./letters_json_grouped_merged.json")
           // clear canvas
           clearCanvas();
 
-          // reomove infobox
+          // remove infobox
           removeContentOfInfobox();
 
           // create spheres
@@ -488,6 +677,7 @@ fetch("./letters_json_grouped_merged.json")
           makeInfoBox();
         },
       });
+      
       console.log("Ready");
 
       $("#amount").val(
@@ -497,6 +687,7 @@ fetch("./letters_json_grouped_merged.json")
           $("#slider-range").slider("values", 1)
       );
     });
+    
 
     /* Briefstatus-Filter */
 
@@ -1012,190 +1203,23 @@ fetch("./letters_json_grouped_merged.json")
       // remove content of infobox
       removeContentOfInfobox();
 
-      // CHECKED
-      // hides letter objects with male receiver if male-checkbox and filter-mode-checkbox are checked
-      if ($(this).is(":checked") && $(".filter").is(":checked")) {
-        // get array of all letter objects currently on the scene
-        let currentLetterObjectsOnScene = getCurrentLetterObjectsOnScene();
-        // get array of all the ids of the letter objects
-        let idsOfCurrentLetterObjectsOnScene = getIdsOfLetterObjects(
-          currentLetterObjectsOnScene
-        );
-
-        let lettersCurrentlyOnScene = getletterDataOfLetterObjects(
-          idsOfCurrentLetterObjectsOnScene
-        );
-
-        // count number of male recipients
-        let maleCounter = 0;
-
-        for (let i = 0; i < lettersCurrentlyOnScene.length; i++) {
-          // hides all letters with non-male receivers
-          if (lettersCurrentlyOnScene[i].receiverGender != "Männlich") {
-            //console.log(i, "männlich");
-            hideLetterObject(
-              currentLetterObjectsOnScene,
-              lettersCurrentlyOnScene[i].id
-            );
-            maleCounter++;
-          }
-        }
-        // update infobox content
-        makeInfoBox();
-      }
-
-      // UNCHECKED
-      if (!$(this).is(":checked")) {
-        // get array of all letter objects currently on the scene
-        let currentLetterObjectsOnScene = getCurrentLetterObjectsOnScene();
-        // get array of all the ids of the letter objects
-        let idsOfCurrentLetterObjectsOnScene = getIdsOfLetterObjects(
-          currentLetterObjectsOnScene
-        );
-
-        let lettersCurrentlyOnScene = getletterDataOfLetterObjects(
-          idsOfCurrentLetterObjectsOnScene
-        );
-
-        for (let i = 0; i < lettersCurrentlyOnScene.length; i++) {
-          if (lettersCurrentlyOnScene[i].receiverGender != "Männlich") {
-            //console.log(i, "männlich");
-            showLetterObject(
-              currentLetterObjectsOnScene,
-              lettersCurrentlyOnScene[i].id
-            );
-          }
-        }
-        // update infobox content
-        makeInfoBox();
-      }
+      genderFilter();
     });
 
-    // FEMALE
-    $(".female").change(function () {
+     // FEMALE
+     $(".female").change(function () {
       // remove content of infobox
       removeContentOfInfobox();
 
-      // CHECKED
-      // hides letter objects with female receiver if female-checkbox and filter-mode-checkbox are checked
-      if ($(this).is(":checked") && $(".filter").is(":checked")) {
-        // get array of all letter objects currently on the scene
-        let currentLetterObjectsOnScene = getCurrentLetterObjectsOnScene();
-        // get array of all the ids of the letter objects
-        let idsOfCurrentLetterObjectsOnScene = getIdsOfLetterObjects(
-          currentLetterObjectsOnScene
-        );
-
-        let lettersCurrentlyOnScene = getletterDataOfLetterObjects(
-          idsOfCurrentLetterObjectsOnScene
-        );
-
-        // count number of female recipients
-        let femaleCounter = 0;
-
-        for (let i = 0; i < lettersCurrentlyOnScene.length; i++) {
-          // hides all letters with non-female receivers
-          if (lettersCurrentlyOnScene[i].receiverGender != "Weiblich") {
-            //console.log(i, "weiblich");
-            hideLetterObject(
-              currentLetterObjectsOnScene,
-              lettersCurrentlyOnScene[i].id
-            );
-            femaleCounter++;
-          }
-        }
-        // update infobox content
-        makeInfoBox();
-      }
-
-      // UNCHECKED
-      if (!$(this).is(":checked")) {
-        // get array of all letter objects currently on the scene
-        let currentLetterObjectsOnScene = getCurrentLetterObjectsOnScene();
-        // get array of all the ids of the letter objects
-        let idsOfCurrentLetterObjectsOnScene = getIdsOfLetterObjects(
-          currentLetterObjectsOnScene
-        );
-
-        let lettersCurrentlyOnScene = getletterDataOfLetterObjects(
-          idsOfCurrentLetterObjectsOnScene
-        );
-
-        for (let i = 0; i < lettersCurrentlyOnScene.length; i++) {
-          if (lettersCurrentlyOnScene[i].receiverGender != "Weiblich") {
-            //console.log(i, "weiblich");
-            showLetterObject(
-              currentLetterObjectsOnScene,
-              lettersCurrentlyOnScene[i].id
-            );
-          }
-        }
-        // update infobox content
-        makeInfoBox();
-      }
+      genderFilter();
     });
 
-    // OTHER / UNKNOWN
-    $(".other").change(function () {
+     // OTHER
+     $(".other").change(function () {
       // remove content of infobox
       removeContentOfInfobox();
 
-      // CHECKED
-      if ($(this).is(":checked") && $(".filter").is(":checked")) {
-        // get array of all letter objects currently on the scene
-        let currentLetterObjectsOnScene = getCurrentLetterObjectsOnScene();
-        // get array of all the ids of the letter objects
-        let idsOfCurrentLetterObjectsOnScene = getIdsOfLetterObjects(
-          currentLetterObjectsOnScene
-        );
-
-        let lettersCurrentlyOnScene = getletterDataOfLetterObjects(
-          idsOfCurrentLetterObjectsOnScene
-        );
-
-        // count number of female recipients
-        let otherCounter = 0;
-
-        for (let i = 0; i < lettersCurrentlyOnScene.length; i++) {
-          // hides all letters which do not have "Keine Info" as gender info, i.e. male and female
-          if (lettersCurrentlyOnScene[i].receiverGender != "Keine Info") {
-            //console.log(i, "Keine Info");
-            hideLetterObject(
-              currentLetterObjectsOnScene,
-              lettersCurrentlyOnScene[i].id
-            );
-            otherCounter++;
-          }
-        }
-        // update infobox content
-        makeInfoBox();
-      }
-
-      // UNCHECKED
-      if (!$(this).is(":checked")) {
-        // get array of all letter objects currently on the scene
-        let currentLetterObjectsOnScene = getCurrentLetterObjectsOnScene();
-        // get array of all the ids of the letter objects
-        let idsOfCurrentLetterObjectsOnScene = getIdsOfLetterObjects(
-          currentLetterObjectsOnScene
-        );
-
-        let lettersCurrentlyOnScene = getletterDataOfLetterObjects(
-          idsOfCurrentLetterObjectsOnScene
-        );
-
-        for (let i = 0; i < lettersCurrentlyOnScene.length; i++) {
-          if (lettersCurrentlyOnScene[i].receiverGender != "Keine Info") {
-            //console.log(i, "Keine Info");
-            showLetterObject(
-              currentLetterObjectsOnScene,
-              lettersCurrentlyOnScene[i].id
-            );
-          }
-        }
-        // update infobox content
-        makeInfoBox();
-      }
+      genderFilter();
     });
 
     /**
@@ -1289,60 +1313,6 @@ fetch("./letters_json_grouped_merged.json")
       });
       return numOther;
     }
-
-    /*     function getInfosforBox() {
-      const lettersCurrentlyOnScene = getLetterArray();
-
-      // Gesamtanzahl Briefe
-      let numLetters = lettersCurrentlyOnScene.length;
-
-      // Anzahl gesendete Briefe
-      let numSent = 0;
-      lettersCurrentlyOnScene.forEach((letter) => {
-        if (letter.id.endsWith("s")) {
-          numSent++;
-        }
-      });
-
-      // Anzahl empfangene Briefe
-      let numReceived = 0;
-      lettersCurrentlyOnScene.forEach((letter) => {
-        if (letter.id.endsWith("r")) {
-          numReceived++;
-        }
-      });
-
-      // Anzahl Briefe mit weiblichen Adressatinnen
-      let numFemale = 0;
-      lettersCurrentlyOnScene.forEach((letter) => {
-        if (letter.receiverGender == "Weiblich") {
-          numFemale++;
-        }
-      });
-
-      // Anzahl Briefe mit männlichen Adressaten
-      let numMale = 0;
-      lettersCurrentlyOnScene.forEach((letter) => {
-        if (letter.receiverGender == "Männlich") {
-          numMale++;
-        }
-      });
-
-      // Anzahl Briefe mit Adressaten unbekannten Geschlechts
-      let numOther = 0;
-      lettersCurrentlyOnScene.forEach((letter) => {
-        if (letter.receiverGender == "Keine Info") {
-          numOther++;
-        }
-      });
-
-      return `${numLetters} Briefe Goethes werden angezeigt\n
-      davon ${numFemale} Adressat:innen mit Geschlecht "weiblich"\n
-      davon ${numMale} Adressat:innen mit Geschlecht "männlich"\n
-      davon ${numOther} Adressat:innen mit Geschlecht "andere/unbekannt"\n
-      davon ${numSent} aus ${placename} gesesendet\n
-      davon ${numReceived} in ${placename} empfangen`;
-    } */
 
     function makeInfoBox() {
       const numLetters = getNumLetters();
@@ -1457,7 +1427,7 @@ fetch("./letters_json_grouped_merged.json")
       camera.updateProjectionMatrix();
 
       // Update renderer
-      renderer.setSize(sizes.width, sizes.height);
+      renderer.setSize(sizes.width, 1000);
       if (renderer.name == "WebGL") {
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       }
@@ -1522,15 +1492,16 @@ fetch("./letters_json_grouped_merged.json")
 
     /* move camera in y axis with arrow keys up and down */
     document.onkeydown = function (e) {
+      console.log(e.key);
       switch (e.key) {
-        case "ArrowUp":
+        case "+":
           camera.position.y += 100;
           camera.updateProjectionMatrix();
 
           // controls need to be updated too, otherwise as soon as you use the mouse to move the camera jumps to its inital position
           controls.target.y = camera.position.y;
           break;
-        case "ArrowDown":
+        case "-":
           camera.position.y -= 100;
           camera.updateProjectionMatrix();
 
