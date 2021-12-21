@@ -1,4 +1,16 @@
-/**
+/** 
+ *  @fileOverview This js-file creates the single place view.
+ *
+ *  @author       Marina Lehmann
+ *
+ *  @requires     NPM:three.js
+ *  @requires     NPM:dat.gui
+ *  @requires     NPM:ramda
+ *  @requires     NPM:d3
+ *  @requires     NPM:jQuery
+ */
+
+/*
  * Imports
  */
 

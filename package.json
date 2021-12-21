@@ -4,7 +4,7 @@
   "scripts": {
     "build": "webpack --config ./bundler/webpack.prod.js",
     "dev": "webpack serve --config ./bundler/webpack.dev.js",
-    "docs": "jsdoc -c jsdoc.conf.json ./src/script.js"
+    "docs": "jsdoc -c jsdoc.conf.json"
   },
   "dependencies": {
     "@babel/core": "^7.13.1",

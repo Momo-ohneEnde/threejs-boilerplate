@@ -1,7 +1,19 @@
-/**
- * Imports
+/** 
+ *  @fileOverview This js-file creates the map view.
+ *
+ *  @author       Marina Lehmann
+ *
+ *  @requires     NPM:three.js
+ *  @requires     NPM:dat.gui
+ *  @requires     NPM:ramda
+ *  @requires     NPM:d3
+ *  @requires     NPM:jQuery
+ *  @requires     NPM:troika-three-text
  */
 
+/*
+ * Imports
+ */
 import "./style.css";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
@@ -25,16 +37,16 @@ fetch("./letters_json_grouped_merged.json")
     return data;
   })
   .then((data) => {
-    /**
+
+    /*
      * Settings
      */
-
     const SETTINGS = {
       render_wireframe: false,
       show_edges: false,
     };
 
-    /**
+    /*
      * Sizes
      */
 
@@ -44,7 +56,7 @@ fetch("./letters_json_grouped_merged.json")
       height: 1000,
     };
 
-    /**
+    /*
      * Canvas
      */
 
@@ -53,8 +65,11 @@ fetch("./letters_json_grouped_merged.json")
 
     /**
      * Renderer
+     * 
+     * @desc This function creates the WebGL renderer used by the map view. The renderer uses the canvas element to display the rendered objects.
+     * @function renderer
+     * @returns WebGLRenderer
      */
-
     let renderer = (() => {
       let renderer = new THREE.WebGLRenderer({
         canvas: canvas,
@@ -69,7 +84,7 @@ fetch("./letters_json_grouped_merged.json")
       return renderer;
     })();
 
-    /**
+    /*
      * Scene
      */
     const scene = new THREE.Scene();
