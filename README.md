@@ -1,12 +1,23 @@
-# threejs-boilerplate
+# threejs-experiments
+This repository contains experiments in 3D visualization with three.js.
 
-Based on the boilerplate by [https://github.com/designcourse](https://github.com/designcourse) [https://github.com/designcourse/threejs-webpack-starter](https://github.com/designcourse/threejs-webpack-starter).
+## What is visualized?
 
-## Suggested video tutorials
+**Data:** Letters written by Johann Wolfgang von Goethe (metadata) 
 
-* [Getting Started with THREE.JS in 2021! by DesignCourse](https://www.youtube.com/watch?v=pUgWfqWZWmM)
+**Time span:** 1776-1772
 
-## Tools & Websites
+**Places:** Frankfurt, Worms, Darmstadt, Wiesbaden
 
-* [CPetry's normal map generator](https://cpetry.github.io/NormalMap-Online/)
-* [Free PBR textures](https://3dtextures.me/)
+## Context
+
+Student project within the M.A. "Digitale Methodik in den Geistes- und Kulturwissenschaften" (University Mainz)
+
+## Branches
+
+**Main Branch:** contains the final version of the student project
+
+**Experiments Branch:** contains additional experimential material created over the course of the project and earlier versions
+
+Basiert auf: https://github.com/hou2zi0/threejs-boilerplate
+
