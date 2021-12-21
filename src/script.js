@@ -1522,9 +1522,7 @@ fetch("./letters_json_grouped_merged.json")
           case "true-true-true":
             // shows objects if hidden
             for (let i = 0; i < currentPlanesOnScene.length; i++) {
-              if (currentPlanesOnScene[i].visible == false) {
-                showPlane(currentPlanesOnScene, lettersCurrentlyOnScene[i].id);
-              }
+              showPlane(currentPlanesOnScene, lettersCurrentlyOnScene[i].id);
             }
             // update infobox content
             makeInfoBox();
@@ -1534,9 +1532,7 @@ fetch("./letters_json_grouped_merged.json")
           case "false-false-false":
             // hides object if visible
             for (let i = 0; i < currentPlanesOnScene.length; i++) {
-              if (currentPlanesOnScene[i].visible == true) {
-                hidePlane(currentPlanesOnScene, lettersCurrentlyOnScene[i].id);
-              }
+              hidePlane(currentPlanesOnScene, lettersCurrentlyOnScene[i].id);
             }
             // update infobox content
             makeInfoBox();
@@ -1559,7 +1555,7 @@ fetch("./letters_json_grouped_merged.json")
           // nur female gecheckt
           case "false-true-false":
             for (let i = 0; i < lettersCurrentlyOnScene.length; i++) {
-              // hides all letters with non-male receivers
+              // hides all letters with non-female receivers
               if (lettersCurrentlyOnScene[i].receiverGender != "Weiblich") {
                 //console.log(i, "männlich");
                 hidePlane(currentPlanesOnScene, lettersCurrentlyOnScene[i].id);
@@ -1573,7 +1569,7 @@ fetch("./letters_json_grouped_merged.json")
           // nur other gecheckt
           case "false-false-true":
             for (let i = 0; i < lettersCurrentlyOnScene.length; i++) {
-              // hides all letters with non-male receivers
+              // hides all letters with non-other receivers
               if (lettersCurrentlyOnScene[i].receiverGender != "Keine Info") {
                 //console.log(i, "männlich");
                 hidePlane(currentPlanesOnScene, lettersCurrentlyOnScene[i].id);
@@ -1687,7 +1683,6 @@ fetch("./letters_json_grouped_merged.json")
             timeFilterRange = range(ui.values[0], ui.values[1]);
 
             mapViewSpheres(timeFilterRange);
-
           }
 
           /* HELIX */
@@ -1700,7 +1695,6 @@ fetch("./letters_json_grouped_merged.json")
             timeFilterRange = range(ui.values[0], ui.values[1]);
 
             mapViewHelix(timeFilterRange);
-
           }
         },
       });
@@ -1908,7 +1902,7 @@ fetch("./letters_json_grouped_merged.json")
       // remove content of infobox
       removeContentOfInfobox();
 
-      // hides letter planes if letter-box and filter-mode-box are checked
+      // hides planes that are not letters if box is checked
       if ($(this).is(":checked") && $(".filter").is(":checked")) {
         // get array of all planes currently on the scene
         let currentPlanesOnScene = getCurrentPlanesOnScene();
@@ -1917,11 +1911,15 @@ fetch("./letters_json_grouped_merged.json")
         // loop over ids and determine if document is letter
         idsOfCurrentPlanesOnScene.forEach((id) => {
           if (!id.startsWith("GB")) {
+            // hides planes that are not letters if box is checked
             hidePlane(currentPlanesOnScene, id);
+          } else {
+            // make the letter planes appear again, if no planes are visible (bc of other filters) and the box is then again checked
+            showPlane(currentPlanesOnScene, id);
           }
         });
       } else {
-        // shows planes again once letter-box is unchecked
+        // special case: planes stay visible also when box is unchecked
         let currentPlanesOnScene = getCurrentPlanesOnScene();
 
         let idsOfCurrentPlanesOnScene = getIdsOfPlanes(currentPlanesOnScene);
@@ -2272,131 +2270,6 @@ fetch("./letters_json_grouped_merged.json")
       infobox.appendChild(pNumMale);
       infobox.appendChild(pNumOther);
     }
-
-    // MALE
-    $(".male").change(function () {
-      // CHECKED
-      // hides planes with male receiver if male-checkbox and filter-mode-checkbox are checked
-      if ($(this).is(":checked") && $(".filter").is(":checked")) {
-        // get array of all planes currently on the scene
-        let currentPlanesOnScene = getCurrentPlanesOnScene();
-        // get array of all the ids of the planes
-        let idsOfCurrentPlanesOnScene = getIdsOfPlanes(currentPlanesOnScene);
-
-        let letterDataArray = getletterDataOfPlanes(idsOfCurrentPlanesOnScene);
-
-        // count number of male recipients
-        let maleCounter = 0;
-
-        for (let i = 0; i < letterDataArray.length; i++) {
-          if (letterDataArray[i].receiverGender == "Männlich") {
-            //console.log(i, "männlich");
-            hidePlane(currentPlanesOnScene, letterDataArray[i].id);
-            maleCounter++;
-          }
-        }
-      }
-
-      // UNCHECKED
-      if (!$(this).is(":checked")) {
-        // get array of all planes currently on the scene
-        let currentPlanesOnScene = getCurrentPlanesOnScene();
-        // get array of all the ids of the planes
-        let idsOfCurrentPlanesOnScene = getIdsOfPlanes(currentPlanesOnScene);
-
-        let letterDataArray = getletterDataOfPlanes(idsOfCurrentPlanesOnScene);
-
-        for (let i = 0; i < letterDataArray.length; i++) {
-          if (letterDataArray[i].receiverGender == "Männlich") {
-            //console.log(i, "männlich");
-            showPlane(currentPlanesOnScene, letterDataArray[i].id);
-          }
-        }
-      }
-    });
-
-    // FEMALE
-    $(".female").change(function () {
-      // CHECKED
-      // hides planes with female receiver if female-checkbox and filter-mode-checkbox are checked
-      if ($(this).is(":checked") && $(".filter").is(":checked")) {
-        // get array of all planes currently on the scene
-        let currentPlanesOnScene = getCurrentPlanesOnScene();
-        // get array of all the ids of the planes
-        let idsOfCurrentPlanesOnScene = getIdsOfPlanes(currentPlanesOnScene);
-
-        let letterDataArray = getletterDataOfPlanes(idsOfCurrentPlanesOnScene);
-
-        // count number of female recipients
-        let femaleCounter = 0;
-
-        for (let i = 0; i < letterDataArray.length; i++) {
-          if (letterDataArray[i].receiverGender == "Weiblich") {
-            //console.log(i, "weiblich");
-            hidePlane(currentPlanesOnScene, letterDataArray[i].id);
-            femaleCounter++;
-          }
-        }
-      }
-
-      // UNCHECKED
-      if (!$(this).is(":checked")) {
-        // get array of all planes currently on the scene
-        let currentPlanesOnScene = getCurrentPlanesOnScene();
-        // get array of all the ids of the planes
-        let idsOfCurrentPlanesOnScene = getIdsOfPlanes(currentPlanesOnScene);
-
-        let letterDataArray = getletterDataOfPlanes(idsOfCurrentPlanesOnScene);
-
-        for (let i = 0; i < letterDataArray.length; i++) {
-          if (letterDataArray[i].receiverGender == "Weiblich") {
-            //console.log(i, "weiblich");
-            showPlane(currentPlanesOnScene, letterDataArray[i].id);
-          }
-        }
-      }
-    });
-
-    // OTHER / UNKNOWN
-    $(".other").change(function () {
-      // CHECKED
-      if ($(this).is(":checked") && $(".filter").is(":checked")) {
-        // get array of all planes currently on the scene
-        let currentPlanesOnScene = getCurrentPlanesOnScene();
-        // get array of all the ids of the planes
-        let idsOfCurrentPlanesOnScene = getIdsOfPlanes(currentPlanesOnScene);
-
-        let letterDataArray = getletterDataOfPlanes(idsOfCurrentPlanesOnScene);
-
-        // count number of female recipients
-        let otherCounter = 0;
-
-        for (let i = 0; i < letterDataArray.length; i++) {
-          if (letterDataArray[i].receiverGender == "Keine Info") {
-            //console.log(i, "Keine Info");
-            hidePlane(currentPlanesOnScene, letterDataArray[i].id);
-            otherCounter++;
-          }
-        }
-      }
-
-      // UNCHECKED
-      if (!$(this).is(":checked")) {
-        // get array of all planes currently on the scene
-        let currentPlanesOnScene = getCurrentPlanesOnScene();
-        // get array of all the ids of the planes
-        let idsOfCurrentPlanesOnScene = getIdsOfPlanes(currentPlanesOnScene);
-
-        let letterDataArray = getletterDataOfPlanes(idsOfCurrentPlanesOnScene);
-
-        for (let i = 0; i < letterDataArray.length; i++) {
-          if (letterDataArray[i].receiverGender == "Keine Info") {
-            //console.log(i, "Keine Info");
-            showPlane(currentPlanesOnScene, letterDataArray[i].id);
-          }
-        }
-      }
-    });
 
     /**
      * Helper Geometries
