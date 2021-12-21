@@ -497,7 +497,7 @@ fetch("./letters_json_grouped_merged.json")
       letterNumMarker.add(axesHelperLetterNumMarker); */
 
       // gui für letterNumMarker
-      letterNumMarkerGui
+      /* letterNumMarkerGui
         .add(letterNumMarker.position, "y")
         .min(-10)
         .max(10)
@@ -514,7 +514,7 @@ fetch("./letters_json_grouped_merged.json")
         .min(-10)
         .max(10)
         .step(0.01)
-        .name(`z_${letterNumMarker.name}`);
+        .name(`z_${letterNumMarker.name}`); */
     }
 
     function getMaxLettersPerPlace() {
@@ -661,7 +661,7 @@ fetch("./letters_json_grouped_merged.json")
       idText.add( axesHelperidText ); */
 
         // gui helper for idText
-        idTextGui
+        /* idTextGui
           .add(idText.position, "y")
           .min(-10)
           .max(10)
@@ -678,7 +678,7 @@ fetch("./letters_json_grouped_merged.json")
           .min(-10)
           .max(10)
           .step(0.01)
-          .name(`z_${idText.name}`);
+          .name(`z_${idText.name}`); */
 
         /* INITIALS */
         initialsText.position.y = 0.07;
@@ -690,7 +690,7 @@ fetch("./letters_json_grouped_merged.json")
       initialsText.add( axesHelperInitials ); */
 
         // gui helper for initials
-        initialsGui
+        /* initialsGui
           .add(initialsText.position, "y")
           .min(-10)
           .max(10)
@@ -707,7 +707,7 @@ fetch("./letters_json_grouped_merged.json")
           .min(-10)
           .max(10)
           .step(0.01)
-          .name(`z_${idText.name}`);
+          .name(`z_${idText.name}`); */
 
         /* NAME */
         firstNameText.position.y = -0.03;
@@ -726,7 +726,7 @@ fetch("./letters_json_grouped_merged.json")
   lastNameText.add( axesHelperName ); */
 
         // gui helper for firstName
-        firstNameGui
+        /* firstNameGui
           .add(firstNameText.position, "y")
           .min(-10)
           .max(10)
@@ -743,10 +743,10 @@ fetch("./letters_json_grouped_merged.json")
           .min(-10)
           .max(10)
           .step(0.01)
-          .name(`z_${idText.name}`);
+          .name(`z_${idText.name}`); */
 
         // gui helper for lastName
-        lastNameGui
+        /* lastNameGui
           .add(lastNameText.position, "y")
           .min(-10)
           .max(10)
@@ -763,7 +763,7 @@ fetch("./letters_json_grouped_merged.json")
           .min(-10)
           .max(10)
           .step(0.01)
-          .name(`z_${idText.name}`);
+          .name(`z_${idText.name}`); */
 
         /* DATE */
         dateText.position.y = -0.09;
@@ -775,7 +775,7 @@ fetch("./letters_json_grouped_merged.json")
       dateText.add( axesHelperDate ); */
 
         // gui helper for date
-        dateGui
+        /* dateGui
           .add(dateText.position, "y")
           .min(-10)
           .max(10)
@@ -792,7 +792,7 @@ fetch("./letters_json_grouped_merged.json")
           .min(-10)
           .max(10)
           .step(0.01)
-          .name(`z_${idText.name}`);
+          .name(`z_${idText.name}`); */
 
         /* AXES HELPER for pivot */
         /* const axesHelperPivot = new THREE.AxesHelper( 1 );
@@ -2355,29 +2355,29 @@ fetch("./letters_json_grouped_merged.json")
     /**
      * Debug GUI
      */
-    const gui = new dat.GUI();
+    //const gui = new dat.GUI();
     // must be wider than default, so that also long labels are visible e.g. "y_GB01 Nr.EB013"
-    gui.width = 310;
+    //gui.width = 310;
 
     // Set GUI folders
-    const cameraGui = gui.addFolder("Camera");
+    /* const cameraGui = gui.addFolder("Camera");
     const light = gui.addFolder("Light");
     const idTextGui = gui.addFolder("idText");
     const initialsGui = gui.addFolder("initials");
     const firstNameGui = gui.addFolder("firstname");
     const lastNameGui = gui.addFolder("lastname");
     const dateGui = gui.addFolder("date");
-    const letterNumMarkerGui = gui.addFolder("letterNumMarker");
+    const letterNumMarkerGui = gui.addFolder("letterNumMarker"); */
 
     // Set Debug GUI
-    light.add(pointLight.position, "y").min(-10).max(100).step(0.01);
+    /* light.add(pointLight.position, "y").min(-10).max(100).step(0.01);
     light.add(pointLight.position, "x").min(-10).max(10).step(0.01);
     light.add(pointLight.position, "z").min(-10).max(10).step(0.01);
     light.add(pointLight, "intensity").min(0).max(15).step(0.01);
     light.addColor(pointLightColor, "color").onChange(() => {
       pointLight.color.set(pointLightColor.color);
     });
-
+ */
     /**
      * Camera
      */
