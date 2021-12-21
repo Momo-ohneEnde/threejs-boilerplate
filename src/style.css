@@ -11,27 +11,21 @@ html,
 body {
   font-family: Helvetica, sans-serif;
   background: black;
+  color: whitesmoke;
 }
 
 h1 {
-  font-size: 20rem;
+  font-size: 2rem;
   text-transform: uppercase;
   color: whitesmoke;
   text-align: center;
-  border-bottom: 5px solid whitesmoke;
   margin-bottom: 0.01em;
-}
-
-h2 {
-  font-size: 5.1rem;
-  text-transform: uppercase;
-  color: whitesmoke;
-  text-align: center;
+  margin-top: 0.5rem;
 }
 
 p {
-    margin-top: 0.5rem;
-    margin-bottom: 0.5rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
 a {
@@ -48,15 +42,29 @@ a {
   /*mix-blend-mode: color-burn;*/
 }
 
-.container {
+#container {
   height: 100vh;
   display: grid;
   place-items: center;
+  position: relative;
+  padding-top: 0.5em;
 }
+
+/* #content {
+  display: inline-flex;
+} */
 
 /* MENU */
 
-#menu {
+#menuSingle {
+  position: absolute;
+  bottom: 20px;
+  width: 100%;
+  text-align: right;
+  padding-right: 0.5em;
+}
+
+#menuMap {
   position: absolute;
   bottom: 20px;
   width: 100%;
@@ -82,6 +90,10 @@ button:active {
   background-color: rgba(255, 255, 255, 0.75);
 }
 
+button.ui-button {
+  outline: none;
+}
+
 /* STEUERUNGSELEMENTE */
 div#ui {
   max-width: 500px;
@@ -89,11 +101,127 @@ div#ui {
   margin-top: 1em;
   color: white;
   width: 20%;
+  /* flex-shrink: 0; */
+  position: absolute;
 }
 
+div#ui-single {
+  max-width: 500px;
+  margin-left: 2em;
+  margin-top: 1em;
+  color: white;
+  width: 20%;
+  /* flex-shrink: 0; */
+  position: absolute;
+  z-index: 1;
+}
+
+/* filter:time */
+
 div#time-filter {
-    border: 1px solid white;
-    padding: 0.5em;
+  border: 1px solid white;
+  padding: 0.5em;
+}
+
+/* filter-mode */
+div#filter-mode {
+  margin-top: 1rem;
+}
+
+/* filter: letter status */
+
+div#letter-status-filter {
+  border: 1px solid white;
+  padding: 0.5em;
+  margin-top: 0.5rem;
+}
+
+label.sent {
+  color: darkorchid;
+  padding-left: 1.5rem;
+}
+
+label.received {
+  color: plum;
+  padding-left: 1.5rem;
+
+}
+
+/* filter: document type */
+div#doc-type-filter {
+  border: 1px solid white;
+  padding: 0.5em;
+  margin-top: 0.5rem;
+}
+
+label.goetheletter {
+  color: rgb(231, 59, 59);
+  padding-left: 1.5rem;
+}
+
+label.goethediary {
+  color: rgb(90, 203, 231);
+  padding-left: 1.5rem;
+}
+
+/* filter: person */
+
+div#person-filter {
+  border: 1px solid white;
+  padding: 0.5em;
+  margin-top: 0.5rem;
+}
+
+label.male {
+  color: grey;
+  padding-left: 1.5rem;
+}
+
+label.female {
+  color: orange;
+  padding-left: 1.5rem;
+}
+
+label.other {
+  color: white;
+  padding-left: 1.5rem;
+}
+
+/* checkbox styling */
+
+input[type=checkbox]{
+  filter: invert(100%) hue-rotate(200deg) brightness(2);
+}
+
+input[type=checkbox].received{
+  filter: invert(100%) hue-rotate(250deg) brightness(1.5);
+}
+
+input[type=checkbox].sent{
+  filter: invert(100%) hue-rotate(229deg) brightness(0.9);
+}
+
+input[type=checkbox].male{
+  filter: invert(100%) hue-rotate(200deg) brightness(0.6) grayscale(80%);
+}
+
+input[type=checkbox].female{
+  filter: invert(100%) hue-rotate(350deg) brightness(1);
+}
+
+input[type=checkbox].goetheletter{
+  filter: invert(100%) hue-rotate(320deg) brightness(0.9);
+}
+
+input[type=checkbox].goethediary{
+  filter: invert(100%) hue-rotate(150deg) brightness(0.8);
+}
+
+/* INFOBOX */
+#infobox {
+  border: 1px solid white;
+  padding: 0.5em;
+  margin-top: 0.5rem;
 }
 
 /* hat keinen Effekt -> warum? */
@@ -120,14 +248,13 @@ div#time-filter {
 
 #amount {
   border: 0;
-  background-color: black;
+  background-color: rgba(0, 0, 0, 0);
   color: #f6931f;
   font-weight: bold;
 }
 
-
 /* SINGLE PLACE VIEW */
-.element {
+.letter {
   width: 120px;
   height: 160px;
 
@@ -138,12 +265,12 @@ div#time-filter {
   cursor: default;
 }
 
-.element:hover {
+.letter:hover {
   box-shadow: 0px 0px 12px rgba(255, 255, 255, 0.75);
   border: 1px solid rgba(255, 255, 255, 0.75);
 }
 
-.element .id {
+.letter .id {
   position: absolute;
   top: 20px;
   right: 20px;
@@ -151,7 +278,11 @@ div#time-filter {
   color: rgba(255, 255, 255, 0.75);
 }
 
-.element .initials {
+.letter .id:hover{
+  text-shadow: 0px 0px 12px rgba(255, 255, 255);
+}
+
+.letter .initials {
   position: absolute;
   top: 40px;
   left: 0px;
@@ -162,11 +293,11 @@ div#time-filter {
   text-shadow: 0 0 10px rgba(175, 174, 174, 0.95);
 }
 
-.element .initials:hover {
+.letter .initials:hover {
   text-shadow: 0px 0px 12px rgba(255, 255, 255);
 }
 
-.element .name {
+.letter .name {
   position: absolute;
   bottom: 30px;
   left: 0px;
@@ -175,15 +306,23 @@ div#time-filter {
   color: rgba(255, 255, 255, 0.75);
 }
 
-.element .name:hover {
+.letter .name:hover {
   text-shadow: 0px 0px 12px rgba(255, 255, 255);
 }
 
-.element .date {
+.letter .date {
   position: absolute;
   bottom: 15px;
   left: 0px;
   right: 0px;
   font-size: 12px;
   color: rgba(255, 255, 255, 0.75);
+}
+
+.year {
+  position: absolute;
+  font-size: 60px;
+  font-weight: bold;
+  color: #f6931f;
+  /* text-shadow: 0 0 10px rgba(255, 255, 255, 0.95); */
 }

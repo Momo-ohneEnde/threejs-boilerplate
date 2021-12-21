@@ -5,7 +5,6 @@
 import "./style.css";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { FirstPersonControls } from "three/examples/jsm/controls/FirstPersonControls.js";
 import * as dat from "dat.gui";
 import { PointLight, AmbientLight, Vector3 } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
@@ -13,10 +12,6 @@ import { RoughnessMipmapper } from "three/examples/jsm/utils/RoughnessMipmapper.
 import { Text } from "troika-three-text";
 import * as R from "ramda";
 import * as d3 from "d3";
-import {
-  CSS3DRenderer,
-  CSS3DObject,
-} from "three/examples/jsm/renderers/CSS3DRenderer.js";
 import * as jQuery from "jquery/dist/jquery.min.js";
 
 fetch("./letters_json_grouped_merged.json")
@@ -43,10 +38,10 @@ fetch("./letters_json_grouped_merged.json")
      * Sizes
      */
 
-    // Anpassung an Größe des Browsers
+    // Größe des canvas, auf dem gerendert wird
     const sizes = {
       width: window.innerWidth,
-      height: window.innerHeight,
+      height: 1000,
     };
 
     /**
@@ -70,7 +65,7 @@ fetch("./letters_json_grouped_merged.json")
       renderer.setSize(sizes.width, sizes.height);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       // shows render info e.g. how many objects are currently in memory
-      console.log(renderer.info);
+      console.log("renderer info", renderer.info);
       return renderer;
     })();
 
@@ -84,6 +79,8 @@ fetch("./letters_json_grouped_merged.json")
      */
     const targets = { table: [], sphere: [], helix: [], clickable: [] };
 
+    let timeFilterRange = range(1764, 1772);
+
     /**
      * Data and Main Functions
      */
@@ -96,19 +93,10 @@ fetch("./letters_json_grouped_merged.json")
       resourceTracker.dispose();
 
       console.log("Disposed!");
-      console.log(scene);
-      console.log(renderer.info);
+      console.log("Scene: ", scene);
+      console.log("renderer info", renderer.info);
       //resourceTracker.logResources();
     }
-
-    // dispose button (alternative for clearCanvas, used for testing the resource tracker)
-    /* let disposeBtn = document.getElementById("disposeBtn");
-    disposeBtn.onclick = () => {
-      resourceTracker.dispose();
-      //console.log("Disposed!");
-      console.log(scene);
-      console.log(renderer.info);
-    }; */
 
     /* Allgemeines Vorgehen, um Elemente aus der Szene zu löschen: 
       1.) Komplette Szene durchgehen, 
@@ -192,7 +180,7 @@ fetch("./letters_json_grouped_merged.json")
         this.resources.clear();
       }
       logResources() {
-        console.log(this.resources);
+        console.log("Resources of Tracker", this.resources);
       }
     }
 
@@ -202,9 +190,8 @@ fetch("./letters_json_grouped_merged.json")
 
     /* INIT */
     function init() {
-      // default
-      mapViewKugeln();
-      //mapViewHelix();
+      // default: Kugelansicht
+      mapViewKugeln(timeFilterRange);
     }
     init();
 
@@ -216,54 +203,18 @@ fetch("./letters_json_grouped_merged.json")
       // clear canvas
       clearCanvas();
 
-      /* reset renderer and camera 
-       why necessary?
-       In case the button is clicked coming from the single place view,
-       where the css3d renderer and the perspective camera are used,
-       the renderer must be changed to  WebGl and the camera must be changed to orthographic
-    */
-      if (renderer.name != "WebGL") {
-        renderer = (() => {
-          let renderer = new THREE.WebGLRenderer({
-            canvas: canvas,
-            // makes background transparent
-            alpha: true,
-          });
-          renderer.name = "WebGL";
-          renderer.setSize(sizes.width, sizes.height);
-          renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-          // shows render info e.g. how many objects are currently in memory
-          console.log(renderer.info);
-          return renderer;
-        })();
-
-        camera = new THREE.OrthographicCamera(
-          sizes.width / -2,
-          sizes.width / 2,
-          sizes.height / 2,
-          sizes.height / -2,
-          0,
-          2000
-        );
-        camera.position.x = 0;
-        camera.position.y = 25;
-        camera.position.z = 20;
-        camera.zoom = 10;
-        camera.updateProjectionMatrix();
-        controls = new OrbitControls(camera, canvas);
-
-        // wichtig!
-        /* Wenn der css3d renderer verwendet wird, muss das container-div im Vordergrund sein,
-        wenn der webgl renderer verwendet wird, muss das canvas-Element im Vordergrund sein.
-        Daher bekommt das canvas-Element hier einen z-Index von 100 
-        und das Menü mit den Buttons einen z-Index von 200 (Menü soll über allen Visus sitzen und klickbar sein).
-        */
-        document.getElementById("canvas").style.zIndex = "100";
-        document.getElementById("menu").style.zIndex = "200";
-      }
-
       // create Kugelansicht
-      mapViewKugeln();
+      mapViewKugeln(timeFilterRange);
+
+      // reset all color filters
+      /* const checkboxes = document.querySelectorAll('input[type=checkbox]');
+
+      checkboxes.forEach((checkbox) => {
+        checkbox.checked = false;
+      }) */
+
+      //$("#checkbox").prop("unchecked", true);
+
       console.log("Wechsel zu Kugelansicht!");
     };
 
@@ -273,49 +224,12 @@ fetch("./letters_json_grouped_merged.json")
       // clear canvas
       clearCanvas();
 
-      // reset renderer
-      if (renderer.name != "WebGL") {
-        renderer = (() => {
-          let renderer = new THREE.WebGLRenderer({
-            canvas: canvas,
-            // makes background transparent
-            alpha: true,
-          });
-          renderer.name = "WebGL";
-          renderer.setSize(sizes.width, sizes.height);
-          renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-          // shows render info e.g. how many objects are currently in memory
-          console.log(renderer.info);
-          return renderer;
-        })();
-
-        camera = new THREE.OrthographicCamera(
-          sizes.width / -2,
-          sizes.width / 2,
-          sizes.height / 2,
-          sizes.height / -2,
-          0,
-          2000
-        );
-        camera.position.x = 0;
-        camera.position.y = 25;
-        camera.position.z = 20;
-        camera.zoom = 10;
-        camera.updateProjectionMatrix();
-        controls = new OrbitControls(camera, canvas);
-
-        // wichtig!
-        /* Wenn der css3d renderer verwendet wird, muss das container-div im Vordergrund sein,
-        wenn der webgl renderer verwendet wird, muss das canvas-Element im Vordergrund sein.
-        Daher bekommt das canvas-Element hier einen z-Index von 100 
-        und das Menü mit den Buttons einen z-Index von 200 (Menü soll über allen Visus sitzen und klickbar sein).
-        */
-        document.getElementById("canvas").style.zIndex = "100";
-        document.getElementById("menu").style.zIndex = "200";
-      }
+      // remove content of infobox
+      removeContentOfInfobox();
 
       // create Sphärenansicht
-      mapViewSpheres();
+      mapViewSpheres(timeFilterRange);
+
       console.log("Wechsel zu Sphärenansicht!");
     };
 
@@ -326,49 +240,12 @@ fetch("./letters_json_grouped_merged.json")
       // clear canvas
       clearCanvas();
 
-      // reset renderer
-      if (renderer.name != "WebGL") {
-        renderer = (() => {
-          let renderer = new THREE.WebGLRenderer({
-            canvas: canvas,
-            // makes background transparent
-            alpha: true,
-          });
-          renderer.name = "WebGL";
-          renderer.setSize(sizes.width, sizes.height);
-          renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-          // shows render info e.g. how many objects are currently in memory
-          console.log(renderer.info);
-          return renderer;
-        })();
-
-        camera = new THREE.OrthographicCamera(
-          sizes.width / -2,
-          sizes.width / 2,
-          sizes.height / 2,
-          sizes.height / -2,
-          0,
-          2000
-        );
-        camera.position.x = 0;
-        camera.position.y = 25;
-        camera.position.z = 20;
-        camera.zoom = 10;
-        camera.updateProjectionMatrix();
-        controls = new OrbitControls(camera, canvas);
-
-        // wichtig!
-        /* Wenn der css3d renderer verwendet wird, muss das container-div im Vordergrund sein,
-        wenn der webgl renderer verwendet wird, muss das canvas-Element im Vordergrund sein.
-        Daher bekommt das canvas-Element hier einen z-Index von 100 
-        und das Menü mit den Buttons einen z-Index von 200 (Menü soll über allen Visus sitzen und klickbar sein).
-        */
-        document.getElementById("canvas").style.zIndex = "100";
-        document.getElementById("menu").style.zIndex = "200";
-      }
+      // remove content of infobox
+      removeContentOfInfobox();
 
       // create Helixansicht
-      mapViewHelix();
+      mapViewHelix(timeFilterRange);
+
       console.log("Wechsel zu Helixansicht!");
     };
 
@@ -376,7 +253,30 @@ fetch("./letters_json_grouped_merged.json")
 
     /* 1) Default: Kugelansicht */
     // Karte laden, dann Aufruf von makeKugeln()
-    function mapViewKugeln() {
+    function mapViewKugeln(
+      yearArray = [
+        "1764",
+        "1765",
+        "1766",
+        "1767",
+        "1768",
+        "1769",
+        "1770",
+        "1771",
+        "1772",
+      ]
+    ) {
+      // set view id to "kugel"
+      setViewId("kugel");
+
+      // Sichtbarkeit Steuerungselemente
+      document.getElementById("filter-mode").style.visibility = "hidden";
+      document.getElementById("letter-status-filter").style.visibility =
+        "hidden";
+      document.getElementById("doc-type-filter").style.visibility = "hidden";
+      document.getElementById("person-filter").style.visibility = "hidden";
+      document.getElementById("infobox").style.visibility = "hidden";
+
       const roughnessMipmapper = new RoughnessMipmapper(renderer);
       // load gltf basemap
       const loader = new GLTFLoader();
@@ -392,10 +292,10 @@ fetch("./letters_json_grouped_merged.json")
         scene.add(track(gltf.scene));
 
         // debug: log scene graph
-        console.log(scene);
+        console.log("Scene: ", scene);
 
         // add kugeln
-        loopPlaceMarker(addKugeltoPlaceMarker);
+        loopPlaceMarker(addKugeltoPlaceMarker, yearArray);
 
         // correct position of placemarker "Wiesbaden"
         correctPositionWiesbaden();
@@ -425,7 +325,30 @@ fetch("./letters_json_grouped_merged.json")
     // vector to which the planes will be facing
     const vector = new Vector3();
 
-    function mapViewSpheres() {
+    function mapViewSpheres(
+      yearArray = [
+        "1764",
+        "1765",
+        "1766",
+        "1767",
+        "1768",
+        "1769",
+        "1770",
+        "1771",
+        "1772",
+      ]
+    ) {
+      // set view id to "sphere"
+      setViewId("sphere");
+
+      // Sichtbarkeit Steuerungselemente
+      document.getElementById("filter-mode").style.visibility = "visible";
+      document.getElementById("letter-status-filter").style.visibility =
+        "visible";
+      document.getElementById("doc-type-filter").style.visibility = "visible";
+      document.getElementById("person-filter").style.visibility = "visible";
+      document.getElementById("infobox").style.visibility = "visible";
+
       const roughnessMipmapper = new RoughnessMipmapper(renderer);
       // load gltf basemap
       const loader = new GLTFLoader();
@@ -441,20 +364,48 @@ fetch("./letters_json_grouped_merged.json")
         scene.add(track(gltf.scene));
 
         // debug: log scene graph
-        console.log(scene);
+        console.log("Scene: ", scene);
 
-        loopYearMarker(addYearMarkerAndSpheres);
+        loopYearMarker(addYearMarkerAndSpheres, yearArray);
 
         // correct position of placemarker "Wiesbaden"
         correctPositionWiesbaden();
 
         roughnessMipmapper.dispose();
         //render();
+
+        // create infobox
+        // important: infobox can only be made once gltf scene is loaded
+        // therefore it needs to be inside the mapViewSpheres function
+        makeInfoBox();
       });
     }
 
     /* 4) Helix-Ansicht */
-    function mapViewHelix() {
+    function mapViewHelix(
+      yearArray = [
+        "1764",
+        "1765",
+        "1766",
+        "1767",
+        "1768",
+        "1769",
+        "1770",
+        "1771",
+        "1772",
+      ]
+    ) {
+      // set view id to "helix"
+      setViewId("helix");
+
+      // Sichtbarkeit Steuerungselemente
+      document.getElementById("filter-mode").style.visibility = "visible";
+      document.getElementById("letter-status-filter").style.visibility =
+        "visible";
+      document.getElementById("doc-type-filter").style.visibility = "visible";
+      document.getElementById("person-filter").style.visibility = "visible";
+      document.getElementById("infobox").style.visibility = "visible";
+
       const roughnessMipmapper = new RoughnessMipmapper(renderer);
       // load gltf basemap
       const loader = new GLTFLoader();
@@ -470,15 +421,18 @@ fetch("./letters_json_grouped_merged.json")
         scene.add(track(gltf.scene));
 
         // debug: log scene graph
-        console.log(scene);
+        console.log("Scene", scene);
 
-        loopPlaceMarker(addHelixtoPlaceMarker);
+        loopPlaceMarker(addHelixtoPlaceMarker, yearArray);
 
         // correct position of placemarker "Wiesbaden"
         correctPositionWiesbaden();
 
         roughnessMipmapper.dispose();
         //render();
+
+        // make infobox
+        makeInfoBox();
       });
     }
 
@@ -486,16 +440,19 @@ fetch("./letters_json_grouped_merged.json")
 
     /* 1) Kugeln */
     // wird in init aufgerufen
-    function makeKugeln(placeMarker, city) {
-      // erhält übergeben: placeMarker, Ortsobjekt
+    function makeKugeln(placeMarker, city, yearArray) {
+      // erhält übergeben: placeMarker, Ortsobjekt, yearArray
       // Iteration über Jahre, dann Objekten in Jahren
       // Anzahl der Objekte ermitteln
       let letterCount = 0;
-      Object.keys(city).forEach((year) => {
-        let yearArray = city[`${year}`];
-        // loop over array with letter objects
-        for (let i = 0; i < yearArray.length; i++) {
-          letterCount++;
+      yearArray.forEach((year) => {
+        // Bedingung: Jahreszahl aus dem übergebenen yearArray (Infos aus Zeitfilter) in den Daten vorhanden sein, sonst undefined Error
+        if (Object.keys(city).includes(year)) {
+          let yearArrayData = city[`${year}`];
+          // loop over array with letter data
+          for (let i = 0; i < yearArrayData.length; i++) {
+            letterCount++;
+          }
         }
       });
       //console.log(letterCount);
@@ -539,7 +496,7 @@ fetch("./letters_json_grouped_merged.json")
       const axesHelperLetterNumMarker = new THREE.AxesHelper(1);
       letterNumMarker.add(axesHelperLetterNumMarker); */
 
-      // gui helper für letterNumMarker
+      // gui für letterNumMarker
       /* letterNumMarkerGui
         .add(letterNumMarker.position, "y")
         .min(-10)
@@ -569,7 +526,7 @@ fetch("./letters_json_grouped_merged.json")
         // loop over years
         Object.keys(data[`${place}`]).forEach((year) => {
           let yearArray = data[`${place}`][`${year}`];
-          // loop over array with letter objects
+          // loop over array with letter data
           for (let i = 0; i < yearArray.length; i++) {
             letterCount++;
           }
@@ -591,7 +548,7 @@ fetch("./letters_json_grouped_merged.json")
         // loop over years
         Object.keys(data[`${place}`]).forEach((year) => {
           let yearArray = data[`${place}`][`${year}`];
-          // loop over array with letter objects
+          // loop over array with letter data
           for (let i = 0; i < yearArray.length; i++) {
             letterCount++;
           }
@@ -606,12 +563,12 @@ fetch("./letters_json_grouped_merged.json")
     }
 
     // implementation of functionForLoop in loop over placemarker
-    function addKugeltoPlaceMarker(placeMarker) {
+    function addKugeltoPlaceMarker(placeMarker, yearArray) {
       try {
         const city = data[placeMarker.name]; // saves name of place from json data
         //console.log(city, placeMarker.name); // logs city names
 
-        makeKugeln(placeMarker, city);
+        makeKugeln(placeMarker, city, yearArray);
       } catch (error) {
         console.log(error);
       }
@@ -625,20 +582,11 @@ fetch("./letters_json_grouped_merged.json")
     // i = index position, l = length of dataset, pivot = point around which sphere will be centered
     function makeSpheresForMap(pivot, letters) {
       for (let i = 0, l = letters.length; i < l; i++) {
-        // for later: filtering options
-        /* if (data[i].receiverGender == "Weiblich") {
-      element.style.backgroundColor = "rgb(237, 125, 49, 0.5)";
-    } else if (data[i].receiverGender == "Männlich") {
-      element.style.backgroundColor = "rgb(231, 230, 230, 0.5)";
-    } else {
-      element.style.backgroundColor = "rgb(0, 0, 0, 0.5)";
-    } */
-
         /* 
         create planes and position them as a sphere 
       */
 
-        // Mesh/Plane for letter objects
+        // Mesh/Plane for letter data
         const plane = makePlane();
 
         // set id for naming the plane (z.B. GB01_1_EB005_0_s)
@@ -655,7 +603,7 @@ fetch("./letters_json_grouped_merged.json")
         vector.copy(plane.position).multiplyScalar(2);
         plane.lookAt(vector);
 
-        // add letter objects to pivot bc their position is relative to the pivot
+        // add planes to pivot bc their position is relative to the pivot
         pivot.add(plane);
 
         // add planes to array of clickable objects
@@ -878,8 +826,8 @@ fetch("./letters_json_grouped_merged.json")
       placeMarker.add(yearMarker);
 
       // test whether years in the time filter array (year) are contained in the list of years associated to each city
-      // if yes, plot the letter objects (here: as sphere)
-      // yearMarker = pivot, city[year] = data = array with all letter objects associated to this year
+      // if yes, plot the plane (here: as sphere)
+      // yearMarker = pivot, city[year] = data = array with all planes associated to this year
       if (yearsOfCity.includes(year)) {
         let lettersFromYear = city[year];
         makeSpheresForMap(yearMarker, lettersFromYear);
@@ -891,36 +839,35 @@ fetch("./letters_json_grouped_merged.json")
 
     /* 4) Helix */
     // implementation of functionForLoop in loop over placemarker
-    function addHelixtoPlaceMarker(placeMarker) {
+    function addHelixtoPlaceMarker(placeMarker, yearArray) {
       try {
         const city = data[placeMarker.name]; // saves name of place from json data
         console.log(city, placeMarker.name); // logs city names
 
-        makeHelixForMap(placeMarker, city);
+        makeHelixForMap(placeMarker, city, yearArray);
       } catch (error) {
         console.log(error);
       }
     }
 
-    function makeHelixForMap(placeMarker, city) {
+    function makeHelixForMap(placeMarker, city, yearArray) {
       // height of previous helix, starting point to from which helix is built
       let old_h = 0.0;
 
       // aggreagate all letters of one place in an array
-      [
-        "1764",
-        "1765",
-        "1766",
-        "1767",
-        "1768",
-        "1769",
-        "1770",
-        "1771",
-        "1772",
-      ].forEach((year, yearindex) => {
+      yearArray.forEach((year, yearindex) => {
         // array of years
         let letters = city[`${year}`];
-
+        /**
+ * .map((n) => {
+          
+          if(n.hasOwnProperty('day')){
+            return n;
+          } else {
+            return {...n, day: "0"};
+          }
+        }).sort((a,b) => a.day > b.day).sort((a,b) => a.month > b.month)
+ */
         // if there are no letters for a year, the letters variable is undefined
         // in this case an array with only one yearboundary object needs to be created
         if (letters == undefined) {
@@ -929,7 +876,19 @@ fetch("./letters_json_grouped_merged.json")
 
         // check the first element in array, if it is not a yearboundary object yet, add a yearboundary object
         // yearboundary objects will become the yearmarkers
-        else if (letters[0].type != "yearboundary") {
+        else {
+          letters = letters
+            .map((n) => {
+              if (n.hasOwnProperty("day")) {
+                return n;
+              } else {
+                return { ...n, day: "0" };
+              }
+            })
+            .sort((a, b) => a.day > b.day)
+            .sort((a, b) => a.month > b.month);
+        }
+        if (letters[0].type != "yearboundary") {
           letters.unshift({
             type: "yearboundary",
             id: year,
@@ -950,7 +909,7 @@ fetch("./letters_json_grouped_merged.json")
             let plane;
 
             /* MAKE YEARBOUNDARY PLANES FOR EMPTY YEARS */
-            if(letters[i].type == "yearboundary_empty_year"){
+            if (letters[i].type == "yearboundary_empty_year") {
               plane = makePlane(0xffff00, 0);
               // id of yearboundary object is the year
               const id = letters[i].id;
@@ -972,7 +931,7 @@ fetch("./letters_json_grouped_merged.json")
 
               plane.lookAt(vector);
 
-              // add letter objects to pivot (placemarker) bc their position is relative to the pivot
+              // add planes to pivot (placemarker) bc their position is relative to the pivot
               placeMarker.add(plane);
 
               // add text to yearboundary plane
@@ -987,11 +946,8 @@ fetch("./letters_json_grouped_merged.json")
               yearboundaryText.position.x = -0.1;
               yearboundaryText.position.z = 0.01;
               yearboundaryText.fontSize = 0.1;
-              
-            }
-
-            /* MAKE YEARBOUNDARY PLANES FOR YEARS WITH LETTERS*/
-            else if (letters[i].type == "yearboundary") {
+            } else if (letters[i].type == "yearboundary") {
+              /* MAKE YEARBOUNDARY PLANES FOR YEARS WITH LETTERS*/
               plane = makePlane(0xffff00);
               // id of yearboundary object is the year
               const id = letters[i].id;
@@ -1011,7 +967,7 @@ fetch("./letters_json_grouped_merged.json")
 
               plane.lookAt(vector);
 
-              // add letter objects to pivot (placemarker) bc their position is relative to the pivot
+              // add planes to pivot (placemarker) bc their position is relative to the pivot
               placeMarker.add(plane);
 
               // add text to yearboundary plane
@@ -1026,7 +982,6 @@ fetch("./letters_json_grouped_merged.json")
               yearboundaryText.position.x = -0.1;
               yearboundaryText.position.z = 0.01;
               yearboundaryText.fontSize = 0.1;
-
             } else {
               /* MAKE LETTER PLANES */
               plane = makePlane(0xcc0000);
@@ -1053,7 +1008,7 @@ fetch("./letters_json_grouped_merged.json")
             vector.y = plane.position.y;
             vector.z = plane.position.z * 2; */
 
-              // add letter objects to pivot bc their position is relative to the pivot
+              // add planes to pivot bc their position is relative to the pivot
               placeMarker.add(plane);
 
               // add planes to array of clickable objects
@@ -1139,17 +1094,56 @@ fetch("./letters_json_grouped_merged.json")
         /* 
         create planes and position them as a helix 
       */
-
-        // Mesh/Plane for letter objects
       });
     }
 
     /* 5.) Helper Functions for Map View */
 
+    function setViewId(viewName) {
+      // if there is no div with id "viewId" -> create dif
+      if (!document.getElementById("viewId")) {
+        const view = track(document.createElement("div"));
+        view.id = "viewId";
+        view.name = `${viewName}`;
+        document.body.prepend(view);
+        console.log("div 'viewName' created, name: ", viewName);
+      }
+
+      // if there already is a div, update its name
+      else if (document.getElementById("viewId").name != viewName) {
+        const view = document.getElementById("viewId");
+        view.name = `${viewName}`;
+        console.log("div 'viewName': name set to ", viewName);
+      }
+    }
+
+    function makeClickable(obj, isArray) {
+      // test ob obj schon in Array enthalten über Namensableich
+
+      // liste aller Objektnamen im Array erstellen
+      let namesOfClickableObjects = [];
+      targets.clickable.forEach((clickObj) => {
+        namesOfClickableObjects.push(clickObj.name);
+      });
+
+      // Namensabgleich mit neuem Objekt, das hinzugefügt werden soll
+      if (!namesOfClickableObjects.includes(obj.name)) {
+        // if: obj = array -> loop
+        // else: simply add to array of clickable objects
+        if (isArray) {
+          obj.forEach((o) => {
+            targets.clickable.push(o);
+          });
+        } else {
+          targets.clickable.push(obj);
+        }
+      }
+    }
+
     function makePlane(color = 0xcc0000, opacity = 0.7) {
       const geometry = track(new THREE.PlaneGeometry(0.3, 0.3));
       // DoubleSide -> visisble and not visible sides of objects are rendered
-      const material = track(
+      let material = track(
         new THREE.MeshBasicMaterial({
           color: color,
           side: THREE.DoubleSide,
@@ -1268,15 +1262,6 @@ fetch("./letters_json_grouped_merged.json")
       return dateText;
     }
 
-    function correctPositionWiesbaden() {
-      scene.children
-        .filter((i) => i.name == "Scene")[0]
-        .children.filter((i) => i.name == "Wiesbaden")
-        .forEach(
-          (wiesbadenPlacemarker) => (wiesbadenPlacemarker.position.y = 3.8)
-        );
-    }
-
     function makeYearMarker(year, index) {
       const yearMarker = track(new Text());
       yearMarker.name = `yearMarker${year}`;
@@ -1314,7 +1299,16 @@ fetch("./letters_json_grouped_merged.json")
       return letterNumMarker;
     }
 
-    function loopPlaceMarker(functionForLoop) {
+    function correctPositionWiesbaden() {
+      scene.children
+        .filter((i) => i.name == "Scene")[0]
+        .children.filter((i) => i.name == "Wiesbaden")
+        .forEach(
+          (wiesbadenPlacemarker) => (wiesbadenPlacemarker.position.y = 3.8)
+        );
+    }
+
+    function loopPlaceMarker(functionForLoop, yearArray) {
       scene.children
         .filter((i) => i.name == "Scene")[0] // scene contains another group "scene" which contains all objects in the gltf file created in blender (Karte und Ortsmarker)
         .children.filter(
@@ -1324,24 +1318,11 @@ fetch("./letters_json_grouped_merged.json")
         .forEach((placeMarker) => {
           // function with code that should be executed in the loop for each placeMarker
           // functionForLoop must have argument "placeMarker"
-          functionForLoop(placeMarker);
+          functionForLoop(placeMarker, yearArray);
         });
     }
 
-    function loopYearMarker(
-      functionForLoop,
-      yearArray = [
-        "1764",
-        "1765",
-        "1766",
-        "1767",
-        "1768",
-        "1769",
-        "1770",
-        "1771",
-        "1772",
-      ]
-    ) {
+    function loopYearMarker(functionForLoop, yearArray) {
       scene.children
         .filter((i) => i.name == "Scene")[0] // scene contains another group "scene" which contains all objects in the gltf file created in blender (Karte und Ortsmarker)
         .children.filter(
@@ -1365,258 +1346,286 @@ fetch("./letters_json_grouped_merged.json")
         });
     }
 
-    /* CREATE SINGLE PLACE VIEWS (Einzelansicht)*/
+    /* Helper functions for Filter */
 
-    // render button for single place view
+    // remove chlildren of infobox div (needed when infobox is updated)
+    function removeContentOfInfobox() {
+      const parent = document.getElementById("infobox");
 
-    /* const renderButton = document.getElementById("render");
-    renderButton.onclick = () => {
-      // clear canvas
-      clearCanvas();
-
-      // create single place view
-      initSinglePlaceView("Frankfurt");
-      console.log("Wechsel zu Einzelansicht!");
-    }; */
-
-    function initSinglePlaceView(place) {
-      // default: Sphären
-      console.log(renderer);
-
-      // update renderer, camera and controls
-      renderer = loadCSS3DRenderer();
-      camera = loadPerspectiveCamera();
-      controls = loadOrbitControls();
-
-      // create spheres
-      makeSpheresForSingleView(place);
-
-      // log
-      console.log("Wechsel zu Einzelansicht!");
-      console.log(renderer);
-    }
-
-    function singlePlaceViewHelix() {
-      // clear canvas
-      clearCanvas();
-
-      // update renderer, camera and controls
-      renderer = loadCSS3DRenderer();
-      camera = loadPerspectiveCamera();
-      controls = loadOrbitControls();
-
-      // create helix
-      makeHelixForSingleView();
-    }
-
-    /* FUNCTIONS FOR SINGLE PLACE VIEW */
-
-    /* Basis für Einzelansicht */
-    function loadCSS3DRenderer() {
-      let renderer = new CSS3DRenderer();
-      renderer.name = "CSS3D";
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      // im div mit id = container werdend die Objekte gerendert
-      document.getElementById("container").appendChild(renderer.domElement);
-      return renderer;
-    }
-
-    function loadPerspectiveCamera() {
-      let camera = new THREE.PerspectiveCamera(
-        40,
-        window.innerWidth / window.innerHeight,
-        1,
-        10000
-      );
-      camera.position.y = 0;
-      camera.position.z = 0;
-      camera.position.x = 0;
-
-      camera.position.z = 10000;
-      camera.position.x = 7500;
-      camera.position.y = 5000;
-      camera.zoom = 1;
-      //camera.updateProjectionMatrix();
-      //camera.lookAt(new Vector3(0,1000,0));
-      //camera.position.y = 3000;
-      //camera.updateProjectionMatrix();
-      //camera.lookAt(new Vector3(0,1000,0));
-
-      // gui helper for camera
-      cameraGui.add(camera.position, "y").min(0).max(10000).step(10);
-      cameraGui.add(camera.position, "x").min(0).max(10000).step(10);
-      cameraGui.add(camera.position, "z").min(0).max(10000).step(10);
-
-      console.log(camera);
-      return camera;
-    }
-
-    function loadOrbitControls() {
-      let controls = new OrbitControls(camera, renderer.domElement);
-      controls.target.x = 0;
-      controls.target.z = 0;
-      controls.target.y = 0;
-      controls.minPolarAngle = Math.PI / 2;
-      controls.maxPolarAngle = Math.PI / 2 + 0.75;
-      controls.enablePan = false;
-      // controls.enableZoom = false;
-      // console.log('azi',controls.getAzimuthalAngle());
-      // console.log('pol',controls.getPolarAngle());
-      console.log(controls.target);
-      //   canvas.addEventListener( 'wheel', function(event){
-      //     //...
-      //     event.preventDefault();
-      //     let scale = 0;
-      //     console.log(event.deltaY);
-      //     scale += event.deltaY;
-
-      //     // Restrict scale
-
-      //     console.log(scale);
-      //     camera.position.y += scale * 10;
-      //     //...
-      //  })
-      //controls.enableRotate = false;
-
-      return controls;
-    }
-
-    /* Einzelansicht: Sphären */
-    function makeSpheresForSingleView(placename) {
-      // Instanziierung eines leeren 3D-Vektors
-      const vector = new THREE.Vector3();
-
-      // get data for place
-      let place = data[`${placename}`];
-
-      // loop over years, put letters from each year in an array and use it to create a sphere
-      Object.keys(place).forEach((year, index) => {
-        let yearArray = place[`${year}`];
-        console.log(yearArray);
-        // loop over array with letter objects
-        let letters = [];
-        for (let i = 0; i < yearArray.length; i++) {
-          letters.push(yearArray[i]);
-        }
-        createSphere(letters, index);
-      });
-
-      function createSphere(letters, year) {
-        for (let i = 0, l = letters.length; i < l; i++) {
-          // <div class="element">
-          const element = track(document.createElement("div"));
-          element.className = "element";
-          // Math.random legt einen zufälligen Alpha-Wert für die Hintergrundfarbe fest
-          // element.style.backgroundColor = 'rgba(255,0,0,' + ( Math.random() * 0.5 + 0.25 ) + ')';
-          // ohne Math.random
-
-          if (letters[i].receiverGender == "Weiblich") {
-            element.style.backgroundColor = "rgb(237, 125, 49, 0.5)";
-          } else if (letters[i].receiverGender == "Männlich") {
-            element.style.backgroundColor = "rgb(231, 230, 230, 0.5)";
-          } else {
-            element.style.backgroundColor = "rgb(0, 0, 0, 0.5)";
-          }
-          //element.style.backgroundColor = 'rgb(231, 230, 230, 0.5)';
-          element.setAttribute(
-            "onclick",
-            "window.open(' " + letters[i].propyURL + "')"
-          );
-
-          // <div class="id">
-          const id = track(document.createElement("div"));
-          id.className = "id";
-          id.textContent = letters[i].idFormatted;
-          element.appendChild(id);
-
-          // <div class="initials">
-          const initials = track(document.createElement("div"));
-          initials.className = "initials";
-          initials.textContent = letters[i].receiverInitials;
-          initials.setAttribute(
-            "onclick",
-            "window.open(' " + letters[i].receiverId + "')"
-          );
-          element.appendChild(initials);
-
-          // <div class="name">
-          const name = track(document.createElement("div"));
-          name.className = "name";
-          name.innerHTML = letters[i].receiverFormatted;
-          name.setAttribute(
-            "onclick",
-            "window.open(' " + letters[i].receiverId + "')"
-          );
-          element.appendChild(name);
-
-          // <div class="date">
-          const date = track(document.createElement("div"));
-          date.className = "date";
-          date.innerHTML = letters[i].dateFormatted;
-          element.appendChild(date);
-
-          // erstellt ein CSS3DObjekt aus Variable element
-          // die Anfangsposition der Elemente wird zufällig festgelegt
-          const objectCSS = track(new CSS3DObject(element));
-          /* objectCSS.position.x = Math.random() * 400 - 200;
-          objectCSS.position.y = Math.random() * 400 - 200;
-          objectCSS.position.z = Math.random() * 400 - 200; */
-
-          // Berechnung von Winkeln, die für die Positionierung in sphärischem Koordinatensystem notwendig sind
-          // Basiert auf Index und Länge des Objekt-Arrays
-          // phi = polar angle in radians from the y (up) axis
-          // theta = equator angle in radians around the y (up) axis
-          const phi = Math.acos(-1 + (2 * i) / l);
-          const theta = Math.sqrt(l * Math.PI) * phi;
-
-          // Objekt (Element) wird in einem sphärischem Koordinatensystem d.h. auf der Kugel platziert
-          // https://en.wikipedia.org/wiki/Spherical_coordinate_system
-          // Mehr Infos zu sphärischen Koordinaten in three.js: https://threejs.org/docs/index.html?q=vector#api/en/math/Spherical
-          // Parameter: radial distance from point to origin (Mittelpunkt), phi, theta
-          objectCSS.position.setFromSphericalCoords(500, phi, theta);
-
-          // im Vektor wird die Position des Objekts gespeichert und skalar mit 2 multipliziert
-          // warum?
-          vector.copy(objectCSS.position).multiplyScalar(2);
-
-          // Objekt und Vektor schauen sich an
-          // Objekt wird so rotiert, dass siene interne Z-Achse zum Vektor zeigt
-          // was auch immer das heißen soll???
-          objectCSS.lookAt(vector);
-          scene.add(objectCSS);
-
-          objectCSS.position.y += 1200 * year;
-
-          // Objekt wird zum Sphären Array im Targets-Objekt hinzugefügt
-          targets.sphere.push(objectCSS);
-        }
+      // removes last child until there are no more children
+      while (parent.lastChild) {
+        parent.removeChild(parent.lastChild);
       }
     }
 
-    /* Einzelansicht: Helix */
-    function makeHelixForSingleView() {}
+    // PLANES ON SCENE BUT NOT NECESSARILY VISIBLE
+    // returns an array of all the planes currently on the scene (but not necessarily visible)
+    function getCurrentPlanesOnScene() {
+      let currentPlanesOnScene = [];
+      scene.children
+        .filter((i) => i.name == "Scene")[0] // scene contains another group "scene" which contains all objects in the gltf file created in blender (Karte und Ortsmarker)
+        .children.filter(
+          (i) =>
+            ["Frankfurt", "Darmstadt", "Wiesbaden", "Worms"].includes(i.name) // temporary! filters which objects (Ortsmarker) from the scene group should be included
+        )
+        .forEach((place) => {
+          // the scenegraph is different in sphere and helix view -> need to be treated separately
+          // sphäre
+          if (document.getElementById("viewId").name == "sphere") {
+            place.children.forEach((yearMarker) => {
+              yearMarker.children.forEach((plane) => {
+                currentPlanesOnScene.push(plane);
+              });
+            });
+          }
+          // helix
+          if (document.getElementById("viewId").name == "helix") {
+            // children can be yearMarker or letter planes, make sure only letter planes are added to the array by testing for "GB" at start of name
+            place.children.forEach((child) => {
+              if (child.name.startsWith("GB")) {
+                currentPlanesOnScene.push(child);
+              }
+            });
+          }
+        });
+      //console.log("Array aller Planes: ");
+      //console.log(currentPlanesOnScene);
+      return currentPlanesOnScene;
+    }
 
-    /* HELPER FUNCTIONS */
+    // ONLY VISIBLE PLANES
+    function getCurrentlyVisiblePlanesOnScene() {
+      console.log("Scene 1: ", scene);
+      let currentlyVisiblePlanesOnScene = [];
+      console.log("log gltf scene", scene.children[4]);
+      scene.children
+        .filter((i) => i.name == "Scene")[0] // scene contains another group "scene" which contains all objects in the gltf file created in blender (Karte und Ortsmarker)
+        .children.filter(
+          (i) =>
+            ["Frankfurt", "Darmstadt", "Wiesbaden", "Worms"].includes(i.name) // temporary! filters which objects (Ortsmarker) from the scene group should be included
+        )
+        .forEach((place) => {
+          // the scenegraph is different in sphere and helix view -> need to be treated separately
+          // sphäre
+          if (document.getElementById("viewId").name == "sphere") {
+            place.children.forEach((yearMarker) => {
+              if (yearMarker.children != undefined) {
+                yearMarker.children.forEach((plane) => {
+                  if (plane.visible == true) {
+                    currentlyVisiblePlanesOnScene.push(plane);
+                  }
+                });
+              }
+            });
+          }
+          // helix
+          if (document.getElementById("viewId").name == "helix") {
+            // children can be yearMarker or letter planes, make sure only letter planes are added to the array by testing for "GB" at start of name
+            place.children.forEach((child) => {
+              if (child.name.startsWith("GB")) {
+                if (child.visible == true) {
+                  currentlyVisiblePlanesOnScene.push(child);
+                }
+              }
+            });
+          }
+        });
+      //console.log("Array aller Planes: ");
+      //console.log(currentlyVisiblePlanesOnScene);
+      return currentlyVisiblePlanesOnScene;
+    }
 
-    function makeClickable(obj, isArray) {
-      // test ob obj schon in Array enthalten über Namensableich
+    // returns an array of all the ids of the planes passed as parameter
+    // parameter: array of planes
+    function getIdsOfPlanes(planeArray) {
+      let idsOfPlanes = [];
+      planeArray.forEach((plane) => {
+        idsOfPlanes.push(plane.name);
+      });
+      //console.log("Liste der Ids:");
+      //console.log(idsOfCurrentPlanesOnScene);
+      return idsOfPlanes;
+    }
 
-      // liste aller Objektnamen im Array erstellen
-      let namesOfClickableObjects = [];
-      targets.clickable.forEach((clickObj) => {
-        namesOfClickableObjects.push(clickObj.name);
+    // DATA
+    // retuns an array of letter data corresponding to a set of ids
+    function getletterDataOfPlanes(idsOfLetters) {
+      let letterDataArray = [];
+
+      // find letters currently visivle in scene and put them into the array
+      Object.values(data).forEach((place) => {
+        Object.values(place).forEach((year) => {
+          for (let i = 0; i < year.length; i++) {
+            if (idsOfLetters.includes(year[i].id)) {
+              letterDataArray.push(year[i]);
+              //console.log("letterData of planes", letterDataArray);
+            }
+          }
+        });
       });
 
-      // Namensabgleich mit neuem Objekt, das hinzugefügt werden soll
-      if (!namesOfClickableObjects.includes(obj.name)) {
-        // if: obj = array -> loop
-        // else: simply add to array of clickable objects
-        if (isArray) {
-          obj.forEach((o) => {
-            targets.clickable.push(o);
-          });
-        } else {
-          targets.clickable.push(obj);
+      return letterDataArray;
+    }
+
+    // changes color of plane
+    function changePlaneColor(currentPlanesOnScene, id, color) {
+      // get plane associated with the current id
+      let currPlane = currentPlanesOnScene.find((plane) => plane.name == id);
+      // change color of the plane (must use set method!!!)
+      currPlane.material.color.set(color);
+    }
+
+    // hides plane
+    function hidePlane(currentPlanesOnScene, id) {
+      // get plane associated with the current id
+      let currPlane = currentPlanesOnScene.find((plane) => plane.name == id);
+      currPlane.visible = false;
+      console.log("plane hidden");
+    }
+
+    // shows plane (after it had been hidden)
+    function showPlane(currentPlanesOnScene, id) {
+      // get plane associated with the current id
+      let currPlane = currentPlanesOnScene.find((plane) => plane.name == id);
+      currPlane.visible = true;
+      console.log("plane shown");
+    }
+
+    function getCheckboxGenderState() {
+      let state = {
+        male: $(".male").is(":checked"),
+        female: $(".female").is(":checked"),
+        other: $(".other").is(":checked"),
+        string: `${$(".male").is(":checked")}-${$(".female").is(
+          ":checked"
+        )}-${$(".other").is(":checked")}`,
+      };
+      return state;
+    }
+
+    function genderFilter() {
+      let state = getCheckboxGenderState();
+
+      if ($(".filter").is(":checked")) {
+        let currentPlanesOnScene = getCurrentPlanesOnScene();
+        // get array of all the ids of the planes
+        let idsOfcurrentPlanesOnScene = getIdsOfPlanes(currentPlanesOnScene);
+
+        let lettersCurrentlyOnScene = getletterDataOfPlanes(
+          idsOfcurrentPlanesOnScene
+        );
+        console.log("planes", currentPlanesOnScene);
+
+        switch (state.string) {
+          // state.string: male-female-other
+          // alles gecheckt
+          case "true-true-true":
+            // shows objects if hidden
+            for (let i = 0; i < currentPlanesOnScene.length; i++) {
+              showPlane(currentPlanesOnScene, lettersCurrentlyOnScene[i].id);
+            }
+            // update infobox content
+            makeInfoBox();
+
+            break;
+          // nichts gecheckt
+          case "false-false-false":
+            // hides object if visible
+            for (let i = 0; i < currentPlanesOnScene.length; i++) {
+              hidePlane(currentPlanesOnScene, lettersCurrentlyOnScene[i].id);
+            }
+            // update infobox content
+            makeInfoBox();
+            break;
+
+          // nur male geckeckt
+          case "true-false-false":
+            for (let i = 0; i < lettersCurrentlyOnScene.length; i++) {
+              // hides all letters with non-male receivers
+              if (lettersCurrentlyOnScene[i].receiverGender != "Männlich") {
+                //console.log(i, "männlich");
+                hidePlane(currentPlanesOnScene, lettersCurrentlyOnScene[i].id);
+              } else {
+                showPlane(currentPlanesOnScene, lettersCurrentlyOnScene[i].id);
+              }
+            }
+            // update infobox content
+            makeInfoBox();
+            break;
+          // nur female gecheckt
+          case "false-true-false":
+            for (let i = 0; i < lettersCurrentlyOnScene.length; i++) {
+              // hides all letters with non-female receivers
+              if (lettersCurrentlyOnScene[i].receiverGender != "Weiblich") {
+                //console.log(i, "männlich");
+                hidePlane(currentPlanesOnScene, lettersCurrentlyOnScene[i].id);
+              } else {
+                showPlane(currentPlanesOnScene, lettersCurrentlyOnScene[i].id);
+              }
+            }
+            // update infobox content
+            makeInfoBox();
+            break;
+          // nur other gecheckt
+          case "false-false-true":
+            for (let i = 0; i < lettersCurrentlyOnScene.length; i++) {
+              // hides all letters with non-other receivers
+              if (lettersCurrentlyOnScene[i].receiverGender != "Keine Info") {
+                //console.log(i, "männlich");
+                hidePlane(currentPlanesOnScene, lettersCurrentlyOnScene[i].id);
+              } else {
+                showPlane(currentPlanesOnScene, lettersCurrentlyOnScene[i].id);
+              }
+            }
+            // update infobox content
+            makeInfoBox();
+            break;
+
+          // male und female gecheckt
+          case "true-true-false":
+            for (let i = 0; i < lettersCurrentlyOnScene.length; i++) {
+              // hides all letters with non-male receivers
+              if (lettersCurrentlyOnScene[i].receiverGender == "Keine Info") {
+                //console.log(i, "männlich");
+                hidePlane(currentPlanesOnScene, lettersCurrentlyOnScene[i].id);
+              } else {
+                showPlane(currentPlanesOnScene, lettersCurrentlyOnScene[i].id);
+              }
+            }
+            // update infobox content
+            makeInfoBox();
+            break;
+          // male und other gecheckt
+          case "true-false-true":
+            for (let i = 0; i < lettersCurrentlyOnScene.length; i++) {
+              // hides all letters with non-male receivers
+              if (lettersCurrentlyOnScene[i].receiverGender == "Weiblich") {
+                //console.log(i, "männlich");
+                hidePlane(currentPlanesOnScene, lettersCurrentlyOnScene[i].id);
+              } else {
+                showPlane(currentPlanesOnScene, lettersCurrentlyOnScene[i].id);
+              }
+            }
+            // update infobox content
+            makeInfoBox();
+            break;
+          // female und other
+          case "false-true-true":
+            for (let i = 0; i < lettersCurrentlyOnScene.length; i++) {
+              // hides all letters with non-male receivers
+              if (lettersCurrentlyOnScene[i].receiverGender == "Männlich") {
+                //console.log(i, "männlich");
+                hidePlane(currentPlanesOnScene, lettersCurrentlyOnScene[i].id);
+              } else {
+                showPlane(currentPlanesOnScene, lettersCurrentlyOnScene[i].id);
+              }
+            }
+            // update infobox content
+            makeInfoBox();
+            break;
+          default:
+            console.log("Error!");
+            break;
         }
       }
     }
@@ -1625,7 +1634,7 @@ fetch("./letters_json_grouped_merged.json")
      * Steuerungselemente
      */
 
-    /** Slider */
+    /** Slider: Zeitfilter */
 
     // get year range from start and end date
     function range(start, end) {
@@ -1636,54 +1645,59 @@ fetch("./letters_json_grouped_merged.json")
       for (let i = s, e = en; i <= e; i++) {
         yearArray.push(i.toString());
       }
-      //      console.log(yearArray);
+      // console.log(yearArray);
       return yearArray;
     }
 
+    // what happens when slider is used
     $(function () {
       $("#slider-range").slider({
         range: true,
         min: 1764,
         max: 1772,
         values: [1764, 1772],
-        slide: function (event, ui) {
+        slide: function slide(event, ui) {
           $("#amount").val("" + ui.values[0] + " – " + ui.values[1]);
           console.log("Keep sliding");
 
           // neue Ansicht auf basis des Sliders aufbauen
-          // Sphäre
-          clearCanvas();
-          const roughnessMipmapper = new RoughnessMipmapper(renderer);
-          // load gltf basemap
-          const loader = new GLTFLoader();
-          loader.load("/gltf/goethe_basemap.glb", function (gltf) {
-            gltf.scene.traverse(function (child) {
-              // travese goes through all the children of an object
-              if (child.isMesh) {
-                roughnessMipmapper.generateMipmaps(child.material); // apply mipmapper before rendering
-              }
-            });
+          // welche Ansicht aufgebaut wird, hängt von der view id ab
 
-            // add basemap to scene (!gltf has its own scene) and track it
-            scene.add(track(gltf.scene));
+          /* KUGEL */
+          // console.log(document.getElementById("viewId").name);
+          if (document.getElementById("viewId").name == "kugel") {
+            clearCanvas();
 
-            // debug: log scene graph
-            console.log(scene);
+            timeFilterRange = range(ui.values[0], ui.values[1]);
 
-            loopYearMarker(
-              addYearMarkerAndSpheres,
-              range(ui.values[0], ui.values[1])
-            );
+            mapViewKugeln(timeFilterRange);
+          }
 
-            // correct position of placemarker "Wiesbaden"
-            correctPositionWiesbaden();
+          /* SPHÄRE */
+          if (document.getElementById("viewId").name == "sphere") {
+            clearCanvas();
 
-            roughnessMipmapper.dispose();
-            //render();
-          });
+            // remove infobox
+            removeContentOfInfobox();
+
+            timeFilterRange = range(ui.values[0], ui.values[1]);
+
+            mapViewSpheres(timeFilterRange);
+          }
+
+          /* HELIX */
+          if (document.getElementById("viewId").name == "helix") {
+            clearCanvas();
+
+            // remove infobox
+            removeContentOfInfobox();
+
+            timeFilterRange = range(ui.values[0], ui.values[1]);
+
+            mapViewHelix(timeFilterRange);
+          }
         },
       });
-      console.log("Ready");
 
       $("#amount").val(
         "" +
@@ -1693,9 +1707,569 @@ fetch("./letters_json_grouped_merged.json")
       );
     });
 
-    /* $("#helix").onclick(function () {
-      alert("clicked!");
-    }); */
+    /* Briefstatus-Filter */
+
+    /* 1.) Farbliche Hervorhebung */
+
+    // SENT
+    $(".sent").change(function () {
+      // sets plane color of sent letters to 'darckorchid' if checkbox is checked
+      if ($(this).is(":checked")) {
+        // get array of all planes currently on the scene
+        let currentPlanesOnScene = getCurrentPlanesOnScene();
+        // get array of all the ids of the planes
+        let idsOfCurrentPlanesOnScene = getIdsOfPlanes(currentPlanesOnScene);
+        // loop over ids and determine if letter has status sent/received by end of idString (r or s)
+        idsOfCurrentPlanesOnScene.forEach((id) => {
+          if (id.endsWith("s")) {
+            changePlaneColor(currentPlanesOnScene, id, 0x9932cc);
+          }
+        });
+      } else {
+        // sets plane color of sent letters back to red if checkbox is unchecked
+        let currentPlanesOnScene = getCurrentPlanesOnScene();
+
+        let idsOfCurrentPlanesOnScene = getIdsOfPlanes(currentPlanesOnScene);
+
+        idsOfCurrentPlanesOnScene.forEach((id) => {
+          if (id.endsWith("s")) {
+            changePlaneColor(currentPlanesOnScene, id, 0xcc0000);
+          }
+        });
+      }
+    });
+
+    // RECEIVED
+    $(".received").change(function () {
+      // sets plane color of received letters to 'plum' if checkbox is checked
+      if ($(this).is(":checked")) {
+        // get array of all planes currently on the scene
+        let currentPlanesOnScene = getCurrentPlanesOnScene();
+        // get array of all the ids of the planes
+        let idsOfCurrentPlanesOnScene = getIdsOfPlanes(currentPlanesOnScene);
+        // loop over ids and determine if letter has status sent/received by end of idString (r or s)
+        idsOfCurrentPlanesOnScene.forEach((id) => {
+          if (id.endsWith("r")) {
+            changePlaneColor(currentPlanesOnScene, id, 0xdda0dd);
+          }
+        });
+      } else {
+        // sets plane color of received letters back to red if checkbox is unchecked
+        let currentPlanesOnScene = getCurrentPlanesOnScene();
+
+        let idsOfCurrentPlanesOnScene = getIdsOfPlanes(currentPlanesOnScene);
+
+        idsOfCurrentPlanesOnScene.forEach((id) => {
+          if (id.endsWith("r")) {
+            changePlaneColor(currentPlanesOnScene, id, 0xcc0000);
+          }
+        });
+      }
+    });
+
+    /* 2.) Filter-Modus */
+
+    // SENT
+    $(".sent").change(function () {
+      // remove content of infobox
+      removeContentOfInfobox();
+
+      // hides planes of sent letters if sent-checkbox is checked and Filter-Mode-box is also checked
+      if ($(this).is(":checked") && $(".filter").is(":checked")) {
+        // get array of all planes currently on the scene
+        let currentPlanesOnScene = getCurrentPlanesOnScene();
+        // get array of all the ids of the planes
+        let idsOfCurrentPlanesOnScene = getIdsOfPlanes(currentPlanesOnScene);
+        // loop over ids and determine if letter has status sent/received by end of idString (r or s)
+        idsOfCurrentPlanesOnScene.forEach((id) => {
+          if (!id.endsWith("s")) {
+            hidePlane(currentPlanesOnScene, id);
+          }
+        });
+      } else {
+        // shows planes again once the sent-box is unchecked
+        let currentPlanesOnScene = getCurrentPlanesOnScene();
+
+        let idsOfCurrentPlanesOnScene = getIdsOfPlanes(currentPlanesOnScene);
+
+        idsOfCurrentPlanesOnScene.forEach((id) => {
+          if (!id.endsWith("s")) {
+            showPlane(currentPlanesOnScene, id);
+          }
+        });
+      }
+      // update infobox content
+      makeInfoBox();
+    });
+
+    // RECEIVED
+    // hides planes of received letters if received-checkbox is checked and Filter-Mode-box is also checked
+    $(".received").change(function () {
+      // remove content of infobox
+      removeContentOfInfobox();
+
+      if ($(this).is(":checked") && $(".filter").is(":checked")) {
+        // get array of all planes currently on the scene
+        let currentPlanesOnScene = getCurrentPlanesOnScene();
+        // get array of all the ids of the planes
+        let idsOfCurrentPlanesOnScene = getIdsOfPlanes(currentPlanesOnScene);
+        // loop over ids and determine if letter has status sent/received by end of idString (r or s)
+        idsOfCurrentPlanesOnScene.forEach((id) => {
+          if (!id.endsWith("r")) {
+            hidePlane(currentPlanesOnScene, id);
+          }
+        });
+      } else {
+        // shows planes again once the received-box is unchecked
+        let currentPlanesOnScene = getCurrentPlanesOnScene();
+
+        let idsOfCurrentPlanesOnScene = getIdsOfPlanes(currentPlanesOnScene);
+
+        idsOfCurrentPlanesOnScene.forEach((id) => {
+          if (!id.endsWith("r")) {
+            showPlane(currentPlanesOnScene, id);
+          }
+        });
+      }
+      // update infobox content
+      makeInfoBox();
+    });
+
+    /* Documenttyp-Filter */
+
+    /* 1.) Farbliche Hervorhebung */
+
+    // LETTERS
+    $(".goetheletter").change(function () {
+      // sets plane color to 'red' if checkbox is checked and doctype is goetheletter
+      if ($(this).is(":checked")) {
+        // get array of all planes currently on the scene
+        let currentPlanesOnScene = getCurrentPlanesOnScene();
+        // get array of all the ids of the planes
+        let idsOfCurrentPlanesOnScene = getIdsOfPlanes(currentPlanesOnScene);
+        // loop over ids and determine if document is letter
+        idsOfCurrentPlanesOnScene.forEach((id) => {
+          if (id.startsWith("GB")) {
+            changePlaneColor(currentPlanesOnScene, id, 0xcc0000);
+          }
+        });
+      } else {
+        // sets plane color to default color if checkbox is unchecked and doctype is goetheletter
+        let currentPlanesOnScene = getCurrentPlanesOnScene();
+
+        let idsOfCurrentPlanesOnScene = getIdsOfPlanes(currentPlanesOnScene);
+
+        idsOfCurrentPlanesOnScene.forEach((id) => {
+          if (id.startsWith("GB")) {
+            changePlaneColor(currentPlanesOnScene, id, 0xcc0000);
+          }
+        });
+      }
+    });
+
+    // DIARIES
+    $(".goethediary").change(function () {
+      // sets plane color to blue if checkbox is checked and doctype is goethediary
+      if ($(this).is(":checked")) {
+        // get array of all planes currently on the scene
+        let currentPlanesOnScene = getCurrentPlanesOnScene();
+        // get array of all the ids of the planes
+        let idsOfCurrentPlanesOnScene = getIdsOfPlanes(currentPlanesOnScene);
+        // loop over ids and determine if document is diary
+        idsOfCurrentPlanesOnScene.forEach((id) => {
+          if (id.startsWith("GT")) {
+            changePlaneColor(currentPlanesOnScene, id, 0xcbe7f9);
+          }
+        });
+      } else {
+        // sets plane color to default color if checkbox is unchecked and doctype is goethediary
+        let currentPlanesOnScene = getCurrentPlanesOnScene();
+
+        let idsOfCurrentPlanesOnScene = getIdsOfPlanes(currentPlanesOnScene);
+
+        idsOfCurrentPlanesOnScene.forEach((id) => {
+          if (id.startsWith("GT")) {
+            changePlaneColor(currentPlanesOnScene, id, 0xcc0000);
+          }
+        });
+      }
+    });
+
+    /* 2.) Filter-Modus */
+
+    // LETTERS
+    $(".goetheletter").change(function () {
+      // remove content of infobox
+      removeContentOfInfobox();
+
+      // hides planes that are not letters if box is checked
+      if ($(this).is(":checked") && $(".filter").is(":checked")) {
+        // get array of all planes currently on the scene
+        let currentPlanesOnScene = getCurrentPlanesOnScene();
+        // get array of all the ids of the planes
+        let idsOfCurrentPlanesOnScene = getIdsOfPlanes(currentPlanesOnScene);
+        // loop over ids and determine if document is letter
+        idsOfCurrentPlanesOnScene.forEach((id) => {
+          if (!id.startsWith("GB")) {
+            // hides planes that are not letters if box is checked
+            hidePlane(currentPlanesOnScene, id);
+          } else {
+            // make the letter planes appear again, if no planes are visible (bc of other filters) and the box is then again checked
+            showPlane(currentPlanesOnScene, id);
+          }
+        });
+      } else {
+        // special case: planes stay visible also when box is unchecked
+        let currentPlanesOnScene = getCurrentPlanesOnScene();
+
+        let idsOfCurrentPlanesOnScene = getIdsOfPlanes(currentPlanesOnScene);
+
+        idsOfCurrentPlanesOnScene.forEach((id) => {
+          if (!id.startsWith("GB")) {
+            showPlane(currentPlanesOnScene, id);
+          }
+        });
+      }
+      // update infobox content
+      makeInfoBox();
+    });
+
+    // DIARIES
+    $(".goethediary").change(function () {
+      // remove content of infobox
+      removeContentOfInfobox();
+
+      // hides diary planes if diary-box and filter-mode-box are checked
+      if ($(this).is(":checked") && $(".filter").is(":checked")) {
+        // get array of all planes currently on the scene
+        let currentPlanesOnScene = getCurrentPlanesOnScene();
+        // get array of all the ids of the planes
+        let idsOfCurrentPlanesOnScene = getIdsOfPlanes(currentPlanesOnScene);
+        // loop over ids and determine if document is diary
+        idsOfCurrentPlanesOnScene.forEach((id) => {
+          if (!id.startsWith("GT")) {
+            hidePlane(currentPlanesOnScene, id);
+          }
+        });
+      } else {
+        // shows planes again once diary-box is unchecked
+        let currentPlanesOnScene = getCurrentPlanesOnScene();
+
+        let idsOfCurrentPlanesOnScene = getIdsOfPlanes(currentPlanesOnScene);
+
+        idsOfCurrentPlanesOnScene.forEach((id) => {
+          if (!id.startsWith("GT")) {
+            showPlane(currentPlanesOnScene, id);
+          }
+        });
+      }
+      // update infobox content
+      makeInfoBox();
+    });
+
+    /* Personen-Filter */
+
+    /* 1.) Farbliche Hervorhebung */
+
+    // MALE
+    $(".male").change(function () {
+      // CHECKED
+      // sets plane color of letters with male receiver to grey if checkbox is checked
+      if ($(this).is(":checked")) {
+        // get array of all planes currently on the scene
+        let currentPlanesOnScene = getCurrentPlanesOnScene();
+        // get array of all the ids of the planes
+        let idsOfCurrentPlanesOnScene = getIdsOfPlanes(currentPlanesOnScene);
+
+        let letterDataArray = getletterDataOfPlanes(idsOfCurrentPlanesOnScene);
+
+        for (let i = 0; i < letterDataArray.length; i++) {
+          if (letterDataArray[i].receiverGender == "Männlich") {
+            //console.log(i, "männlich");
+            changePlaneColor(
+              currentPlanesOnScene,
+              letterDataArray[i].id,
+              0x808080
+            );
+          }
+        }
+      }
+
+      // UNCHECKED
+      if (!$(this).is(":checked")) {
+        // get array of all planes currently on the scene
+        let currentPlanesOnScene = getCurrentPlanesOnScene();
+        // get array of all the ids of the planes
+        let idsOfCurrentPlanesOnScene = getIdsOfPlanes(currentPlanesOnScene);
+
+        let letterDataArray = getletterDataOfPlanes(idsOfCurrentPlanesOnScene);
+
+        for (let i = 0; i < letterDataArray.length; i++) {
+          if (letterDataArray[i].receiverGender == "Männlich") {
+            //console.log(i, "männlich");
+            changePlaneColor(
+              currentPlanesOnScene,
+              letterDataArray[i].id,
+              // default color
+              0xcc0000
+            );
+          }
+        }
+      }
+    });
+
+    // FEMALE
+    $(".female").change(function () {
+      // CHECKED
+      // sets plane color of letters with female receiver to oange if checkbox is checked
+      if ($(this).is(":checked")) {
+        // get array of all planes currently on the scene
+        let currentPlanesOnScene = getCurrentPlanesOnScene();
+        // get array of all the ids of the planes
+        let idsOfCurrentPlanesOnScene = getIdsOfPlanes(currentPlanesOnScene);
+
+        let letterDataArray = getletterDataOfPlanes(idsOfCurrentPlanesOnScene);
+
+        // count number of female recipients
+        let femaleCounter = 0;
+
+        for (let i = 0; i < letterDataArray.length; i++) {
+          if (letterDataArray[i].receiverGender == "Weiblich") {
+            //console.log(i, "weiblich");
+            changePlaneColor(
+              currentPlanesOnScene,
+              letterDataArray[i].id,
+              0xffa500
+            );
+            femaleCounter++;
+          }
+        }
+      }
+
+      // UNCHECKED
+      if (!$(this).is(":checked")) {
+        // get array of all planes currently on the scene
+        let currentPlanesOnScene = getCurrentPlanesOnScene();
+        // get array of all the ids of the planes
+        let idsOfCurrentPlanesOnScene = getIdsOfPlanes(currentPlanesOnScene);
+
+        let letterDataArray = getletterDataOfPlanes(idsOfCurrentPlanesOnScene);
+
+        for (let i = 0; i < letterDataArray.length; i++) {
+          if (letterDataArray[i].receiverGender == "Weiblich") {
+            //console.log(i, "weiblich");
+            changePlaneColor(
+              currentPlanesOnScene,
+              letterDataArray[i].id,
+              // default color
+              0xcc0000
+            );
+          }
+        }
+      }
+    });
+
+    // OTHER / UNKNOWN
+    $(".other").change(function () {
+      // CHECKED
+      // sets plane color of letters with unknown receiver to transparent if checkbox is checked
+      if ($(this).is(":checked")) {
+        // get array of all planes currently on the scene
+        let currentPlanesOnScene = getCurrentPlanesOnScene();
+        // get array of all the ids of the planes
+        let idsOfCurrentPlanesOnScene = getIdsOfPlanes(currentPlanesOnScene);
+
+        let letterDataArray = getletterDataOfPlanes(idsOfCurrentPlanesOnScene);
+
+        // count number of female recipients
+        let otherCounter = 0;
+
+        for (let i = 0; i < letterDataArray.length; i++) {
+          if (letterDataArray[i].receiverGender == "Keine Info") {
+            //console.log(i, "Keine Info");
+            changePlaneColor(
+              currentPlanesOnScene,
+              letterDataArray[i].id,
+              0x000000
+            );
+            otherCounter++;
+          }
+        }
+      }
+
+      // UNCHECKED
+      if (!$(this).is(":checked")) {
+        // get array of all planes currently on the scene
+        let currentPlanesOnScene = getCurrentPlanesOnScene();
+        // get array of all the ids of the planes
+        let idsOfCurrentPlanesOnScene = getIdsOfPlanes(currentPlanesOnScene);
+
+        let letterDataArray = getletterDataOfPlanes(idsOfCurrentPlanesOnScene);
+
+        for (let i = 0; i < letterDataArray.length; i++) {
+          if (letterDataArray[i].receiverGender == "Keine Info") {
+            //console.log(i, "Keine Info");
+            changePlaneColor(
+              currentPlanesOnScene,
+              letterDataArray[i].id,
+              // default color
+              0xcc0000
+            );
+          }
+        }
+      }
+    });
+
+    /* 2.) Filter-Modus */
+
+    // MALE
+    $(".male").change(function () {
+      // remove content of infobox
+      removeContentOfInfobox();
+
+      genderFilter();
+    });
+
+    // FEMALE
+    $(".female").change(function () {
+      // remove content of infobox
+      removeContentOfInfobox();
+
+      genderFilter();
+    });
+
+    // OTHER
+    $(".other").change(function () {
+      // remove content of infobox
+      removeContentOfInfobox();
+
+      genderFilter();
+    });
+
+    /**
+     * Infobox
+     */
+
+    function getLetterDataOfPlanesCurrentlyVisibleOnScene() {
+      let currentlyVisiblePlanesOnScene = getCurrentlyVisiblePlanesOnScene();
+      let idsOfCurrentPlanesOnScene = getIdsOfPlanes(
+        currentlyVisiblePlanesOnScene
+      );
+      let letterDataOfCurrentlyVisiblePlanesOnScene = getletterDataOfPlanes(
+        idsOfCurrentPlanesOnScene
+      );
+      console.log("letters visible", letterDataOfCurrentlyVisiblePlanesOnScene);
+      return letterDataOfCurrentlyVisiblePlanesOnScene;
+    }
+
+    // Gesamtanzahl Briefe
+    function getNumLetters() {
+      const lettersCurrentlyOnScene =
+        getLetterDataOfPlanesCurrentlyVisibleOnScene();
+      let numLetters = lettersCurrentlyOnScene.length;
+      return numLetters;
+    }
+
+    // Anzahl gesendete Briefe
+    function getNumSent() {
+      const lettersCurrentlyOnScene =
+        getLetterDataOfPlanesCurrentlyVisibleOnScene();
+      let numSent = 0;
+      lettersCurrentlyOnScene.forEach((letter) => {
+        if (letter.id.endsWith("s")) {
+          numSent++;
+        }
+      });
+      return numSent;
+    }
+
+    // Anzahl empfangene Briefe
+    function getNumReceived() {
+      const lettersCurrentlyOnScene =
+        getLetterDataOfPlanesCurrentlyVisibleOnScene();
+      let numReceived = 0;
+      lettersCurrentlyOnScene.forEach((letter) => {
+        if (letter.id.endsWith("r")) {
+          numReceived++;
+        }
+      });
+      return numReceived;
+    }
+
+    // Anzahl Briefe mit weiblichen Adressatinnen
+    function getNumFemale() {
+      const lettersCurrentlyOnScene =
+        getLetterDataOfPlanesCurrentlyVisibleOnScene();
+      let numFemale = 0;
+      lettersCurrentlyOnScene.forEach((letter) => {
+        if (letter.receiverGender == "Weiblich") {
+          numFemale++;
+        }
+      });
+      return numFemale;
+    }
+
+    // Anzahl Briefe mit männlichen Adressaten
+    function getNumMale() {
+      const lettersCurrentlyOnScene =
+        getLetterDataOfPlanesCurrentlyVisibleOnScene();
+      let numMale = 0;
+      lettersCurrentlyOnScene.forEach((letter) => {
+        if (letter.receiverGender == "Männlich") {
+          numMale++;
+        }
+      });
+      return numMale;
+    }
+
+    // Anzahl Briefe mit Adressaten unbekannten Geschlechts
+    function getNumOther() {
+      const lettersCurrentlyOnScene =
+        getLetterDataOfPlanesCurrentlyVisibleOnScene();
+      let numOther = 0;
+      lettersCurrentlyOnScene.forEach((letter) => {
+        if (letter.receiverGender == "Keine Info") {
+          numOther++;
+        }
+      });
+      return numOther;
+    }
+
+    function makeInfoBox() {
+      const numLetters = getNumLetters();
+      const numSent = getNumSent();
+      const numReceived = getNumReceived();
+      const numFemale = getNumFemale();
+      const numMale = getNumMale();
+      const numOther = getNumOther();
+
+      // make p elements
+      const pNumLetters = document.createElement("p");
+      pNumLetters.textContent = `${numLetters} Briefe Goethes werden angezeigt`;
+
+      const pNumSent = document.createElement("p");
+      pNumSent.textContent = `${numSent} gesesendet`;
+
+      const pNumReceived = document.createElement("p");
+      pNumReceived.textContent = `${numReceived} empfangen`;
+
+      const pNumFemale = document.createElement("p");
+      pNumFemale.textContent = `${numFemale} Adressat:innen mit Geschlecht "weiblich"`;
+
+      const pNumMale = document.createElement("p");
+      pNumMale.textContent = `${numMale} Adressat:innen mit Geschlecht "männlich"`;
+
+      const pNumOther = document.createElement("p");
+      pNumOther.textContent = `${numOther} Adressat:innen mit Geschlecht "andere/unbekannt"`;
+
+      const infobox = document.getElementById("infobox");
+      infobox.appendChild(pNumLetters);
+      infobox.appendChild(pNumSent);
+      infobox.appendChild(pNumReceived);
+      infobox.appendChild(pNumFemale);
+      infobox.appendChild(pNumMale);
+      infobox.appendChild(pNumOther);
+    }
 
     /**
      * Helper Geometries
@@ -1781,12 +2355,12 @@ fetch("./letters_json_grouped_merged.json")
     /**
      * Debug GUI
      */
-    const gui = new dat.GUI();
+    //const gui = new dat.GUI();
     // must be wider than default, so that also long labels are visible e.g. "y_GB01 Nr.EB013"
-    gui.width = 310;
+    //gui.width = 310;
 
     // Set GUI folders
-    const cameraGui = gui.addFolder("Camera");
+    /* const cameraGui = gui.addFolder("Camera");
     const light = gui.addFolder("Light");
     /* const idTextGui = gui.addFolder("idText");
     const initialsGui = gui.addFolder("initials");
@@ -1796,14 +2370,14 @@ fetch("./letters_json_grouped_merged.json")
     const letterNumMarkerGui = gui.addFolder("letterNumMarker"); */
 
     // Set Debug GUI
-    light.add(pointLight.position, "y").min(-10).max(100).step(0.01);
+    /* light.add(pointLight.position, "y").min(-10).max(100).step(0.01);
     light.add(pointLight.position, "x").min(-10).max(10).step(0.01);
     light.add(pointLight.position, "z").min(-10).max(10).step(0.01);
     light.add(pointLight, "intensity").min(0).max(15).step(0.01);
     light.addColor(pointLightColor, "color").onChange(() => {
       pointLight.color.set(pointLightColor.color);
     });
-
+ */
     /**
      * Camera
      */
@@ -1816,10 +2390,10 @@ fetch("./letters_json_grouped_merged.json")
       0,
       2000
     );
-    camera.position.x = 0;
+    camera.position.x = 25;
     camera.position.y = 25;
-    camera.position.z = 20;
-    camera.zoom = 10;
+    camera.position.z = 100;
+    camera.zoom = 25;
     camera.updateProjectionMatrix();
     scene.add(camera);
 
@@ -1866,7 +2440,7 @@ fetch("./letters_json_grouped_merged.json")
       // der Raycaster gibt ein Array mit den vom Strahl getroffenen
       // Objekten zurück. Dieses Array ist leer (Länge == 0), wenn
       // keine Objekte getroffen wurden.
-      console.log(targets.clickable);
+      console.log("targets clickable", targets.clickable);
       let intersects = raycaster.intersectObjects(targets.clickable);
       //console.log(scene.children[4].children);
       // Alle Elemente in der Szene. Klick auf den LightHelper logged bspw. diesen.
@@ -1880,7 +2454,7 @@ fetch("./letters_json_grouped_merged.json")
 
         /* Define click events for different objects*/
 
-        // click on letter object (planes)
+        // click on plane
         // nur zum Test
         if (clickedObj.geometry.type == "PlaneGeometry") {
           console.log("Briefelement angeklickt");
@@ -1909,7 +2483,7 @@ fetch("./letters_json_grouped_merged.json")
             // loop over years
             Object.keys(data[`${place}`]).forEach((year) => {
               let yearArray = data[`${place}`][`${year}`];
-              // loop over array with letter objects
+              // loop over array with letter data
               for (let i = 0; i < yearArray.length; i++) {
                 // test if id of current obj = name of parent obj in scene (i.e. id of plane)
                 // if yes, save current obj in var searchObj and link to gnd
@@ -1928,24 +2502,10 @@ fetch("./letters_json_grouped_merged.json")
           /* clickedObj.onclick = () => { */
           // clear canvas
           clearCanvas();
-
+          const placeName = clickedObj.name;
+          window.open(`./single.html#${placeName}`);
           console.log("Klick auf Ortsmarker!");
-          initSinglePlaceView(clickedObj.name);
-          /*  }; */
         }
-
-        /* if (
-          clickedObj.parent.name == "Scene" &&
-          clickedObj.parent.type == "Group" &&
-          clickedObj.name != "GOOGLE_SAT_WM" &&
-          clickedObj.name != "GOOGLE_MAP_WM" &&
-          clickedObj.name != "OSM_MAPNIK_WM" &&
-          clickedObj.name != "EXPORT_OSM_MAPNIK_WM"
-        ) {
-          console.log("Klick auf Ortsmarker!");
-          //clearCanvas();
-          //initSinglePlaceView();
-        } */
       } else {
         console.log("No intersections.");
       }
