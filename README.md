@@ -19,5 +19,5 @@ Student project within the M.A. "Digitale Methodik in den Geistes- und Kulturwis
 
 **Experiments Branch:** contains additional experimential material created over the course of the project and earlier versions
 
-Basiert auf: https://github.com/hou2zi0/threejs-boilerplate
+Basiert auf: [https://github.com/hou2zi0/threejs-boilerplate](https://github.com/hou2zi0/threejs-boilerplate)
 
