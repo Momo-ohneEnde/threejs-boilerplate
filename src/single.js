@@ -89,8 +89,8 @@ fetch("./letters_json_grouped_merged.json")
 
     /* placename */
     // gets currrent url e.g. single.html#frankfurt
-    //let placename = window.location.hash.slice(1);
-    let placename = "Frankfurt";
+    let placename = window.location.hash.slice(1);
+    //let placename = "Frankfurt";
 
     /**
      * Data and Main Functions
@@ -753,6 +753,10 @@ fetch("./letters_json_grouped_merged.json")
             console.log("Error!");
             break;
         }
+      } else {
+        // else = if filter mode is not active, only color highlighting
+        //update infobox
+        makeInfoBox();
       }
     }
 

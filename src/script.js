@@ -1853,6 +1853,10 @@ fetch("./letters_json_grouped_merged.json")
             console.log("Error!");
             break;
         }
+      } else {
+        // else = if filter mode is not active, only color highlighting
+        //update infobox
+        makeInfoBox();
       }
     }
 
