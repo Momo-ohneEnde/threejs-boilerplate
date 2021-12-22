@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>ThreeJS Starter</title>
+    <link
+      rel="stylesheet"
+      href="https://code.jquery.com/ui/1.13.0/themes/base/jquery-ui.css"
+    />
+    <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.0/jquery-ui.js"></script>
+    <script defer="defer" src="single.js"></script>
+    <link href="main.css" rel="stylesheet" />
+  </head>
+  <body>
+    <div id="content">
+      <div id="ui-single">
+        <div id="time-filter">
+          <p>
+            <label for="amount">Zeitraum:</label>
+            <input id="amount" readonly="readonly" />
+          </p>
+          <div id="slider-range"></div>
+          <p>Zeitschritt: 1 Jahr</p>
+        </div>
+        <div id="filter-mode">
+          <label for="filter" class="filter">Filter-Modus</label>
+          <input type="checkbox" name="filter" class="filter" /><br />
+        </div>
+        <div id="letter-status-filter">
+          <label for="letterStatus" class="letterStatus">Briefstatus</label
+          ><br /><label for="sent" class="sent">gesendet</label>
+          <input type="checkbox" name="sent" class="sent" /><br /><label
+            for="received"
+            class="received"
+            >empfangen</label
+          >
+          <input type="checkbox" name="received" class="received" />
+        </div>
+        <div id="doc-type-filter">
+          <label for="docType" class="docType">Zeugnistyp</label><br /><label
+            for="goetheletter"
+            class="goetheletter"
+            >Brief</label
+          >
+          <input
+            type="checkbox"
+            name="goetheletter"
+            class="goetheletter"
+            checked="true"
+          /><br /><label for="goethediary" class="goethediary">Tagebuch</label>
+          <input type="checkbox" name="goethediary" class="goethediary" />
+        </div>
+        <div id="person-filter">
+          <label for="person" class="person">Geschlecht der Empfänger:in</label
+          ><br /><label for="male" class="male">männlich</label>
+          <input type="checkbox" name="male" class="male" /><br /><label
+            for="female"
+            class="female"
+            >weiblich</label
+          >
+          <input type="checkbox" name="female" class="female" /><br /><label
+            for="other"
+            class="other"
+            >andere/unbekannt</label
+          >
+          <input type="checkbox" name="other" class="other" />
+        </div>
+        <div id="infobox"></div>
+      </div>
+      <div id="container"></div>
+    </div>
+    <div id="menuSingle">
+      <a href="index.html"><button id="toMap">ZUR KARTE</button></a>
+    </div>
+    <div id="dialog" title="Zur Benutzung">
+      <p><strong>Verschieben</strong> nach oben und unten mit + und -</p>
+      <p><strong>Rotation:</strong> Drehen mit der linken Maustaste</p>
+      <p><strong>Zoom:</strong> Mausrad</p>
+    </div>
+  </body>
+</html>
