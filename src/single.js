@@ -1,7 +1,8 @@
-/** 
+/**
  *  @fileOverview This js-file creates the single place view.
  *
  *  @author       Marina Lehmann
+ *  @author       Max Grüntgens
  *
  *  @requires     NPM:three.js
  *  @requires     NPM:dat.gui
@@ -40,16 +41,15 @@ fetch("./letters_json_grouped_merged.json")
     return data;
   })
   .then((data) => {
-    /**
+    /*
      * Settings
      */
-
     const SETTINGS = {
       render_wireframe: false,
       show_edges: false,
     };
 
-    /**
+    /*
      * Sizes
      */
 
@@ -61,8 +61,11 @@ fetch("./letters_json_grouped_merged.json")
 
     /**
      * Renderer
+     *
+     * @desc This function creates the CSS3D renderer used by the single place view. The renderer uses the div with id="container" to display the rendered objects.
+     * @function renderer
+     * @returns THREE.CSS3DRenderer
      */
-
     let renderer = (() => {
       let renderer = new CSS3DRenderer();
       renderer.name = "CSS3D";
@@ -72,12 +75,12 @@ fetch("./letters_json_grouped_merged.json")
       return renderer;
     })();
 
-    /**
+    /*
      * Scene
      */
     const scene = new THREE.Scene();
 
-    /**
+    /*
      * Variables
      */
     const targets = { table: [], sphere: [], helix: [], clickable: [] };
@@ -93,9 +96,12 @@ fetch("./letters_json_grouped_merged.json")
      * Data and Main Functions
      */
 
-    /* CLEAR - dispose objects when changing views */
-
-    // clear function
+    /**
+     * Clear function
+     * @desc This function disposes of the objects on the canvas by using the class ResourceTracker. It is called when changing between different versions of the map view (kugel, sphere, helix).
+     * @function clearCanvas
+     * @returns nothing
+     */
     function clearCanvas() {
       //resourceTracker.logResources();
       resourceTracker.dispose();
@@ -106,18 +112,29 @@ fetch("./letters_json_grouped_merged.json")
       //resourceTracker.logResources();
     }
 
-    // resource tracker class (tracks objects which will be removed later)
+    /**
+     * ResourceTracker
+     * @classdesc A class to track the objects which will be removed from the scene when views change.
+     * @class ResourceTracker
+     */
     class ResourceTracker {
       constructor() {
         this.resources = new Set();
       }
+
+      /**
+       * @desc Tracks objects, i.e. adds them to the resourceTracker Set. Belongs to class ResourceTracker.
+       * @function track
+       * @param {} resource Parameters can be all kinds of objects.
+       * @returns resource
+       */
       track(resource) {
         // check whether resource is undefined or null
         if (!resource) {
           return resource;
         }
 
-        // handle children and when material is an array of materials or
+        // handle children and handle other arrays, i.e. when material is an array of materials or
         // uniform is array of textures
         if (Array.isArray(resource)) {
           resource.forEach((resource) => this.track(resource));
@@ -135,13 +152,13 @@ fetch("./letters_json_grouped_merged.json")
           this.track(resource.material);
           this.track(resource.children);
         } else if (resource instanceof THREE.Material) {
-          // We have to check if there are any textures on the material
+          // check if there are any textures on the material
           for (const value of Object.values(resource)) {
             if (value instanceof THREE.Texture) {
               this.track(value);
             }
           }
-          // We also have to check if any uniforms reference textures or arrays of textures
+          // check if any uniforms reference textures or arrays of textures
           if (resource.uniforms) {
             for (const value of Object.values(resource.uniforms)) {
               if (value) {
@@ -158,9 +175,22 @@ fetch("./letters_json_grouped_merged.json")
         }
         return resource;
       }
+
+      /**
+       * @desc Untracks objects, i.e. removes them from the resourceTracker Set. Belongs to class ResourceTracker.
+       * @function untrack
+       * @param {} resource Parameters can be all kinds of objects.
+       * @returns nothing
+       */
       untrack(resource) {
         this.resources.delete(resource);
       }
+
+      /**
+       * @desc Deletes all tracked objects, i.e. empties the resourceTracker Set. Belongs to class ResourceTracker.
+       * @function dispose
+       * @returns nothing
+       */
       dispose() {
         for (const resource of this.resources) {
           if (resource instanceof THREE.Object3D) {
@@ -179,21 +209,18 @@ fetch("./letters_json_grouped_merged.json")
       }
     }
 
-    // set up resource tracker and bind tracking method
+    // set up resource tracker and bind tracking method to track() (function can be used without referencing the class first)
     const resourceTracker = new ResourceTracker();
     const track = resourceTracker.track.bind(resourceTracker);
-
-    /* BUTTONS */
-
-    // toMap-Button (Wechsel zur Kartenansicht)
-    /* const toMapButton = document.getElementById("toMap");
-    toMapButton.onclick = () => {
-      // CODE
-    }; */
 
     /* CREATE SINGLE PLACE VIEWS (Einzelansicht)*/
 
     /* INIT: SPHERE */
+    /**
+     * @desc Initializes single place view by creating the default view: sphere.
+     * @function initSinglePlaceView
+     * @returns nothing
+     */
     function initSinglePlaceView(placename, timeFilterRange) {
       // clear canvas
       clearCanvas();
@@ -223,7 +250,12 @@ fetch("./letters_json_grouped_merged.json")
 
     /* FUNCTIONS FOR SINGLE PLACE VIEW */
 
-    /* Set Placename as Heading */
+    /**
+     * @function setHeading
+     * @desc Set the name of the place as heading.
+     * @param {string} placename name of place for which the single view is created
+     * @returns nothing
+     */
     function setHeading(placename) {
       const h1 = track(document.createElement("h1"));
       h1.textContent = placename;
@@ -231,9 +263,15 @@ fetch("./letters_json_grouped_merged.json")
       document.body.prepend(h1);
     }
 
-    /* Einzelansicht: Sphären */
+    /**
+     * @function makeSpheresForSingleView
+     * @desc Creates spheres for single view. Calls createSphere for each year and makeYearMarker to create text objects as yearMarkers.
+     * @param {string} placename name of place for which the single view is created
+     * @param {string[]} timeFilterRange Year range set by the time filter
+     * @returns return value
+     */
     function makeSpheresForSingleView(placename, timeFilterRange) {
-      // Instanziierung eines leeren 3D-Vektors
+      // vector to which the planes will be facing
       const vector = new THREE.Vector3();
 
       // get data for place
@@ -255,6 +293,13 @@ fetch("./letters_json_grouped_merged.json")
         makeYearMarker(year, index);
       });
 
+      /**
+       * @function createSphere
+       * @desc Makes spheres by createing a div structure. div "letter" is associated to a CSS3D Object which represents the letter planes in the single view. The children of this div are other divs which contain the textual inforamtion displayed on the letter object: id, initials, name, date.
+       * @param {Object[]} letters Array of letter data objects
+       * @param {number} yearIndex
+       * @returns nothing
+       */
       function createSphere(letters, yearIndex) {
         for (let i = 0, l = letters.length; i < l; i++) {
           // <div class="element">
@@ -268,6 +313,7 @@ fetch("./letters_json_grouped_merged.json")
           const id = track(document.createElement("div"));
           id.className = "id";
           id.textContent = letters[i].idFormatted;
+          // click on id leads to propy platform
           id.setAttribute(
             "onclick",
             "window.open(' " + letters[i].propyURL + "')"
@@ -278,6 +324,7 @@ fetch("./letters_json_grouped_merged.json")
           const initials = track(document.createElement("div"));
           initials.className = "initials";
           initials.textContent = letters[i].receiverInitials;
+          // click on initials leads to gnd entry of person
           initials.setAttribute(
             "onclick",
             "window.open(' " + letters[i].receiverId + "')"
@@ -288,6 +335,7 @@ fetch("./letters_json_grouped_merged.json")
           const name = track(document.createElement("div"));
           name.className = "name";
           name.innerHTML = letters[i].receiverFormatted;
+          // click on name leads to gnd entry of person
           name.setAttribute(
             "onclick",
             "window.open(' " + letters[i].receiverId + "')"
@@ -300,34 +348,34 @@ fetch("./letters_json_grouped_merged.json")
           date.innerHTML = letters[i].dateFormatted;
           letterElement.appendChild(date);
 
-          // erstellt ein CSS3DObjekt aus Variable letterElement
+          // creates CSS3DObject form variable letterElement
           const objectCSS = track(new CSS3DObject(letterElement));
           objectCSS.name = letters[i].id;
 
-          // Berechnung von Winkeln, die für die Positionierung in sphärischem Koordinatensystem notwendig sind
-          // Basiert auf Index und Länge des Objekt-Arrays
+          // calculation of angles which are necessary for positioning objects in a spherical coordinate system
+          // based on index and length ob object array
           // phi = polar angle in radians from the y (up) axis
           // theta = equator angle in radians around the y (up) axis
           const phi = Math.acos(-1 + (2 * i) / l);
           const theta = Math.sqrt(l * Math.PI) * phi;
 
-          // Objekt (Element) wird in einem sphärischem Koordinatensystem d.h. auf der Kugel platziert
+          // object (element) is placed within a spherical coordinate system, i.e. is placed on a sphere
           // https://en.wikipedia.org/wiki/Spherical_coordinate_system
-          // Mehr Infos zu sphärischen Koordinaten in three.js: https://threejs.org/docs/index.html?q=vector#api/en/math/Spherical
-          // Parameter: radial distance from point to origin (Mittelpunkt), phi, theta
+          // spcherical coordinate system in three.js: https://threejs.org/docs/index.html?q=vector#api/en/math/Spherical
+          // parameter: radial distance from point to origin (Mittelpunkt), phi, theta
           objectCSS.position.setFromSphericalCoords(500, phi, theta);
 
-          // im Vektor wird die Position des Objekts gespeichert und skalar mit 2 multipliziert
+          // position of object is saved in vector and scalar multiplied by 2
           vector.copy(objectCSS.position).multiplyScalar(2);
 
-          // Objekt und Vektor schauen sich an
-          // Objekt wird so rotiert, dass siene interne Z-Achse zum Vektor zeigt
+          // object and vector face each other
+          // object is rotated so that its internal axis is facing the vector
           objectCSS.lookAt(vector);
           scene.add(objectCSS);
 
           objectCSS.position.y += 1200 * yearIndex;
 
-          // Objekt wird zum Sphären Array im Targets-Objekt hinzugefügt
+          // object added to targets.sphere
           targets.sphere.push(objectCSS);
         }
       }
@@ -338,6 +386,12 @@ fetch("./letters_json_grouped_merged.json")
 
     /* HELPER FUNCTIONS */
 
+    /**
+     * @function makeYearMarker
+     * @desc Creates css3D objects as yearMarkers and corresponding div.
+     * @param {string} year 
+     * @returns nothing
+     */
     function makeYearMarker(year, index) {
       const yearMarker = track(document.createElement("div"));
       yearMarker.className = "year";
@@ -351,7 +405,11 @@ fetch("./letters_json_grouped_merged.json")
       marker.position.y += 1200 * index;
     }
 
-    // remove chlildren of infobox div (needed when infobox is updated)
+     /**
+     * @function removeContentOfInfobox
+     * @desc Removes children of infobox div, i.e. removes the content of the infobox. This function is needed whenever the infobox should be updated.
+     * @returns nothing
+     */
     function removeContentOfInfobox() {
       const parent = document.getElementById("infobox");
 
@@ -363,7 +421,11 @@ fetch("./letters_json_grouped_merged.json")
 
     /* Helper functions for Filter */
 
-    // returns an array of all the letter objects (three.js objects) currently on the scene
+    /**
+     * @function getCurrentLetterObjectsOnScene
+     * @desc Goes through entire scene and makes an array of all the letter objects currently on the scene. Important: Not the curently visible objects. This function collects all the objects - visible and hidden.
+     * @returns CSS3DObject[]
+     */
     function getCurrentLetterObjectsOnScene() {
       let currentLetterObjectsOnScene = [];
       scene.children.forEach((child) => {
@@ -375,7 +437,11 @@ fetch("./letters_json_grouped_merged.json")
       return currentLetterObjectsOnScene;
     }
 
-    // returns an array of only the visible letter objects on the scene (property "visible" must be true)
+    /**
+     * @function getCurrentlyVisibleLetterObjectsOnScene
+     * @desc Goes through entire scene and makes an array of all the letter objects currently visible on the scene. Only the visible ones.
+     * @returns CSS3DObject[]
+     */
     function getCurrentlyVisibleLetterObjectsOnScene() {
       let currentlyVisibleLetterObjectsOnScene = [];
       scene.children.forEach((child) => {
@@ -387,8 +453,12 @@ fetch("./letters_json_grouped_merged.json")
       return currentlyVisibleLetterObjectsOnScene;
     }
 
-    // returns an array of all the ids of the letter objects passed as parameter
-    // parameter: array of letter objects
+     /**
+     * @function getIdsOfLetterObjects
+     * @desc Takes an array of letter objects and returns all the ids associated to these objects.
+     * @param {CSS3DObject[]} letterObjectsArray Array of letter objects
+     * @returns string[]
+     */
     function getIdsOfLetterObjects(letterObjectsArray) {
       let idsOfLetterObjects = [];
       letterObjectsArray.forEach((object) => {
@@ -399,8 +469,12 @@ fetch("./letters_json_grouped_merged.json")
       return idsOfLetterObjects;
     }
 
-    // retuns an array of all letters data associated to the letter objects (three.js objects)
-    // parameter: array with ids of letter objects
+    /**
+     * @function getletterDataOfLetterObjects
+     * @desc Takes an array of ids and gets all the letter data associated to these ids.
+     * @param {string[]} idsOfLetters Array of ids
+     * @returns Object.<string, string>
+     */
     function getletterDataOfLetterObjects(idsOfLetterObjects) {
       let letterDataArray = [];
 
@@ -419,7 +493,14 @@ fetch("./letters_json_grouped_merged.json")
       return letterDataArray;
     }
 
-    // changes color of letter object
+    /**
+     * @function changeLetterObjectColor
+     * @desc Changes color of a given letter object.
+     * @param {CSS3DObject[]} currentLetterObjectsOnScene Array of all letter objects currently on scene (visible and hidden)
+     * @param {string} id Id of the letter object which should be recolored.
+     * @param {color} color Color (rgb code)
+     * @returns nothing
+     */
     function changeLetterObjectColor(currentLetterObjectsOnScene, id, color) {
       // get letter object associated with the current id
       let currLetterObj = currentLetterObjectsOnScene.find(
@@ -429,7 +510,13 @@ fetch("./letters_json_grouped_merged.json")
       currLetterObj.element.style.backgroundColor = color;
     }
 
-    // hides letter object
+    /**
+     * @function hideLetterObject
+     * @desc Hides a given letter object.
+     * @param {CSS3DObject[]} currentLetterObjectsOnScene Array of all letter objects currently on scene (visible and hidden)
+     * @param {string} id Id of the letter object which should be hidden.
+     * @returns nothing
+     */
     function hideLetterObject(currentLetterObjectsOnScene, id) {
       // get letter object associated with the current id
       let currLetterObj = currentLetterObjectsOnScene.find(
@@ -438,7 +525,13 @@ fetch("./letters_json_grouped_merged.json")
       currLetterObj.visible = false;
     }
 
-    // shows letter object (after it had been hidden)
+    /**
+     * @function showLetterObject
+     * @desc Shows a given letter object after it has been hidden.
+     * @param {CSS3DObject[]} currentLetterObjectsOnScene Array of all letter objects currently on scene (visible and hidden)
+     * @param {string} id Id of the letter object which should be shown.
+     * @returns nothing
+     */
     function showLetterObject(currentLetterObjectsOnScene, id) {
       // get letter object associated with the current id
       let currLetterObj = currentLetterObjectsOnScene.find(
@@ -447,6 +540,12 @@ fetch("./letters_json_grouped_merged.json")
       currLetterObj.visible = true;
     }
 
+    /**
+     * @function getCheckboxGenderState
+     * @desc Checks whether the following checkboxes are checked: male, female, other. Creates an objects that contains the individual states but also a string of booleans representing the state of all these checkboxes: male-female-other. E.g. true-false-false = only male checkbox checked.
+     * @param {type} paramName Parameter description.
+     * @returns state object
+     */
     function getCheckboxGenderState() {
       let state = {
         male: $(".male").is(":checked"),
@@ -459,7 +558,12 @@ fetch("./letters_json_grouped_merged.json")
       return state;
     }
 
-    function genderFilter(){
+    /**
+     * @function genderFilter
+     * @desc Implements the functionalities of the gender filter. Chooses the functionality based on the state of the three gender checkboxes.
+     * @returns nothing
+     */
+    function genderFilter() {
       let state = getCheckboxGenderState();
 
       if ($(".filter").is(":checked")) {
@@ -510,7 +614,10 @@ fetch("./letters_json_grouped_merged.json")
           case "true-false-false":
             for (let i = 0; i < currentLetterObjectsOnScene.length; i++) {
               // hides all letters with non-male receivers
-              if (currentLetterObjectsOnScene[i].element.dataset.gender != "Männlich") {
+              if (
+                currentLetterObjectsOnScene[i].element.dataset.gender !=
+                "Männlich"
+              ) {
                 //console.log(i, "männlich");
                 hideLetterObject(
                   currentLetterObjectsOnScene,
@@ -530,13 +637,16 @@ fetch("./letters_json_grouped_merged.json")
           case "false-true-false":
             for (let i = 0; i < currentLetterObjectsOnScene.length; i++) {
               // hides all letters with non-male receivers
-              if (currentLetterObjectsOnScene[i].element.dataset.gender != "Weiblich") {
+              if (
+                currentLetterObjectsOnScene[i].element.dataset.gender !=
+                "Weiblich"
+              ) {
                 //console.log(i, "männlich");
                 hideLetterObject(
                   currentLetterObjectsOnScene,
                   lettersCurrentlyOnScene[i].id
                 );
-              }  else {
+              } else {
                 showLetterObject(
                   currentLetterObjectsOnScene,
                   lettersCurrentlyOnScene[i].id
@@ -551,14 +661,15 @@ fetch("./letters_json_grouped_merged.json")
             for (let i = 0; i < currentLetterObjectsOnScene.length; i++) {
               // hides all letters with non-male receivers
               if (
-                currentLetterObjectsOnScene[i].element.dataset.gender != "Keine Info"
+                currentLetterObjectsOnScene[i].element.dataset.gender !=
+                "Keine Info"
               ) {
                 //console.log(i, "männlich");
                 hideLetterObject(
                   currentLetterObjectsOnScene,
                   lettersCurrentlyOnScene[i].id
                 );
-              }  else {
+              } else {
                 showLetterObject(
                   currentLetterObjectsOnScene,
                   lettersCurrentlyOnScene[i].id
@@ -574,14 +685,15 @@ fetch("./letters_json_grouped_merged.json")
             for (let i = 0; i < currentLetterObjectsOnScene.length; i++) {
               // hides all letters with non-male receivers
               if (
-                currentLetterObjectsOnScene[i].element.dataset.gender == "Keine Info"
+                currentLetterObjectsOnScene[i].element.dataset.gender ==
+                "Keine Info"
               ) {
                 //console.log(i, "männlich");
                 hideLetterObject(
                   currentLetterObjectsOnScene,
                   lettersCurrentlyOnScene[i].id
                 );
-              }  else {
+              } else {
                 showLetterObject(
                   currentLetterObjectsOnScene,
                   lettersCurrentlyOnScene[i].id
@@ -595,7 +707,10 @@ fetch("./letters_json_grouped_merged.json")
           case "true-false-true":
             for (let i = 0; i < currentLetterObjectsOnScene.length; i++) {
               // hides all letters with non-male receivers
-              if (currentLetterObjectsOnScene[i].element.dataset.gender == "Weiblich") {
+              if (
+                currentLetterObjectsOnScene[i].element.dataset.gender ==
+                "Weiblich"
+              ) {
                 //console.log(i, "männlich");
                 hideLetterObject(
                   currentLetterObjectsOnScene,
@@ -615,7 +730,10 @@ fetch("./letters_json_grouped_merged.json")
           case "false-true-true":
             for (let i = 0; i < currentLetterObjectsOnScene.length; i++) {
               // hides all letters with non-male receivers
-              if (currentLetterObjectsOnScene[i].element.dataset.gender == "Männlich") {
+              if (
+                currentLetterObjectsOnScene[i].element.dataset.gender ==
+                "Männlich"
+              ) {
                 //console.log(i, "männlich");
                 hideLetterObject(
                   currentLetterObjectsOnScene,
@@ -639,15 +757,15 @@ fetch("./letters_json_grouped_merged.json")
     }
 
     /**
-     * Steuerungselemente
+     * Filter controls
      */
 
-    /* Dialog-Box (Infos zur Benutzung der Einzelansicht) */
+    /* Dialog-Box (Information on how to use the single place view) */
     $(function () {
       $("#dialog").dialog();
     });
 
-    /** Slider: Zeitfilter */
+    /** Slider: Time filter */
 
     // get year range from start and end date
     function range(start, end) {
@@ -689,7 +807,7 @@ fetch("./letters_json_grouped_merged.json")
           makeInfoBox();
         },
       });
-      
+
       console.log("Ready");
 
       $("#amount").val(
@@ -699,11 +817,10 @@ fetch("./letters_json_grouped_merged.json")
           $("#slider-range").slider("values", 1)
       );
     });
-    
 
-    /* Briefstatus-Filter */
+    /* Letter Status Filter */
 
-    /* 1.) Farbliche Hervorhebung */
+    /* 1.) Color Highlighting */
 
     // SENT
     $(".sent").change(function () {
@@ -785,7 +902,7 @@ fetch("./letters_json_grouped_merged.json")
       }
     });
 
-    /* 2.) Filter-Modus */
+    /* 2.) Filter Mode */
 
     // SENT
     $(".sent").change(function () {
@@ -864,9 +981,9 @@ fetch("./letters_json_grouped_merged.json")
       makeInfoBox();
     });
 
-    /* Documenttyp-Filter */
+    /* Document Type Filter */
 
-    /* 1.) Farbliche Hervorhebung */
+    /* 1.) Color Highlighting */
 
     // LETTERS
     $(".goetheletter").change(function () {
@@ -948,7 +1065,7 @@ fetch("./letters_json_grouped_merged.json")
       }
     });
 
-    /* 2.) Filter-Modus */
+    /* 2.) Filter Mode */
 
     // LETTERS
     $(".goetheletter").change(function () {
@@ -1027,9 +1144,9 @@ fetch("./letters_json_grouped_merged.json")
       makeInfoBox();
     });
 
-    /* Personen-Filter */
+    /* Gender Filter */
 
-    /* 1.) Farbliche Hervorhebung */
+    /* 1.) Color Highlighting */
 
     // MALE
     $(".male").change(function () {
@@ -1208,7 +1325,7 @@ fetch("./letters_json_grouped_merged.json")
       }
     });
 
-    /* 2.) Filter-Modus */
+    /* 2.) Filter Mode */
 
     // MALE
     $(".male").change(function () {
@@ -1218,16 +1335,16 @@ fetch("./letters_json_grouped_merged.json")
       genderFilter();
     });
 
-     // FEMALE
-     $(".female").change(function () {
+    // FEMALE
+    $(".female").change(function () {
       // remove content of infobox
       removeContentOfInfobox();
 
       genderFilter();
     });
 
-     // OTHER
-     $(".other").change(function () {
+    // OTHER
+    $(".other").change(function () {
       // remove content of infobox
       removeContentOfInfobox();
 
@@ -1238,6 +1355,11 @@ fetch("./letters_json_grouped_merged.json")
      * Infobox
      */
 
+    /**
+     * @function getLetterDataOfLetterObjectsCurrentlyVisibleOnScene
+     * @desc This functions returns the data of the letters associated to all the letter object currently visible on the scene. 
+     * @returns Object.<string,string>[]
+     */
     function getLetterDataOfLetterObjectsCurrentlyVisibleOnScene() {
       let currentlyVisibleLetterObjectsOnScene =
         getCurrentlyVisibleLetterObjectsOnScene();
@@ -1253,7 +1375,11 @@ fetch("./letters_json_grouped_merged.json")
       return letterDataOfCurrentlyVisibleLettersOnScene;
     }
 
-    // Gesamtanzahl Briefe
+    /**
+     * @function getNumLetters
+     * @desc This function returns how many letters are currently visible on the scene.
+     * @returns number
+     */
     function getNumLetters() {
       const lettersCurrentlyOnScene =
         getLetterDataOfLetterObjectsCurrentlyVisibleOnScene();
@@ -1261,7 +1387,11 @@ fetch("./letters_json_grouped_merged.json")
       return numLetters;
     }
 
-    // Anzahl gesendete Briefe
+    /**
+     * @function getNumSent
+     * @desc This function returns how many letters with status "sent" are currently visible on the scene.
+     * @returns number
+     */
     function getNumSent() {
       const lettersCurrentlyOnScene =
         getLetterDataOfLetterObjectsCurrentlyVisibleOnScene();
@@ -1274,7 +1404,11 @@ fetch("./letters_json_grouped_merged.json")
       return numSent;
     }
 
-    // Anzahl empfangene Briefe
+    /**
+     * @function getNumReceived
+     * @desc This function returns how many letters with status "received" are currently visible on the scene.
+     * @returns number
+     */
     function getNumReceived() {
       const lettersCurrentlyOnScene =
         getLetterDataOfLetterObjectsCurrentlyVisibleOnScene();
@@ -1287,7 +1421,11 @@ fetch("./letters_json_grouped_merged.json")
       return numReceived;
     }
 
-    // Anzahl Briefe mit weiblichen Adressatinnen
+    /**
+     * @function getNumFemale
+     * @desc This function returns how many letters with gender of receiver "female" are currently visible on the scene.
+     * @returns number
+     */
     function getNumFemale() {
       const lettersCurrentlyOnScene =
         getLetterDataOfLetterObjectsCurrentlyVisibleOnScene();
@@ -1300,7 +1438,11 @@ fetch("./letters_json_grouped_merged.json")
       return numFemale;
     }
 
-    // Anzahl Briefe mit männlichen Adressaten
+    /**
+     * @function getNumMale
+     * @desc This function returns how many letters with gender of receiver "male" are currently visible on the scene.
+     * @returns number
+     */
     function getNumMale() {
       const lettersCurrentlyOnScene =
         getLetterDataOfLetterObjectsCurrentlyVisibleOnScene();
@@ -1313,7 +1455,11 @@ fetch("./letters_json_grouped_merged.json")
       return numMale;
     }
 
-    // Anzahl Briefe mit Adressaten unbekannten Geschlechts
+    /**
+     * @function getNumOther
+     * @desc This function returns how many letters with gender of receiver "Keine Info"/other are currently visible on the scene.
+     * @returns number
+     */
     function getNumOther() {
       const lettersCurrentlyOnScene =
         getLetterDataOfLetterObjectsCurrentlyVisibleOnScene();
@@ -1326,6 +1472,11 @@ fetch("./letters_json_grouped_merged.json")
       return numOther;
     }
 
+    /**
+     * @function makeInfoBox
+     * @desc Creates the p-Tags with the content of the infobox.
+     * @returns nothing
+     */
     function makeInfoBox() {
       const numLetters = getNumLetters();
       const numSent = getNumSent();
@@ -1562,15 +1713,13 @@ fetch("./letters_json_grouped_merged.json")
       windowHalfY: window.innerHeight / 2,
     };
 
-    // Hiermit werden die Mauskoordinaten je nach Position geupdated
+    // update mouse coordinates according to mouse position on screen
     document.addEventListener("mousemove", (e) => {
       mousemove.mouseX = e.clientX - mousemove.windowHalfX;
       mousemove.mouseY = e.clientY - mousemove.windowHalfY;
-      // der Raycaster benötigt ein normalisiertes Koordinatensystem auf Basis
-      // der Bildschrimkoordinaten des Mauszeigers
-      // der Raycaster wird innerhalb des Animations-Loops mit den jeweils aktuellen
-      // Koordinaten neu gesetzt (siehe unten)
-      // Teilen durch innerWidth und Multiplizieren mit 2-1 sorgt dafür, dass x und y Werte von -1 bis 1 annehmen können
+      // raycaster needs a normalized coordinate system based on coordinates of mouse pointer
+      // raycaster is newly set within each animation loop according to the updated mouse coordinates (see below)
+      // division by innerWidth/innerHeight and multiplication with 2-1/2+1 turns x and y into values between -1 and 1
       mousemove.normalizedMouse.x = (e.clientX / window.innerWidth) * 2 - 1;
       mousemove.normalizedMouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
     });

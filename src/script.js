@@ -2,6 +2,7 @@
  *  @fileOverview This js-file creates the map view.
  *
  *  @author       Marina Lehmann
+ *  @author       Max Grüntgens
  *
  *  @requires     NPM:three.js
  *  @requires     NPM:dat.gui
@@ -669,7 +670,7 @@ fetch("./letters_json_grouped_merged.json")
      * @function makeSpheresForMap
      * @desc Plots a sphere of planes around each pivot point (yearMarker). Calls functions to make the planes and the text objects on the planes (idText, initialsText, firstNameText, lastNameText, dateText).
      * @param {Mesh} pivot Point around which sphere will be centered, here: yearMarker.
-     * @param {Object.<string, string>[]} letters Array of letter objects associated to a certain year.
+     * @param {Object[]} letters Array of letter objects associated to a certain year.
      * @returns nothing
      */
     function makeSpheresForMap(pivot, letters) {
@@ -1457,7 +1458,7 @@ fetch("./letters_json_grouped_merged.json")
     }
 
     /**
-     * @function correctPositionWiesbaden(
+     * @function correctPositionWiesbaden
      * @desc When creating the basemap, the placeMarker for Wiesbaden was not positioned directly on the map. This function corrects its position.
      * @returns nothing
      */
@@ -1645,7 +1646,6 @@ fetch("./letters_json_grouped_merged.json")
      * @param {string[]} idsOfLetters Array of ids
      * @returns Object.<string, string>
      */
-
     function getletterDataOfPlanes(idsOfLetters) {
       let letterDataArray = [];
 
@@ -2378,7 +2378,7 @@ fetch("./letters_json_grouped_merged.json")
 
     /**
      * @function getLetterDataOfPlanesCurrentlyVisibleOnScene
-     * @desc This functions returns the data of the letters associated to all the planes currently visible on the scene. 
+     * @desc This functions returns the data of the letters associated to all the planes currently visible on the scene.
      * @returns Object.<string,string>[]
      */
     function getLetterDataOfPlanesCurrentlyVisibleOnScene() {
@@ -2393,7 +2393,7 @@ fetch("./letters_json_grouped_merged.json")
       return letterDataOfCurrentlyVisiblePlanesOnScene;
     }
 
-/**
+    /**
      * @function getNumLetters
      * @desc This function returns how many letters are currently visible on the scene.
      * @returns number
@@ -2696,10 +2696,10 @@ fetch("./letters_json_grouped_merged.json")
     // Raycast only activated on mousclick
     document.addEventListener("click", (e) => {
       // raycaster returns an array (intersects) of objects which have been hit by the ray
-      
+
       console.log("targets clickable", targets.clickable);
       let intersects = raycaster.intersectObjects(targets.clickable);
-      
+
       // if intersects.length = 0, no objects were hit
       // if (length > 0), "Klick" plus the object(s) which have been hit are logged
       if (intersects.length > 0) {
@@ -2793,9 +2793,8 @@ fetch("./letters_json_grouped_merged.json")
 
       const elapsedTime = clock.getElapsedTime();
 
-
       // Raycaster
-      // update raycaster according to current mouse coordinates 
+      // update raycaster according to current mouse coordinates
       // so that the ray is cast from the right position
       raycaster.setFromCamera(mousemove.normalizedMouse, camera);
 
