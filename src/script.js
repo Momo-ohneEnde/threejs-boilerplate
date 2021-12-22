@@ -1,4 +1,4 @@
-/** 
+/**
  *  @fileOverview This js-file creates the map view.
  *
  *  @author       Marina Lehmann
@@ -14,6 +14,7 @@
 /*
  * Imports
  */
+
 import "./style.css";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
@@ -37,7 +38,6 @@ fetch("./letters_json_grouped_merged.json")
     return data;
   })
   .then((data) => {
-
     /*
      * Settings
      */
@@ -50,7 +50,7 @@ fetch("./letters_json_grouped_merged.json")
      * Sizes
      */
 
-    // Größe des canvas, auf dem gerendert wird
+    // size of canvas on which objects are rendered
     const sizes = {
       width: window.innerWidth,
       height: 1000,
@@ -65,10 +65,10 @@ fetch("./letters_json_grouped_merged.json")
 
     /**
      * Renderer
-     * 
+     *
      * @desc This function creates the WebGL renderer used by the map view. The renderer uses the canvas element to display the rendered objects.
      * @function renderer
-     * @returns WebGLRenderer
+     * @returns THREE.WebGLRenderer
      */
     let renderer = (() => {
       let renderer = new THREE.WebGLRenderer({
@@ -89,20 +89,26 @@ fetch("./letters_json_grouped_merged.json")
      */
     const scene = new THREE.Scene();
 
-    /**
+    /*
      * Variables
      */
-    const targets = { table: [], sphere: [], helix: [], clickable: [] };
 
+    // clickable = array of clickable objects
+    const targets = { clickable: [] };
+
+    // range that is currently set in the time filter, default: 1764-1772, is later overwritten when time filter is used
     let timeFilterRange = range(1764, 1772);
 
-    /**
+    /*
      * Data and Main Functions
      */
 
-    /* CLEAR - dispose objects when changing views */
-
-    // clear function
+    /**
+     * Clear function
+     * @desc This function disposes of the objects on the canvas by using the class ResourceTracker. It is called when changing between different versions of the map view (kugel, sphere, helix).
+     * @function clearCanvas
+     * @returns nothing
+     */
     function clearCanvas() {
       //resourceTracker.logResources();
       resourceTracker.dispose();
@@ -113,31 +119,42 @@ fetch("./letters_json_grouped_merged.json")
       //resourceTracker.logResources();
     }
 
-    /* Allgemeines Vorgehen, um Elemente aus der Szene zu löschen: 
-      1.) Komplette Szene durchgehen, 
-      2.) alle Elemente in Szene von der Szene entfernen mit remove(), 
-      3.) dann mit dispose() aus dem Speicher löschen, bzw. geometry, material, textures müssen auch einzeln gelöscht werden
+    /* How to delete objects form the scene (general process): 
+      1.) go through the entire scene
+      2.) remove all elements on the scene with remove(), 
+      3.) then delete them from memory with dispose(). Important: geometry, material, texture must be deleted separately.
      */
 
-    /* Vorgehen mit Resource Tracker:
-     * Tracker legt ein Set mit zu löschenden Objekten an
-     * Tracker hat eine track-function, mit der Objekte in das Set aufgenommen werden
-     * d.h. immer wenn ein neues Objekt erstellt wird, dann muss es von der Funktion track() umschlossen werden
-     * am Ende kann dann dispose() auf das Set angewandt werden, sodass alle Objekte gleichzeitig gelöscht werden
+    /* Deletion process with ResourceTracker class:
+     * Tracker creates a Set of the objects to be deleted later
+     * Tracker has a track-function, with which objects can be added to the set. Objects should be tracked with this function directly when they are created.
+     * i.e. when a new object is created, it must always be surrounded by track(), e.g. const yearboundaryText = track(new Text());
+     * When the canvas/scene should be cleared, dispose() can be used to delete all objects currently in the Set at the same time
      */
 
-    // resource tracker class (tracks objects which will be removed later)
+    /**
+     * ResourceTracker
+     * @classdesc A class to track the objects which will be removed from the scene when views change.
+     * @class ResourceTracker
+     */
     class ResourceTracker {
       constructor() {
         this.resources = new Set();
       }
+
+      /**
+       * @desc Tracks objects, i.e. adds them to the resourceTracker Set. Belongs to class ResourceTracker.
+       * @function track
+       * @param {} resource Parameters can be all kinds of objects.
+       * @returns resource
+       */
       track(resource) {
         // check whether resource is undefined or null
         if (!resource) {
           return resource;
         }
 
-        // handle children and when material is an array of materials or
+        // handle children and handle other arrays, i.e. when material is an array of materials or
         // uniform is array of textures
         if (Array.isArray(resource)) {
           resource.forEach((resource) => this.track(resource));
@@ -149,19 +166,19 @@ fetch("./letters_json_grouped_merged.json")
           this.resources.add(resource);
         }
 
-        // geometry, material and possible children of an Object3D must be tracked (and then disposed of) separately
+        // geometry, material and possible children of an object must be tracked (and then disposed of) separately
         if (resource instanceof THREE.Object3D) {
           this.track(resource.geometry);
           this.track(resource.material);
           this.track(resource.children);
         } else if (resource instanceof THREE.Material) {
-          // We have to check if there are any textures on the material
+          // check if there are any textures on the material
           for (const value of Object.values(resource)) {
             if (value instanceof THREE.Texture) {
               this.track(value);
             }
           }
-          // We also have to check if any uniforms reference textures or arrays of textures
+          // check if any uniforms reference textures or arrays of textures
           if (resource.uniforms) {
             for (const value of Object.values(resource.uniforms)) {
               if (value) {
@@ -178,9 +195,22 @@ fetch("./letters_json_grouped_merged.json")
         }
         return resource;
       }
+
+      /**
+       * @desc Untracks objects, i.e. removes them from the resourceTracker Set. Belongs to class ResourceTracker.
+       * @function untrack
+       * @param {} resource Parameters can be all kinds of objects.
+       * @returns nothing
+       */
       untrack(resource) {
         this.resources.delete(resource);
       }
+
+      /**
+       * @desc Deletes all tracked objects, i.e. empties the resourceTracker Set. Belongs to class ResourceTracker.
+       * @function dispose
+       * @returns nothing
+       */
       dispose() {
         for (const resource of this.resources) {
           if (resource instanceof THREE.Object3D) {
@@ -194,46 +224,43 @@ fetch("./letters_json_grouped_merged.json")
         }
         this.resources.clear();
       }
+
       logResources() {
         console.log("Resources of Tracker", this.resources);
       }
     }
 
-    // set up resource tracker and bind tracking method
+    // set up resource tracker and bind tracking method to track() (function can be used without referencing the class first)
     const resourceTracker = new ResourceTracker();
     const track = resourceTracker.track.bind(resourceTracker);
 
     /* INIT */
+    /**
+     * @desc Initializes the visualization by creating the default map view: kugel view.
+     * @function init
+     * @returns nothing
+     */
     function init() {
-      // default: Kugelansicht
+      // default: kugel view
       mapViewKugeln(timeFilterRange);
     }
     init();
 
     /* BUTTONS */
-    // Kugel-Button ->Wechsel zu Kugelansicht(Karte)
+    // KUGEL BUTTON -> change to kugel view
     const kugelButton = document.getElementById("kugel");
 
     kugelButton.onclick = () => {
       // clear canvas
       clearCanvas();
 
-      // create Kugelansicht
+      // create kugel view
       mapViewKugeln(timeFilterRange);
-
-      // reset all color filters
-      /* const checkboxes = document.querySelectorAll('input[type=checkbox]');
-
-      checkboxes.forEach((checkbox) => {
-        checkbox.checked = false;
-      }) */
-
-      //$("#checkbox").prop("unchecked", true);
 
       console.log("Wechsel zu Kugelansicht!");
     };
 
-    // Sphären-Button -> Wechsel zu Spährenansicht (Karte)
+    // SPHERE BUTTON -> change to sphere view
     const sphereButton = document.getElementById("sphere");
     sphereButton.onclick = () => {
       // clear canvas
@@ -242,13 +269,13 @@ fetch("./letters_json_grouped_merged.json")
       // remove content of infobox
       removeContentOfInfobox();
 
-      // create Sphärenansicht
+      // create sphere view
       mapViewSpheres(timeFilterRange);
 
       console.log("Wechsel zu Sphärenansicht!");
     };
 
-    // Helix-Buttton -> Wechsel zu Helixansicht (Karte)
+    // HELIX BUTTON -> change to helix view
     const helixButton = document.getElementById("helix");
 
     helixButton.onclick = () => {
@@ -258,7 +285,7 @@ fetch("./letters_json_grouped_merged.json")
       // remove content of infobox
       removeContentOfInfobox();
 
-      // create Helixansicht
+      // create helix view
       mapViewHelix(timeFilterRange);
 
       console.log("Wechsel zu Helixansicht!");
@@ -266,8 +293,14 @@ fetch("./letters_json_grouped_merged.json")
 
     /* CREATE MAP VIEWS */
 
-    /* 1) Default: Kugelansicht */
-    // Karte laden, dann Aufruf von makeKugeln()
+    /* 1) Default: Kugel View */
+
+    /**
+     * @function mapViewKugeln
+     * @desc Creates kugel view. 1) Sets view id to "kugel" 2) sets visibility of filter controls to hidden 3) loads gltf basemap and adds it to scene 4) calls function to make kugeln 5) makes objects on scene clickable
+     * @param {string[]} yearArray Year range set by the time filter.
+     * @returns nothing
+     */
     function mapViewKugeln(
       yearArray = [
         "1764",
@@ -284,7 +317,7 @@ fetch("./letters_json_grouped_merged.json")
       // set view id to "kugel"
       setViewId("kugel");
 
-      // Sichtbarkeit Steuerungselemente
+      // set visibility of filter controls
       document.getElementById("filter-mode").style.visibility = "hidden";
       document.getElementById("letter-status-filter").style.visibility =
         "hidden";
@@ -292,8 +325,8 @@ fetch("./letters_json_grouped_merged.json")
       document.getElementById("person-filter").style.visibility = "hidden";
       document.getElementById("infobox").style.visibility = "hidden";
 
-      const roughnessMipmapper = new RoughnessMipmapper(renderer);
       // load gltf basemap
+      const roughnessMipmapper = new RoughnessMipmapper(renderer);
       const loader = new GLTFLoader();
       loader.load("/gltf/goethe_basemap.glb", function (gltf) {
         gltf.scene.traverse(function (child) {
@@ -327,19 +360,24 @@ fetch("./letters_json_grouped_merged.json")
       });
     }
 
-    /* 2) Briefnetz-Ansicht */
+    /* 2) Lettter Network View */
 
     function mapViewLetterNetwork() {
       // Code
-      // Karte laden
-      // Aufruf von makeLetterNetwork()
+      // not yet implemented
     }
 
-    /* 3) Sphären-Ansicht*/
+    /* 3) Sphere View*/
 
     // vector to which the planes will be facing
     const vector = new Vector3();
 
+    /**
+     * @function mapViewSpheres
+     * @desc Creates sphere view. 1) sets view id to "sphere" 2) sets visibility of filter controls to visible 3) loads gltf basemap and adds it to scene 4) calls function to add yearMarker and spheres 5) make infobox
+     * @param {string[]} yearArray Year range set by the time filter.
+     * @returns nothing
+     */
     function mapViewSpheres(
       yearArray = [
         "1764",
@@ -356,7 +394,7 @@ fetch("./letters_json_grouped_merged.json")
       // set view id to "sphere"
       setViewId("sphere");
 
-      // Sichtbarkeit Steuerungselemente
+      // set visibility of filter controls
       document.getElementById("filter-mode").style.visibility = "visible";
       document.getElementById("letter-status-filter").style.visibility =
         "visible";
@@ -364,8 +402,8 @@ fetch("./letters_json_grouped_merged.json")
       document.getElementById("person-filter").style.visibility = "visible";
       document.getElementById("infobox").style.visibility = "visible";
 
-      const roughnessMipmapper = new RoughnessMipmapper(renderer);
       // load gltf basemap
+      const roughnessMipmapper = new RoughnessMipmapper(renderer);
       const loader = new GLTFLoader();
       loader.load("/gltf/goethe_basemap.glb", function (gltf) {
         gltf.scene.traverse(function (child) {
@@ -381,6 +419,7 @@ fetch("./letters_json_grouped_merged.json")
         // debug: log scene graph
         console.log("Scene: ", scene);
 
+        // add yearmarker and spheres
         loopYearMarker(addYearMarkerAndSpheres, yearArray);
 
         // correct position of placemarker "Wiesbaden"
@@ -396,7 +435,14 @@ fetch("./letters_json_grouped_merged.json")
       });
     }
 
-    /* 4) Helix-Ansicht */
+    /* 4) Helix View */
+
+    /**
+     * @function mapViewHelix
+     * @desc Creates helix view. 1) sets view id to "helix" 2) sets visibility of filter controls to visible 3) load gltf basemap and add it to scene 4) call function that adds helix 5) make infobox
+     * @param {string[]} yearArray Year range set by the time filter.
+     * @returns nothing
+     */
     function mapViewHelix(
       yearArray = [
         "1764",
@@ -413,7 +459,7 @@ fetch("./letters_json_grouped_merged.json")
       // set view id to "helix"
       setViewId("helix");
 
-      // Sichtbarkeit Steuerungselemente
+      // visibility of filter controls
       document.getElementById("filter-mode").style.visibility = "visible";
       document.getElementById("letter-status-filter").style.visibility =
         "visible";
@@ -421,8 +467,8 @@ fetch("./letters_json_grouped_merged.json")
       document.getElementById("person-filter").style.visibility = "visible";
       document.getElementById("infobox").style.visibility = "visible";
 
-      const roughnessMipmapper = new RoughnessMipmapper(renderer);
       // load gltf basemap
+      const roughnessMipmapper = new RoughnessMipmapper(renderer);
       const loader = new GLTFLoader();
       loader.load("/gltf/goethe_basemap.glb", function (gltf) {
         gltf.scene.traverse(function (child) {
@@ -438,6 +484,7 @@ fetch("./letters_json_grouped_merged.json")
         // debug: log scene graph
         console.log("Scene", scene);
 
+        // add helix
         loopPlaceMarker(addHelixtoPlaceMarker, yearArray);
 
         // correct position of placemarker "Wiesbaden"
@@ -453,15 +500,21 @@ fetch("./letters_json_grouped_merged.json")
 
     /* FUNCTIONS FOR MAP VIEW */
 
-    /* 1) Kugeln */
-    // wird in init aufgerufen
+    /* 1) Functions for KUGEL VIEW */
+
+    /**
+     * @function makeKugeln
+     * @desc Creates kugeln plus markers showing the number of letters.
+     * @param {Object3D} placeMarker Placename object on map
+     * @param {Object.<string, Object>} city data for a specific city
+     * @param {string[]} yearArray Year range set by the time filter.
+     * @returns nothing
+     */
     function makeKugeln(placeMarker, city, yearArray) {
-      // erhält übergeben: placeMarker, Ortsobjekt, yearArray
-      // Iteration über Jahre, dann Objekten in Jahren
-      // Anzahl der Objekte ermitteln
+      // iterates over years, then over letter objects of each year, then counts number of letter objects
       let letterCount = 0;
       yearArray.forEach((year) => {
-        // Bedingung: Jahreszahl aus dem übergebenen yearArray (Infos aus Zeitfilter) in den Daten vorhanden sein, sonst undefined Error
+        // condition: year of yearArray must also be a key in the city data, i.e. threre must be data points for the year (otherwise: undefined error)
         if (Object.keys(city).includes(year)) {
           let yearArrayData = city[`${year}`];
           // loop over array with letter data
@@ -472,10 +525,10 @@ fetch("./letters_json_grouped_merged.json")
       });
       //console.log(letterCount);
 
-      // Anzahl der Objekte als Textobjekt
+      // create number of letter objects as text object
       const letterNumMarker = makeLetterNumMarker(letterCount);
 
-      // determins radius of kugel with interpolation
+      // determines radius of kugel with interpolation
       function getRadius() {
         // d3.scaleSequencial = generator for scaling function
         // maps a domain (here: range of numbers, namely the max and min number of letters per place)
@@ -489,17 +542,17 @@ fetch("./letters_json_grouped_merged.json")
         return radius;
       }
 
-      // Kugel mit three.js erstellen
+      // make kugel by using the calculated radius based on number of letters
       const kugel = makeKugel(getRadius());
 
-      // Kugel auf Karte platzieren
+      // place kugel on map
       placeMarker.add(kugel);
-      // Kugel positionieren
+      // position kugel
       kugel.position.y = getRadius() + 0.5;
 
-      // Text auf Kugel
+      // put text on kugel
       kugel.add(letterNumMarker);
-      //Text positionieren
+      // position text
       letterNumMarker.position.y = 0.5;
       letterNumMarker.position.x = -0.2;
       letterNumMarker.position.z = getRadius();
@@ -532,8 +585,13 @@ fetch("./letters_json_grouped_merged.json")
         .name(`z_${letterNumMarker.name}`); */
     }
 
+    /**
+     * @function getMaxLettersPerPlace
+     * @desc This function returns the highest number of letters associated to a place.
+     * @returns maximum number of letters
+     */
     function getMaxLettersPerPlace() {
-      // iteration über Orte, Anzahl der Briefe zählen, in Array schreiben, dann max()
+      // iteration over places, count number of letters, write to array, then max()
       let letterCount = 0;
       let letterCountArray = [];
       let maxLettersPerPlace = 0;
@@ -549,12 +607,18 @@ fetch("./letters_json_grouped_merged.json")
         letterCountArray.push(letterCount);
         letterCount = 0;
       });
+
       //console.log(letterCountArray);
       maxLettersPerPlace = Math.max(...letterCountArray);
       //console.log(maxLettersPerPlace);
       return maxLettersPerPlace;
     }
 
+    /**
+     * @function getMinLettersPerPlace
+     * @desc This function returns the lowest number of letters associated to a place.
+     * @returns minimum number of letters
+     */
     function getMinLettersPerPlace() {
       let letterCount = 0;
       let letterCountArray = [];
@@ -571,16 +635,24 @@ fetch("./letters_json_grouped_merged.json")
         letterCountArray.push(letterCount);
         letterCount = 0;
       });
+
       //console.log(letterCountArray);
       minLettersPerPlace = Math.min(...letterCountArray);
       //console.log(minLettersPerPlace);
       return minLettersPerPlace;
     }
 
-    // implementation of functionForLoop in loop over placemarker
+    /**
+     * @function addKugeltoPlaceMarker
+     * @desc This function is an implementation of functionForLoop executed in the loopPlaceMarker function. It adds kugeln to placemarkers.
+     * @param {Object3D} placeMarker Placename object on map
+     * @param {string[]} yearArray Year range set by the time filter.
+     * @returns nothing
+     */
+
     function addKugeltoPlaceMarker(placeMarker, yearArray) {
       try {
-        const city = data[placeMarker.name]; // saves name of place from json data
+        const city = data[placeMarker.name]; // data associated to a place
         //console.log(city, placeMarker.name); // logs city names
 
         makeKugeln(placeMarker, city, yearArray);
@@ -589,12 +661,17 @@ fetch("./letters_json_grouped_merged.json")
       }
     }
 
-    /* 2) Briefnetz */
+    /* 2) Functions for LETTER NETWORK VIEW */
 
-    /* 3) Sphären */
-    // wird bei Klick auf Button Sphäre ausgeführt
-    // Plots a sphere around each pivot point (year)
-    // i = index position, l = length of dataset, pivot = point around which sphere will be centered
+    /* 3) Functions for SPHERE VIEW */
+
+    /**
+     * @function makeSpheresForMap
+     * @desc Plots a sphere of planes around each pivot point (yearMarker). Calls functions to make the planes and the text objects on the planes (idText, initialsText, firstNameText, lastNameText, dateText).
+     * @param {Mesh} pivot Point around which sphere will be centered, here: yearMarker.
+     * @param {Object.<string, string>[]} letters Array of letter objects associated to a certain year.
+     * @returns nothing
+     */
     function makeSpheresForMap(pivot, letters) {
       for (let i = 0, l = letters.length; i < l; i++) {
         /* 
@@ -817,22 +894,20 @@ fetch("./letters_json_grouped_merged.json")
         /* const myText = new Text();
         pivot.add(myText);
  */
-        //
-
-        // ???
-        const object = track(new THREE.Object3D());
-        // Objekte werden in das table Array des targets-Objekts aufgenommen
-        targets.table.push(object);
       }
     }
 
-    // implementation of functionForLoop in loop over yearMarkers
+    /**
+     * @function addYearMarkerAndSpheres
+     * @desc This function is an implementation of functionForLoop executed in the loopYearMarker function. It adds spheares and yearMarkers to the given placeMarker. It calls the functions makeYearMarker and makeSpheresForMap.
+     * @param {Object3D} placeMarker Placename object on map
+     * @param {Object.<string, Object>} city data for a specific city
+     * @param {string} year
+     * @param {number} index
+     * @returns return value
+     */
     function addYearMarkerAndSpheres(placeMarker, city, year, index) {
-      let yearsOfCity = Object.keys(city); // save years associated to each city in an Array
-
-      // test: little spheres in middle instead of text with year
-      //let s = sphere(0.1);
-      //s.position.y += 1 + index * 2.5;
+      let yearsOfCity = Object.keys(city); // save years associated to the city in an Array
 
       // create text object
       const yearMarker = makeYearMarker(year, index);
@@ -853,7 +928,14 @@ fetch("./letters_json_grouped_merged.json")
     }
 
     /* 4) Helix */
-    // implementation of functionForLoop in loop over placemarker
+
+    /**
+     * @function addHelixtoPlaceMarker
+     * @desc This functions is an implementation of functionForLoop in loopPlaceMarker. It calls the function makeHelixForMap. It adds the helix to the given placeMarker.
+     * @param {Object3D} placeMarker Placename object on map
+     * @param {string[]} yearArray Year range set by the time filter.
+     * @returns nothing
+     */
     function addHelixtoPlaceMarker(placeMarker, yearArray) {
       try {
         const city = data[placeMarker.name]; // saves name of place from json data
@@ -865,6 +947,14 @@ fetch("./letters_json_grouped_merged.json")
       }
     }
 
+    /**
+     * @function makeHelixForMap
+     * @desc Creates Helix consisting of planes.
+     * @param {Object3D} placeMarker Placename object on map
+     * @param {Object.<string, Object>} city data for a specific city
+     * @param {string[]} yearArray Year range set by the time filter
+     * @returns nothing
+     */
     function makeHelixForMap(placeMarker, city, yearArray) {
       // height of previous helix, starting point to from which helix is built
       let old_h = 0.0;
@@ -873,16 +963,7 @@ fetch("./letters_json_grouped_merged.json")
       yearArray.forEach((year, yearindex) => {
         // array of years
         let letters = city[`${year}`];
-        /**
- * .map((n) => {
-          
-          if(n.hasOwnProperty('day')){
-            return n;
-          } else {
-            return {...n, day: "0"};
-          }
-        }).sort((a,b) => a.day > b.day).sort((a,b) => a.month > b.month)
- */
+
         // if there are no letters for a year, the letters variable is undefined
         // in this case an array with only one yearboundary object needs to be created
         if (letters == undefined) {
@@ -931,7 +1012,7 @@ fetch("./letters_json_grouped_merged.json")
               plane.name = `${id}`;
 
               // calculate helix
-              // die Höhe wird hier größer gesetzt als bei den anderen planes, damit die yearmarker nicht zu nah übereinander sitzen
+              // height is bigger in this case so that yearMarkers are not too close together
               h = n / 2;
               theta = (2 * Math.PI * i) / n;
               y = (h * i) / n + old_h;
@@ -1103,17 +1184,17 @@ fetch("./letters_json_grouped_merged.json")
             }
           }
         }
-
-        // loop over letters and create helix
-        //for (let i = 0, l = letters.length; i < l; i++) {
-        /* 
-        create planes and position them as a helix 
-      */
       });
     }
 
     /* 5.) Helper Functions for Map View */
 
+    /**
+     * @function setViewId
+     * @desc Sets name of div with id="viewId" to the given name. Div is necessary to check which map view is currently displayed and to choose the according settings.
+     * @param {string} viewName name of the current view: either "kugel", "sphere" or "helix"
+     * @returns nothing
+     */
     function setViewId(viewName) {
       // if there is no div with id "viewId" -> create dif
       if (!document.getElementById("viewId")) {
@@ -1132,16 +1213,21 @@ fetch("./letters_json_grouped_merged.json")
       }
     }
 
+    /**
+     * @function makeClickable
+     * @desc Makes objcts clickable by adding them to the targets.clickable array which communicates with the raycaster.
+     * @param {*} obj Any object that should be clickable.
+     * @param {isArray} boolean True if obj is an array of multiple objects.
+     * @returns nothing
+     */
     function makeClickable(obj, isArray) {
-      // test ob obj schon in Array enthalten über Namensableich
-
-      // liste aller Objektnamen im Array erstellen
+      // make list of all objects currently in the targets.clickable array
       let namesOfClickableObjects = [];
       targets.clickable.forEach((clickObj) => {
         namesOfClickableObjects.push(clickObj.name);
       });
 
-      // Namensabgleich mit neuem Objekt, das hinzugefügt werden soll
+      // check if obj is already included in the targets.clickable array, if not add it
       if (!namesOfClickableObjects.includes(obj.name)) {
         // if: obj = array -> loop
         // else: simply add to array of clickable objects
@@ -1155,6 +1241,13 @@ fetch("./letters_json_grouped_merged.json")
       }
     }
 
+    /**
+     * @function makePlane
+     * @desc Creates a mesh of geometry type planeGeometry.
+     * @param {color} [color=0xcc0000] Color of plane
+     * @param {opacity} [opacity=0.7] Opacity of plane
+     * @returns THREE.PlaneGeometry
+     */
     function makePlane(color = 0xcc0000, opacity = 0.7) {
       const geometry = track(new THREE.PlaneGeometry(0.3, 0.3));
       // DoubleSide -> visisble and not visible sides of objects are rendered
@@ -1170,6 +1263,12 @@ fetch("./letters_json_grouped_merged.json")
       return plane;
     }
 
+    /**
+     * @function makeKugel
+     * @desc Creates a mesh of geometry type SphereGeometry.
+     * @param {number} radius Radius of sphere
+     * @returns THREE.SphereGeometry
+     */
     function makeKugel(radius) {
       const geometryKugel = track(new THREE.SphereGeometry(radius, 32, 16));
       const materialKugel = track(
@@ -1185,6 +1284,12 @@ fetch("./letters_json_grouped_merged.json")
       return kugel;
     }
 
+    /**
+     * @function makeIdText
+     * @desc Creates a text object containing the id of a given letter.
+     * @param {Object<string,string>} letter Letter data object
+     * @returns Text
+     */
     function makeIdText(letter) {
       const idText = track(new Text());
 
@@ -1205,6 +1310,12 @@ fetch("./letters_json_grouped_merged.json")
       return idText;
     }
 
+    /**
+     * @function makeInitialsText
+     * @desc Creates a text object containing the initials of the receiver of a given letter.
+     * @param {Object<string,string>} letter Letter data object
+     * @returns Text
+     */
     function makeInitialsText(letter) {
       const initialsText = track(new Text());
       // Scenegraph in Console: e.g. name="CB"
@@ -1223,6 +1334,12 @@ fetch("./letters_json_grouped_merged.json")
       return initialsText;
     }
 
+    /**
+     * @function makeFirstNameText
+     * @desc Creates a text object containing the first name of a receiver of a given letter.
+     * @param {Object<string,string>} letter Letter data object
+     * @returns Text
+     */
     function makeFirstNameText(letter) {
       const firstNameText = track(new Text());
       // Scenegraph in Console: e.g. name="Charlotte"
@@ -1241,6 +1358,12 @@ fetch("./letters_json_grouped_merged.json")
       return firstNameText;
     }
 
+    /**
+     * @function makeLastNameText
+     * @desc Creates a text object containing the last name of a receiver of a given letter.
+     * @param {Object<string,string>} letter Letter data object
+     * @returns Text
+     */
     function makeLastNameText(letter) {
       const lastNameText = track(new Text());
       // Scenegraph in Console: e.g. name="Buff"
@@ -1259,6 +1382,12 @@ fetch("./letters_json_grouped_merged.json")
       return lastNameText;
     }
 
+    /**
+     * @function makeDateText
+     * @desc Creates a text object containing the date of a given letter.
+     * @param {Object<string,string>} letter Letter data object
+     * @returns Text
+     */
     function makeDateText(letter) {
       const dateText = track(new Text());
       // Scenegraph in Console: e.g. name="12. Juli 1764"
@@ -1277,6 +1406,13 @@ fetch("./letters_json_grouped_merged.json")
       return dateText;
     }
 
+    /**
+     * @function makeYearMarker
+     * @desc Creates a text object as yearMarker.
+     * @param {string} year
+     * @param {number} index
+     * @returns Text
+     */
     function makeYearMarker(year, index) {
       const yearMarker = track(new Text());
       yearMarker.name = `yearMarker${year}`;
@@ -1297,6 +1433,12 @@ fetch("./letters_json_grouped_merged.json")
       return yearMarker;
     }
 
+    /**
+     * @function makeLetterNumMarker
+     * @desc Creates a text object representing the number of letters for a given place.
+     * @param {number} letterCount number of letters for a given place
+     * @returns Text
+     */
     function makeLetterNumMarker(letterCount) {
       const letterNumMarker = track(new Text());
       letterNumMarker.name = `letterNumMarker${letterCount}`;
@@ -1314,6 +1456,11 @@ fetch("./letters_json_grouped_merged.json")
       return letterNumMarker;
     }
 
+    /**
+     * @function correctPositionWiesbaden(
+     * @desc When creating the basemap, the placeMarker for Wiesbaden was not positioned directly on the map. This function corrects its position.
+     * @returns nothing
+     */
     function correctPositionWiesbaden() {
       scene.children
         .filter((i) => i.name == "Scene")[0]
@@ -1323,6 +1470,13 @@ fetch("./letters_json_grouped_merged.json")
         );
     }
 
+    /**
+     * @function loopPlaceMarker
+     * @desc Helper function to loop over a placeMarker. Executes a function for each placeMarker.
+     * @param {requestCallback} functionForLoop Function to be executed within the loop
+     * @param {string[]} yearArray Year range set by the time filter
+     * @returns nothing
+     */
     function loopPlaceMarker(functionForLoop, yearArray) {
       scene.children
         .filter((i) => i.name == "Scene")[0] // scene contains another group "scene" which contains all objects in the gltf file created in blender (Karte und Ortsmarker)
@@ -1337,6 +1491,13 @@ fetch("./letters_json_grouped_merged.json")
         });
     }
 
+    /**
+     * @function loopYearMarker
+     * @desc Helper function to loop over a yearMarker. Executes a function for each yearMarker.
+     * @param {requestCallback} functionForLoop Function to be executed within the loop
+     * @param {string[]} yearArray Year range set by the time filter
+     * @returns nothing
+     */
     function loopYearMarker(functionForLoop, yearArray) {
       scene.children
         .filter((i) => i.name == "Scene")[0] // scene contains another group "scene" which contains all objects in the gltf file created in blender (Karte und Ortsmarker)
@@ -1361,9 +1522,13 @@ fetch("./letters_json_grouped_merged.json")
         });
     }
 
-    /* Helper functions for Filter */
+    /* 6.) Helper functions for Filter */
 
-    // remove chlildren of infobox div (needed when infobox is updated)
+    /**
+     * @function removeContentOfInfobox
+     * @desc Removes children of infobox div, i.e. removes the content of the infobox. This function is needed whenever the infobox should be updated.
+     * @returns nothing
+     */
     function removeContentOfInfobox() {
       const parent = document.getElementById("infobox");
 
@@ -1373,9 +1538,13 @@ fetch("./letters_json_grouped_merged.json")
       }
     }
 
-    // PLANES ON SCENE BUT NOT NECESSARILY VISIBLE
-    // returns an array of all the planes currently on the scene (but not necessarily visible)
+    /**
+     * @function getCurrentPlanesOnScene
+     * @desc Goes through entire scene and makes an array of all the planes currently on the scene. Important: Not the curently visible planes. This function collects all the planes - visible and hidden.
+     * @returns Mesh[]
+     */
     function getCurrentPlanesOnScene() {
+      // currentPlanes on scene includes visible as well as hidden planes!
       let currentPlanesOnScene = [];
       scene.children
         .filter((i) => i.name == "Scene")[0] // scene contains another group "scene" which contains all objects in the gltf file created in blender (Karte und Ortsmarker)
@@ -1408,7 +1577,11 @@ fetch("./letters_json_grouped_merged.json")
       return currentPlanesOnScene;
     }
 
-    // ONLY VISIBLE PLANES
+    /**
+     * @function getCurrentlyVisiblePlanesOnScene
+     * @desc Goes through entire scene and makes an array of all the planes currently visible on the scene. Only the visible ones.
+     * @returns Mesh[]
+     */
     function getCurrentlyVisiblePlanesOnScene() {
       console.log("Scene 1: ", scene);
       let currentlyVisiblePlanesOnScene = [];
@@ -1450,8 +1623,12 @@ fetch("./letters_json_grouped_merged.json")
       return currentlyVisiblePlanesOnScene;
     }
 
-    // returns an array of all the ids of the planes passed as parameter
-    // parameter: array of planes
+    /**
+     * @function getIdsOfPlanes
+     * @desc Takes an array of planes and returns all the ids associated to these planes.
+     * @param {Mesh[]} planeArray Array of planes
+     * @returns string[]
+     */
     function getIdsOfPlanes(planeArray) {
       let idsOfPlanes = [];
       planeArray.forEach((plane) => {
@@ -1462,8 +1639,13 @@ fetch("./letters_json_grouped_merged.json")
       return idsOfPlanes;
     }
 
-    // DATA
-    // retuns an array of letter data corresponding to a set of ids
+    /**
+     * @function getletterDataOfPlanes
+     * @desc Takes an array of ids and gets all the letter data associated to these ids.
+     * @param {string[]} idsOfLetters Array of ids
+     * @returns Object.<string, string>
+     */
+
     function getletterDataOfPlanes(idsOfLetters) {
       let letterDataArray = [];
 
@@ -1482,7 +1664,14 @@ fetch("./letters_json_grouped_merged.json")
       return letterDataArray;
     }
 
-    // changes color of plane
+    /**
+     * @function changePlaneColor
+     * @desc Changes color of a given plane.
+     * @param {Mesh[]} currentPlanesOnScene Array of all planes currently on scene (visible and hidden)
+     * @param {string} id Id of the plane which should be recolored.
+     * @param {color} color Color (hexcode)
+     * @returns nothing
+     */
     function changePlaneColor(currentPlanesOnScene, id, color) {
       // get plane associated with the current id
       let currPlane = currentPlanesOnScene.find((plane) => plane.name == id);
@@ -1490,7 +1679,13 @@ fetch("./letters_json_grouped_merged.json")
       currPlane.material.color.set(color);
     }
 
-    // hides plane
+    /**
+     * @function hidePlane
+     * @desc Hides a given plane.
+     * @param {Mesh[]} currentPlanesOnScene Array of all planes currently on scene (visible and hidden)
+     * @param {string} id Id of the plane which should be hidden.
+     * @returns nothing
+     */
     function hidePlane(currentPlanesOnScene, id) {
       // get plane associated with the current id
       let currPlane = currentPlanesOnScene.find((plane) => plane.name == id);
@@ -1498,14 +1693,25 @@ fetch("./letters_json_grouped_merged.json")
       console.log("plane hidden");
     }
 
-    // shows plane (after it had been hidden)
-    function showPlane(currentPlanesOnScene, id) {
+    /**
+     * @function showPlane
+     * @desc Shows a given plane after it has been hidden.
+     * @param {Mesh[]} currentPlanesOnScene Array of all planes currently on scene (visible and hidden)
+     * @param {string} id Id of the plane which should be shown.
+     * @returns nothing
+     */ function showPlane(currentPlanesOnScene, id) {
       // get plane associated with the current id
       let currPlane = currentPlanesOnScene.find((plane) => plane.name == id);
       currPlane.visible = true;
       console.log("plane shown");
     }
 
+    /**
+     * @function getCheckboxGenderState
+     * @desc Checks whether the following checkboxes are checked: male, female, other. Creates an objects that contains the individual states but also a string of booleans representing the state of all these checkboxes: male-female-other. E.g. true-false-false = only male checkbox checked.
+     * @param {type} paramName Parameter description.
+     * @returns state object
+     */
     function getCheckboxGenderState() {
       let state = {
         male: $(".male").is(":checked"),
@@ -1518,6 +1724,11 @@ fetch("./letters_json_grouped_merged.json")
       return state;
     }
 
+    /**
+     * @function genderFilter
+     * @desc Implements the functionalities of the gender filter. Chooses the functionality based on the state of the three gender checkboxes.
+     * @returns nothing
+     */
     function genderFilter() {
       let state = getCheckboxGenderState();
 
@@ -1646,10 +1857,10 @@ fetch("./letters_json_grouped_merged.json")
     }
 
     /**
-     * Steuerungselemente
+     * Filter controls
      */
 
-    /** Slider: Zeitfilter */
+    /** Slider: Time filter */
 
     // get year range from start and end date
     function range(start, end) {
@@ -1675,8 +1886,8 @@ fetch("./letters_json_grouped_merged.json")
           $("#amount").val("" + ui.values[0] + " – " + ui.values[1]);
           console.log("Keep sliding");
 
-          // neue Ansicht auf basis des Sliders aufbauen
-          // welche Ansicht aufgebaut wird, hängt von der view id ab
+          // bulid new view based on slider settings
+          // which view is buit depends on the viewId
 
           /* KUGEL */
           // console.log(document.getElementById("viewId").name);
@@ -1688,7 +1899,7 @@ fetch("./letters_json_grouped_merged.json")
             mapViewKugeln(timeFilterRange);
           }
 
-          /* SPHÄRE */
+          /* SPHERE */
           if (document.getElementById("viewId").name == "sphere") {
             clearCanvas();
 
@@ -1722,9 +1933,9 @@ fetch("./letters_json_grouped_merged.json")
       );
     });
 
-    /* Briefstatus-Filter */
+    /* Letter Status Filter */
 
-    /* 1.) Farbliche Hervorhebung */
+    /* 1.) Color Highlighting */
 
     // SENT
     $(".sent").change(function () {
@@ -1782,7 +1993,7 @@ fetch("./letters_json_grouped_merged.json")
       }
     });
 
-    /* 2.) Filter-Modus */
+    /* 2.) Filter Mode */
 
     // SENT
     $(".sent").change(function () {
@@ -1850,9 +2061,9 @@ fetch("./letters_json_grouped_merged.json")
       makeInfoBox();
     });
 
-    /* Documenttyp-Filter */
+    /* Document Type Filter */
 
-    /* 1.) Farbliche Hervorhebung */
+    /* 1.) Color Highlighting */
 
     // LETTERS
     $(".goetheletter").change(function () {
@@ -1910,7 +2121,7 @@ fetch("./letters_json_grouped_merged.json")
       }
     });
 
-    /* 2.) Filter-Modus */
+    /* 2.) Filter Mode */
 
     // LETTERS
     $(".goetheletter").change(function () {
@@ -1982,9 +2193,9 @@ fetch("./letters_json_grouped_merged.json")
       makeInfoBox();
     });
 
-    /* Personen-Filter */
+    /* Gender Filter */
 
-    /* 1.) Farbliche Hervorhebung */
+    /* 1.) Color Hightlighting */
 
     // MALE
     $(".male").change(function () {
@@ -2135,7 +2346,7 @@ fetch("./letters_json_grouped_merged.json")
       }
     });
 
-    /* 2.) Filter-Modus */
+    /* 2.) Filter Mode */
 
     // MALE
     $(".male").change(function () {
@@ -2165,6 +2376,11 @@ fetch("./letters_json_grouped_merged.json")
      * Infobox
      */
 
+    /**
+     * @function getLetterDataOfPlanesCurrentlyVisibleOnScene
+     * @desc This functions returns the data of the letters associated to all the planes currently visible on the scene. 
+     * @returns Object.<string,string>[]
+     */
     function getLetterDataOfPlanesCurrentlyVisibleOnScene() {
       let currentlyVisiblePlanesOnScene = getCurrentlyVisiblePlanesOnScene();
       let idsOfCurrentPlanesOnScene = getIdsOfPlanes(
@@ -2177,7 +2393,11 @@ fetch("./letters_json_grouped_merged.json")
       return letterDataOfCurrentlyVisiblePlanesOnScene;
     }
 
-    // Gesamtanzahl Briefe
+/**
+     * @function getNumLetters
+     * @desc This function returns how many letters are currently visible on the scene.
+     * @returns number
+     */
     function getNumLetters() {
       const lettersCurrentlyOnScene =
         getLetterDataOfPlanesCurrentlyVisibleOnScene();
@@ -2185,7 +2405,11 @@ fetch("./letters_json_grouped_merged.json")
       return numLetters;
     }
 
-    // Anzahl gesendete Briefe
+    /**
+     * @function getNumSent
+     * @desc This function returns how many letters with status "sent" are currently visible on the scene.
+     * @returns number
+     */
     function getNumSent() {
       const lettersCurrentlyOnScene =
         getLetterDataOfPlanesCurrentlyVisibleOnScene();
@@ -2198,7 +2422,11 @@ fetch("./letters_json_grouped_merged.json")
       return numSent;
     }
 
-    // Anzahl empfangene Briefe
+    /**
+     * @function getNumReceived
+     * @desc This function returns how many letters with status "received" are currently visible on the scene.
+     * @returns number
+     */
     function getNumReceived() {
       const lettersCurrentlyOnScene =
         getLetterDataOfPlanesCurrentlyVisibleOnScene();
@@ -2211,7 +2439,11 @@ fetch("./letters_json_grouped_merged.json")
       return numReceived;
     }
 
-    // Anzahl Briefe mit weiblichen Adressatinnen
+    /**
+     * @function getNumFemale
+     * @desc This function returns how many letters with gender of receiver "female" are currently visible on the scene.
+     * @returns number
+     */
     function getNumFemale() {
       const lettersCurrentlyOnScene =
         getLetterDataOfPlanesCurrentlyVisibleOnScene();
@@ -2224,7 +2456,11 @@ fetch("./letters_json_grouped_merged.json")
       return numFemale;
     }
 
-    // Anzahl Briefe mit männlichen Adressaten
+    /**
+     * @function getNumMale
+     * @desc This function returns how many letters with gender of receiver "male" are currently visible on the scene.
+     * @returns number
+     */
     function getNumMale() {
       const lettersCurrentlyOnScene =
         getLetterDataOfPlanesCurrentlyVisibleOnScene();
@@ -2237,7 +2473,11 @@ fetch("./letters_json_grouped_merged.json")
       return numMale;
     }
 
-    // Anzahl Briefe mit Adressaten unbekannten Geschlechts
+    /**
+     * @function getNumOther
+     * @desc This function returns how many letters with gender of receiver "Keine Info"/other are currently visible on the scene.
+     * @returns number
+     */
     function getNumOther() {
       const lettersCurrentlyOnScene =
         getLetterDataOfPlanesCurrentlyVisibleOnScene();
@@ -2250,6 +2490,11 @@ fetch("./letters_json_grouped_merged.json")
       return numOther;
     }
 
+    /**
+     * @function makeInfoBox
+     * @desc Creates the p-Tags with the content of the infobox.
+     * @returns nothing
+     */
     function makeInfoBox() {
       const numLetters = getNumLetters();
       const numSent = getNumSent();
@@ -2286,7 +2531,7 @@ fetch("./letters_json_grouped_merged.json")
       infobox.appendChild(pNumOther);
     }
 
-    /**
+    /*
      * Helper Geometries
      */
     if (SETTINGS.show_edges) {
@@ -2307,14 +2552,14 @@ fetch("./letters_json_grouped_merged.json")
       scene.add(wire);
     }
 
-    /**
+    /*
      * Axes Helper (Scene)
      */
 
     /* const axesHelperScene = new THREE.AxesHelper( 30 );
   scene.add( axesHelperScene ); */
 
-    /**
+    /*
      * Lights
      */
 
@@ -2336,7 +2581,7 @@ fetch("./letters_json_grouped_merged.json")
 
     const pointLightColor = { color: 0xff0000 };
 
-    /**
+    /*
      * Helper geos for lights
      */
 
@@ -2347,7 +2592,7 @@ fetch("./letters_json_grouped_merged.json")
     //const pointLight2helper = new THREE.PointLightHelper(pointLight2, 1);
     //scene.add(pointLight2helper);
 
-    /**
+    /*
      * Resizing
      */
 
@@ -2367,7 +2612,7 @@ fetch("./letters_json_grouped_merged.json")
       }
     });
 
-    /**
+    /*
      * Debug GUI
      */
     //const gui = new dat.GUI();
@@ -2393,7 +2638,7 @@ fetch("./letters_json_grouped_merged.json")
       pointLight.color.set(pointLightColor.color);
     });
  */
-    /**
+    /*
      * Camera
      */
 
@@ -2412,18 +2657,18 @@ fetch("./letters_json_grouped_merged.json")
     camera.updateProjectionMatrix();
     scene.add(camera);
 
-    /**
+    /*
      * Controls
      */
 
     let controls = new OrbitControls(camera, canvas);
     //controls.enableDamping = true;
 
-    /**
+    /*
      * Mouse interaction and Raycasting
      */
 
-    // speichert Koordinaten der Maus
+    // saves mouse coordinates
     const mousemove = {
       mouseX: 0,
       mouseY: 0,
@@ -2437,31 +2682,26 @@ fetch("./letters_json_grouped_merged.json")
       windowHalfY: window.innerHeight / 2,
     };
 
-    // Hiermit werden die Mauskoordinaten je nach Position geupdated
+    // update mouse coordinates according to mouse position on screen
     document.addEventListener("mousemove", (e) => {
       mousemove.mouseX = e.clientX - mousemove.windowHalfX;
       mousemove.mouseY = e.clientY - mousemove.windowHalfY;
-      // der Raycaster benötigt ein normalisiertes Koordinatensystem auf Basis
-      // der Bildschrimkoordinaten des Mauszeigers
-      // der Raycaster wird innerhalb des Animations-Loops mit den jeweils aktuellen
-      // Koordinaten neu gesetzt (siehe unten)
-      // Teilen durch innerWidth und Multiplizieren mit 2-1 sorgt dafür, dass x und y Werte von -1 bis 1 annehmen können
+      // raycaster needs a normalized coordinate system based on coordinates of mouse pointer
+      // raycaster is newly set within each animation loop according to the updated mouse coordinates (see below)
+      // division by innerWidth/innerHeight and multiplication with 2-1/2+1 turns x and y into values between -1 and 1
       mousemove.normalizedMouse.x = (e.clientX / window.innerWidth) * 2 - 1;
       mousemove.normalizedMouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
     });
 
-    // Raycast passiert nur bei Mausklick
+    // Raycast only activated on mousclick
     document.addEventListener("click", (e) => {
-      // der Raycaster gibt ein Array mit den vom Strahl getroffenen
-      // Objekten zurück. Dieses Array ist leer (Länge == 0), wenn
-      // keine Objekte getroffen wurden.
+      // raycaster returns an array (intersects) of objects which have been hit by the ray
+      
       console.log("targets clickable", targets.clickable);
       let intersects = raycaster.intersectObjects(targets.clickable);
-      //console.log(scene.children[4].children);
-      // Alle Elemente in der Szene. Klick auf den LightHelper logged bspw. diesen.
-      // Statt scene.children kann auch ein Array relevanter Objekte angegeben werden: [ objectPlanet ]
-      // Wenn der intersects Array Objekte enthält (length > 0), dann wird der string "Klick" ausgegeben plus das Objekt
-
+      
+      // if intersects.length = 0, no objects were hit
+      // if (length > 0), "Klick" plus the object(s) which have been hit are logged
       if (intersects.length > 0) {
         // log clicks
         let clickedObj = intersects[0].object;
@@ -2470,14 +2710,14 @@ fetch("./letters_json_grouped_merged.json")
         /* Define click events for different objects*/
 
         // click on plane
-        // nur zum Test
+        // only for testing
         if (clickedObj.geometry.type == "PlaneGeometry") {
           console.log("Briefelement angeklickt");
         }
 
         // click on id -> link to platform
         if (clickedObj.name.includes("GB01 Nr.")) {
-          // öffnet neuen Tab mit Beispielbrief
+          // opens new tab with example letter
           window.open("https://goethe-biographica.de/id/GB02_BR005_0");
           // perspektivisch (wenn Briefe auf Plattform verlinkt)
           // Lookup: Welcher Brief gehört zum Plane? evtl. BriefId als Name des Planes festlegen damit es funktioniert, dann property "propyURL" in window() einsetzen
@@ -2526,7 +2766,7 @@ fetch("./letters_json_grouped_merged.json")
       }
     });
 
-    // Raycast-event bei gedrückt gehaltener Maustaste
+    // Raycast-event for mousedown or mouseup (not active here)
     document.addEventListener("mousedown", (e) => {
       // der Raycaster gibt ein Array mit den vom Strahl getroffenen
       // Objekten zurück. Dieses Array ist leer (Länge == 0), wenn
@@ -2534,24 +2774,15 @@ fetch("./letters_json_grouped_merged.json")
       let intersects = raycaster.intersectObjects(scene.children);
 
       if (intersects.length > 0) {
-        //let planet = intersects[0].object;
-        //console.log("Mousedown ", planet);
-        // Skaliert die Größe des Objekts hoch
-        //planet.scale.x = orig.x * 1.2;
-        //planet.scale.y = orig.y * 1.2;
-        //planet.scale.z = orig.z * 1.2;
+        //Code
       }
     });
 
     document.addEventListener("mouseup", (e) => {
-      // Setzt die Größe des Planeten auf den Anfangswert
-      // sobald die Maustaste nicht mehr gehalten wird
-      //object.scale.x = orig.x;
-      //object.scale.y = orig.y;
-      //object.scale.z = orig.z;
+      // Code
     });
 
-    // Instanziiert den Raycaster
+    // Instantiates Raycaster
     const raycaster = new THREE.Raycaster();
 
     const clock = new THREE.Clock();
@@ -2562,19 +2793,10 @@ fetch("./letters_json_grouped_merged.json")
 
       const elapsedTime = clock.getElapsedTime();
 
-      // Update objects
-      /* object.rotation.y = 0.3 * elapsedTime;
-    
-      object.rotation.y += 0.5 * (mousemove.targetX - object.rotation.y);
-      object.rotation.x += 0.5 * (mousemove.targetY - object.rotation.x);
-      object.rotation.z += 0.005 * (mousemove.targetY - object.rotation.x); */
-      // Update Orbital Controls
-      //controls.update()
 
       // Raycaster
-      // hier wird der Raycaster mit den jeweils aktuellen Mauskoordinaten
-      // aktualisiert, so dass der Strahl von der korrekten Position
-      // geschossen wird
+      // update raycaster according to current mouse coordinates 
+      // so that the ray is cast from the right position
       raycaster.setFromCamera(mousemove.normalizedMouse, camera);
 
       // Render
