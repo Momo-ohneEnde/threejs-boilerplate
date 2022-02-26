@@ -1,12 +1,5 @@
 # How to bundle
 
-## What to find where
-The `\src` folder contains the source files for map view and single place view. In dev mode - i.e. with `npm run dev` - only one of the two views can be shown at the same time depending on the settings in `webpack.common.js`. 
-
-The `\dist` folder is where the output of the most recent build is stored. With each new build the content is overwritten. Builds for single place view and map view have to be created separately.
-
-The `\final` folder contains the ready-to-view builds of map view and single view. By starting a python webserver from this folder, the visualization can be viewed - including the interaction of map and single view.
-
 ## Step by step bundling
 1. Make sure the placeName variable in single.js is set to: `window.location.hash.slice(1)`. When the two views interact, the name of the place for which to open the single place view is stored in the url. However, in dev mode the placename variable needs to be set to a specific string value e.g. 'Frankfurt'. Otherwise nothing will be displayed, since the interaction does not work.
 
