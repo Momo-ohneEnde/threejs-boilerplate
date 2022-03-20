@@ -1,5 +1,5 @@
 /**
- *  @fileOverview This js-file creates the map view.
+ *  @fileOverview This js-file creates the map view. Sphere view and helix view are inspired by https://github.com/mrdoob/three.js/blob/master/examples/css3d_periodictable.html.
  *
  *  @author       Marina Lehmann
  *  @author       Max Grüntgens
@@ -135,7 +135,7 @@ fetch("./letters_json_grouped_merged.json")
 
     /**
      * ResourceTracker
-     * @classdesc A class to track the objects which will be removed from the scene when views change.
+     * @classdesc A class to track the objects which will be removed from the scene when views change. Inspired by: https://r105.threejsfundamentals.org/threejs/lessons/threejs-cleanup.html#toc.
      * @class ResourceTracker
      */
     class ResourceTracker {
