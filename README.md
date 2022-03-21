@@ -52,7 +52,7 @@ The design of the visualization was inspired by the concept of *PolyCubes* (Raum
 
 `\final` contains the ready-to-view builds of map view and single view. By starting a python webserver from this folder locally on your machine, the visualization can be viewed - including the interaction of map and single view.
 
-# How to View the Visualization Locally
+## How to View the Visualization Locally
 The bundled version of the visualization that is ready to view can be found in the folder `\final`.
 
 To start the visualization, you need a webserver, e.g. from Python.
