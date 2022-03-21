@@ -5,9 +5,9 @@ The design of the visualization was inspired by the concept of *PolyCubes* (Raum
 
 ## What You Can Explore
 
-➡️ [3D visualization of Goethe's letters](final/index.html)
+➡️ [3D visualization of Goethe's letters](https://momo-ohneende.github.io/threejs-praxisprojekt-goethe/final/index.html)
 
-➡️ [Script documentation](docs/index.html)
+➡️ [Script documentation](https://momo-ohneende.github.io/threejs-praxisprojekt-goethe/docs/index.html)
 
 ## What to Find in the Visualization
 
