@@ -54,7 +54,7 @@ fetch("./letters_json_grouped_merged.json")
     // size of canvas on which objects are rendered
     const sizes = {
       width: window.innerWidth,
-      height: 1000,
+      height: window.innerHeight,
     };
 
     /*
@@ -329,7 +329,7 @@ fetch("./letters_json_grouped_merged.json")
       // load gltf basemap
       const roughnessMipmapper = new RoughnessMipmapper(renderer);
       const loader = new GLTFLoader();
-      loader.load("/final/gltf/goethe_basemap.glb", function (gltf) {
+      loader.load("/gltf/goethe_basemap.glb", function (gltf) {
         gltf.scene.traverse(function (child) {
           // traverse goes through all the children of an object
           if (child.isMesh) {
@@ -406,7 +406,7 @@ fetch("./letters_json_grouped_merged.json")
       // load gltf basemap
       const roughnessMipmapper = new RoughnessMipmapper(renderer);
       const loader = new GLTFLoader();
-      loader.load("/final/gltf/goethe_basemap.glb", function (gltf) {
+      loader.load("/gltf/goethe_basemap.glb", function (gltf) {
         gltf.scene.traverse(function (child) {
           // travese goes through all the children of an object
           if (child.isMesh) {
@@ -471,7 +471,7 @@ fetch("./letters_json_grouped_merged.json")
       // load gltf basemap
       const roughnessMipmapper = new RoughnessMipmapper(renderer);
       const loader = new GLTFLoader();
-      loader.load("/final/gltf/goethe_basemap.glb", function (gltf) {
+      loader.load("/gltf/goethe_basemap.glb", function (gltf) {
         gltf.scene.traverse(function (child) {
           // travese goes through all the children of an object
           if (child.isMesh) {
@@ -2760,7 +2760,7 @@ fetch("./letters_json_grouped_merged.json")
         if (Object.keys(data).includes(clickedObj.name)) {
           /* clickedObj.onclick = () => { */
           // clear canvas
-          clearCanvas();
+          //clearCanvas();
           const placeName = clickedObj.name;
           window.open(`./single.html#${placeName}`);
           console.log("Klick auf Ortsmarker!");
