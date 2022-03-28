@@ -48,7 +48,7 @@ The design of the visualization was inspired by the concept of *PolyCubes* (Raum
 
 `\src` contains the source files for map view and single place view. In dev mode - i.e. with `npm run dev` - only one of the two views can be displayed at the same time depending on the settings in `webpack.common.js`. 
 
-`\dist` is where the output of the most recent build is stored. With each new build the content is overwritten. Builds for single place view and map view have to be created separately.
+`\dist` is where the output of the most recent build is stored. With each new build the content is overwritten. Builds for single place view and map view have to be created separately. (not part of this repo)
 
 `\final` contains the ready-to-view builds of map view and single view. By starting a python webserver from this folder locally on your machine, the visualization can be accessed.
 
