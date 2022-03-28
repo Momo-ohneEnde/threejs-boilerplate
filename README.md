@@ -13,7 +13,7 @@ The design of the visualization was inspired by the concept of *PolyCubes* (Raum
 
 **Data:** letters written by Johann Wolfgang von Goethe (metadata) 
 
-**Time span:** 1776-1772
+**Time span:** 1764-1772
 
 **Places:** Frankfurt, Worms, Darmstadt, Wiesbaden
 
@@ -31,26 +31,26 @@ The design of the visualization was inspired by the concept of *PolyCubes* (Raum
 ## What to Find in This Repo
 `\bundler` contains the webpack configuration files.
 
-`\docs` contains a JsDoc documentation of the visualization scripts that create map view and single view.  
+`\docs` contains a JsDoc documentation of the visualization scripts that create map view and single place view.  
 
 `\data_prep` contains everything related to data cleaning, preparation and aggregation. The subfolders `01_xquery` and `02_ramda` include input data, scripts and output of the two main data preparation steps. 
 
 `\01_xquery`
-* `input` is a collection xml files of Goethe's letters (not part of this repo).
-* `script` contains the xquery script that retrieves relevant data from the xml files and saves them as JSON.
-* `output` contains the JSON output files.
+* `\input` is a collection xml files of Goethe's letters (not part of this repo).
+* `\script` contains the xquery script that retrieves relevant data from the xml files and saves them as JSON.
+* `\output` contains the JSON output files.
 
 `\02_ramda`
-* `\input` JSON files created via xquery in the step before. `gb_01_compact_array.json` includes the same data as `gb_01_compact.json` but the outer object structure is removed, leaving only the array as input for the ramda.js data prepareation scripts.
+* `\input` includes the JSON files created via XQuery in the step before. `gb_01_compact_array.json` contains the same data as `gb_01_compact.json` but the outer object structure is removed, leaving only the array as input for the ramda.js data prepareation scripts.
 * `\scripts` contains the data preparation scripts used to clean, filter and enhance the data and thus prepare it for its use within the visualization.
 * `\output_indexjs` contains all the output files of the index.js data preparation script.
 * `\output_mergejs` contains the result of merging the files `letters_json_grouped_received.json` and `letters_json_grouped_sent.json` created in the step before. The merged file contains the final data to be loaded in the visualization.
 
-`\src` contains the source files for map view and single place view. In dev mode - i.e. with `npm run dev` - only one of the two views can be shown at the same time depending on the settings in `webpack.common.js`. 
+`\src` contains the source files for map view and single place view. In dev mode - i.e. with `npm run dev` - only one of the two views can be displayed at the same time depending on the settings in `webpack.common.js`. 
 
 `\dist` is where the output of the most recent build is stored. With each new build the content is overwritten. Builds for single place view and map view have to be created separately.
 
-`\final` contains the ready-to-view builds of map view and single view. By starting a python webserver from this folder locally on your machine, the visualization can be viewed - including the interaction of map and single view.
+`\final` contains the ready-to-view builds of map view and single view. By starting a python webserver from this folder locally on your machine, the visualization can be accessed.
 
 ## How to View the Visualization Locally
 The bundled version of the visualization that is ready to view can be found in the folder `\final`.
