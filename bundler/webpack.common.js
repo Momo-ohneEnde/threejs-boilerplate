@@ -5,8 +5,8 @@ const path = require('path')
 
 module.exports = {
     // specify path to js file which should be loaded
-    // entry: path.resolve(__dirname, '../src/script.js'),
-    entry: path.resolve(__dirname, '../src/single.js'),
+    entry: path.resolve(__dirname, '../src/script.js'),
+    // entry: path.resolve(__dirname, '../src/single.js'),
     //entry: path.resolve(__dirname, '../src/script_ohne_fetch.js'),
     //entry: path.resolve(__dirname, '../src/experiments.js'),
     //entry: path.resolve(__dirname, '../src/script_periodic.js'),
@@ -27,8 +27,8 @@ module.exports = {
         }),
         new HtmlWebpackPlugin({
             // specify path to html file to be loaded
-            // template: path.resolve(__dirname, '../src/index.html'),
-            template: path.resolve(__dirname, '../src/single.html'),
+            template: path.resolve(__dirname, '../src/index.html'),
+            // template: path.resolve(__dirname, '../src/single.html'),
             //template: path.resolve(__dirname, '../src/periodic_table.html'),
             //template: path.resolve(__dirname, '../src/goethe.html'),
             minify: true
