@@ -19,7 +19,7 @@ The design of the visualization was inspired by the concept of *PolyCubes* (Raum
 
 **Views:**
 * Map view (as kugel, sphere, helix)
-* Single place view (as sphere)
+* Single place view (as sphere) → click on placename in map view
 
 **Filter categories:**
 * date range
