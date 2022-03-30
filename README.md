@@ -24,7 +24,7 @@ The design of the visualization was inspired by the concept of *PolyCubes* (Raum
 **Filter categories:**
 * date range
 * place
-* document type
+* document type (now only letters, in the future diary entries could be included)
 * letter status (sent, received)
 * sex of recipient
 
