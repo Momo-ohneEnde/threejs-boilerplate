@@ -1494,7 +1494,7 @@ fetch("./letters_json_grouped_merged.json")
       pNumLetters.textContent = `${numLetters} Briefe Goethes werden angezeigt`;
 
       const pNumSent = document.createElement("p");
-      pNumSent.textContent = `${numSent} aus ${placename} gesesendet`;
+      pNumSent.textContent = `${numSent} aus ${placename} gesendet`;
 
       const pNumReceived = document.createElement("p");
       pNumReceived.textContent = `${numReceived} in ${placename} empfangen`;
