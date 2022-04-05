@@ -1,3 +1,4 @@
 node_modules/*
 dist/*
 how_to_bundle.md
+.vscode
