@@ -2,7 +2,7 @@ xquery version "3.0";
 declare namespace tei = "http://www.tei-c.org/ns/1.0";
 declare namespace output="http://www.w3.org/2010/xslt-xquery-serialization";
 declare option output:method "text";
-declare variable $letters := collection('file:///C:/Users/Marina/Desktop/transform_gb/GB01_Daten/letters_and_commentaries/?select=*.xml'); 
+declare variable $letters := collection('./GB01_Daten/letters_and_commentaries/?select=*.xml');
 
 
 xml-to-json(
